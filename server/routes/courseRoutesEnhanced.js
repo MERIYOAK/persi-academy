@@ -13,6 +13,7 @@ const {
   unarchiveCourse,
   deleteCourse,
   getAllCourses,
+  getUserPurchasedCourses,
   getCourseById,
   enrollStudent,
   updateStudentProgress

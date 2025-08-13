@@ -15,6 +15,7 @@ const emailService = require('./services/emailService');
 const authRoutes = require('./routes/authRoutes');
 const courseRoutes = require('./routes/courseRoutes');
 const courseRoutesEnhanced = require('./routes/courseRoutesEnhanced');
+const myCoursesRoutes = require('./routes/myCoursesRoutes');
 const archiveRoutes = require('./routes/archiveRoutes');
 const videoRoutes = require('./routes/videoRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
@@ -102,6 +103,7 @@ app.get('/health', (req, res) => {
 // API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/my-courses', myCoursesRoutes);
 
 // Fallback route for profile photo (backward compatibility)
 app.get('/api/users/me/photo', authMiddleware, (req, res) => {

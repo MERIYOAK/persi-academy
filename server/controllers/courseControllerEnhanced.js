@@ -198,7 +198,7 @@ const uploadThumbnail = async (req, res) => {
       thumbnailURL = getPublicUrl(uploadResult.s3Key);
       console.log(`⚠️ Upload didn't return public URL, generated: ${thumbnailURL}`);
     }
-    
+
     // Update course version with thumbnail URL
     courseVersion.thumbnailURL = thumbnailURL;
     courseVersion.thumbnailS3Key = uploadResult.s3Key; // Keep S3 key for potential future use
@@ -712,7 +712,7 @@ const deleteCourse = async (req, res) => {
 };
 
 /**
- * Get all courses (with filtering)
+ * Get all courses (filtered for logged-in users to exclude purchased courses)
  */
 const getAllCourses = async (req, res) => {
   try {
@@ -749,8 +749,47 @@ const getAllCourses = async (req, res) => {
 
     console.log(`📚 Found ${courses.length} courses from database`);
 
+    // Filter out purchased courses for logged-in users
+    let filteredCourses = courses;
+    
+    // Check for authentication token in headers
+    const authHeader = req.headers.authorization;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      try {
+        const token = authHeader.substring(7);
+        const jwt = require('jsonwebtoken');
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        
+        if (decoded && decoded.userId) {
+          console.log('🔍 User is logged in, filtering out purchased courses');
+          console.log('🔍 User ID:', decoded.userId);
+          
+          // Get user's purchased courses
+          const User = require('../models/User');
+          const user = await User.findById(decoded.userId);
+          
+          if (user && user.purchasedCourses && user.purchasedCourses.length > 0) {
+            const purchasedCourseIds = user.purchasedCourses.map(id => id.toString());
+            console.log('🔍 User has purchased courses:', purchasedCourseIds);
+            
+            filteredCourses = courses.filter(course => 
+              !purchasedCourseIds.includes(course._id.toString())
+            );
+            
+            console.log(`📚 Filtered from ${courses.length} to ${filteredCourses.length} courses`);
+          } else {
+            console.log('🔍 User has no purchased courses');
+          }
+        }
+      } catch (error) {
+        console.log('🔍 Invalid token, showing all courses');
+      }
+    } else {
+      console.log('🔍 No authentication token, showing all courses');
+    }
+
     // Ensure all courses have proper public thumbnail URLs
-    const coursesWithFixedThumbnails = courses.map(course => {
+    const coursesWithFixedThumbnails = filteredCourses.map(course => {
       console.log(`🔍 Course: "${course.title}"`);
       console.log(`   - thumbnailURL: ${course.thumbnailURL || 'NULL'}`);
       console.log(`   - thumbnailS3Key: ${course.thumbnailS3Key || 'NULL'}`);
@@ -786,6 +825,109 @@ const getAllCourses = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Failed to fetch courses',
+      error: error.message
+    });
+  }
+};
+
+/**
+ * Get user's purchased courses
+ */
+const getUserPurchasedCourses = async (req, res) => {
+  try {
+    console.log('🔍 getUserPurchasedCourses called');
+    
+    if (!req.user || !req.user.userId) {
+      return res.status(401).json({
+        success: false,
+        message: 'Authentication required'
+      });
+    }
+
+    const { limit = 20, page = 1 } = req.query;
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+
+    // Get user's purchased course IDs
+    const User = require('../models/User');
+    const user = await User.findById(req.user.userId);
+    
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    if (!user.purchasedCourses || user.purchasedCourses.length === 0) {
+      return res.json({
+        success: true,
+        data: {
+          courses: [],
+          pagination: {
+            page: parseInt(page),
+            limit: parseInt(limit),
+            total: 0,
+            pages: 0
+          }
+        }
+      });
+    }
+
+    console.log(`🔍 User has ${user.purchasedCourses.length} purchased courses`);
+
+    // Get purchased courses with pagination
+    const purchasedCourses = await Course.find({
+      _id: { $in: user.purchasedCourses },
+      status: 'active'
+    })
+    .populate('videos')
+    .sort({ createdAt: -1 })
+    .skip(skip)
+    .limit(parseInt(limit));
+
+    console.log(`📚 Found ${purchasedCourses.length} purchased courses from database`);
+
+    // Ensure all courses have proper public thumbnail URLs
+    const coursesWithFixedThumbnails = purchasedCourses.map(course => {
+      console.log(`🔍 Purchased Course: "${course.title}"`);
+      console.log(`   - thumbnailURL: ${course.thumbnailURL || 'NULL'}`);
+      console.log(`   - thumbnailS3Key: ${course.thumbnailS3Key || 'NULL'}`);
+      
+      if (course.thumbnailS3Key && (!course.thumbnailURL || !course.thumbnailURL.includes('s3.amazonaws.com'))) {
+        // Generate public URL from S3 key
+        course.thumbnailURL = getPublicUrl(course.thumbnailS3Key);
+        console.log(`🔧 Fixed thumbnail URL for "${course.title}": ${course.thumbnailURL}`);
+      }
+      
+      console.log(`   - Final thumbnailURL: ${course.thumbnailURL || 'NULL'}`);
+      return course;
+    });
+
+    const total = await Course.countDocuments({
+      _id: { $in: user.purchasedCourses },
+      status: 'active'
+    });
+
+    console.log(`📊 Total purchased courses: ${total}`);
+
+    res.json({
+      success: true,
+      data: {
+        courses: coursesWithFixedThumbnails,
+        pagination: {
+          page: parseInt(page),
+          limit: parseInt(limit),
+          total,
+          pages: Math.ceil(total / parseInt(limit))
+        }
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ Get user purchased courses error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch purchased courses',
       error: error.message
     });
   }
@@ -966,7 +1108,8 @@ module.exports = {
   unarchiveCourse,
   deleteCourse,
   getAllCourses,
+  getUserPurchasedCourses,
   getCourseById,
   enrollStudent,
   updateStudentProgress
-};
+}; 

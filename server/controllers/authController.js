@@ -209,6 +209,7 @@ const getCurrentUser = async (req, res) => {
         isVerified: user.isVerified,
         status: user.status,
         createdAt: user.createdAt,
+        purchasedCourses: user.purchasedCourses || []
       }
     });
 
