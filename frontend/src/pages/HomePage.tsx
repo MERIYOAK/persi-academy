@@ -70,8 +70,21 @@ const HomePage = () => {
       console.log('🔄 HomePage loading featured courses');
       try {
         setLoading(true);
+        
+        // Get authentication token if available
+        const token = localStorage.getItem('token');
+        const headers: HeadersInit = {};
+        if (token) {
+          headers['Authorization'] = `Bearer ${token}`;
+          console.log('🔐 HomePage using authentication token');
+        } else {
+          console.log('🔓 HomePage no authentication token found');
+        }
+        
         console.log('📡 Making API request to: http://localhost:5000/api/courses');
-        const res = await fetch('http://localhost:5000/api/courses');
+        const res = await fetch('http://localhost:5000/api/courses', {
+          headers
+        });
         
         console.log(`📊 HomePage API Response status: ${res.status}`);
         console.log(`📊 HomePage API Response ok: ${res.ok}`);

@@ -2,6 +2,16 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Prevent unwanted pseudo-elements */
+.course-title {
+  position: relative;
+}
+
+.course-title::before,
+.course-title::after {
+  content: none !important;
+}
+
 /* Simple Video Player Styles */
 .simple-video-player {
   position: relative;

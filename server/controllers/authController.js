@@ -415,6 +415,39 @@ const logout = async (req, res) => {
   }
 };
 
+/**
+ * Check email availability for registration
+ * POST /api/auth/check-email
+ */
+const checkEmailAvailability = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email || !emailRegex.test(email)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please provide a valid email address'
+      });
+    }
+
+    const result = await authService.checkEmailAvailability(email);
+
+    res.json({
+      success: true,
+      data: result
+    });
+
+  } catch (error) {
+    console.error('❌ Email availability check error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to check email availability'
+    });
+  }
+};
+
 module.exports = {
   register,
   verifyEmail,
@@ -426,5 +459,6 @@ module.exports = {
   getProfilePhoto,
   deleteProfilePhoto,
   googleCallback,
-  logout
+  logout,
+  checkEmailAvailability
 }; 

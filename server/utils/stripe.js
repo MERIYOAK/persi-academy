@@ -69,6 +69,56 @@ if (process.env.STRIPE_SECRET_KEY) {
   verifyWebhook = (req) => {
     try {
       const sig = req.headers['stripe-signature'];
+      
+      // In development mode, bypass signature verification
+      if (process.env.NODE_ENV === 'development') {
+        console.log('🔧 Development mode - bypassing signature verification');
+        
+        // Parse the raw body as JSON
+        let eventData;
+        try {
+          const body = req.rawBody || req.body;
+          if (Buffer.isBuffer(body)) {
+            const bodyString = body.toString();
+            console.log('🔍 Parsed body string:', bodyString);
+            eventData = JSON.parse(bodyString);
+          } else if (typeof body === 'string') {
+            eventData = JSON.parse(body);
+          } else if (typeof body === 'object' && body !== null) {
+            eventData = body;
+          } else {
+            throw new Error('Unknown body type: ' + typeof body);
+          }
+          
+          console.log('✅ Parsed webhook data:', eventData.type);
+          console.log('✅ Webhook metadata:', eventData.data?.object?.metadata);
+          return eventData;
+        } catch (parseError) {
+          console.log('⚠️  Could not parse webhook body:', parseError.message);
+          console.log('⚠️  Creating fallback event with actual request data');
+          
+          // Use the actual request body if available
+          const actualBody = req.body;
+          console.log('🔍 Actual request body:', actualBody);
+          
+          return {
+            type: 'checkout.session.completed',
+            id: `dev_webhook_${Date.now()}`,
+            data: {
+              object: {
+                id: `dev_session_${Date.now()}`,
+                metadata: actualBody?.data?.object?.metadata || {
+                  userId: 'dev_user',
+                  courseId: 'dev_course',
+                  userEmail: 'dev@example.com'
+                }
+              }
+            }
+          };
+        }
+      }
+      
+      // Production mode verification
       if (!sig) {
         throw new Error('No Stripe signature found');
       }
@@ -136,20 +186,53 @@ if (process.env.STRIPE_SECRET_KEY) {
   
   verifyWebhook = (req) => {
     console.log('🔧 Development webhook verification (bypassing signature check)');
-    return {
-      type: 'checkout.session.completed',
-      id: `dev_webhook_${Date.now()}`,
-      data: {
-        object: {
-          id: `dev_session_${Date.now()}`,
-          metadata: {
-            userId: req.body?.metadata?.userId || 'dev_user',
-            courseId: req.body?.metadata?.courseId || 'dev_course',
-            userEmail: req.body?.metadata?.userEmail || 'dev@example.com'
+    
+    // Try to parse the webhook body
+    let eventData;
+    try {
+      // The raw body should be available from express.raw() middleware
+      const body = req.rawBody || req.body;
+      console.log('🔍 Webhook body type:', typeof body);
+      console.log('🔍 Webhook body length:', body ? body.length : 'No body');
+      
+      if (Buffer.isBuffer(body)) {
+        const bodyString = body.toString();
+        console.log('🔍 Parsed body string:', bodyString);
+        eventData = JSON.parse(bodyString);
+      } else if (typeof body === 'string') {
+        eventData = JSON.parse(body);
+      } else if (typeof body === 'object' && body !== null) {
+        eventData = body;
+      } else {
+        throw new Error('Unknown body type: ' + typeof body);
+      }
+      
+      console.log('✅ Parsed webhook data:', eventData.type);
+      console.log('✅ Webhook metadata:', eventData.data?.object?.metadata);
+      return eventData;
+    } catch (parseError) {
+      console.log('⚠️  Could not parse webhook body:', parseError.message);
+      console.log('⚠️  Creating fallback event with actual request data');
+      
+      // Use the actual request body if available
+      const actualBody = req.body;
+      console.log('🔍 Actual request body:', actualBody);
+      
+      return {
+        type: 'checkout.session.completed',
+        id: `dev_webhook_${Date.now()}`,
+        data: {
+          object: {
+            id: `dev_session_${Date.now()}`,
+            metadata: actualBody?.data?.object?.metadata || {
+              userId: 'dev_user',
+              courseId: 'dev_course',
+              userEmail: 'dev@example.com'
+            }
           }
         }
-      }
-    };
+      };
+    }
   };
 }
 

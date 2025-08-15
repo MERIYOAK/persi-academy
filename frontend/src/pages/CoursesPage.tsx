@@ -17,6 +17,7 @@ const CoursesPage: React.FC = () => {
   const [courses, setCourses] = useState<ApiCourse[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [userToken, setUserToken] = useState<string | null>(null);
   
   // Search and filter state
   const [searchTerm, setSearchTerm] = useState<string>('');
@@ -25,12 +26,26 @@ const CoursesPage: React.FC = () => {
   const [priceRange, setPriceRange] = useState<string>('');
   const [showFilters, setShowFilters] = useState<boolean>(false);
 
+  // Check if user is authenticated
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    setUserToken(token);
+  }, []);
+
   const fetchCourses = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
       
-      const res = await fetch('http://localhost:5000/api/courses');
+      // Include authentication token if available
+      const headers: HeadersInit = {};
+      if (userToken) {
+        headers['Authorization'] = `Bearer ${userToken}`;
+      }
+      
+      const res = await fetch('http://localhost:5000/api/courses', {
+        headers
+      });
       
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
@@ -53,7 +68,7 @@ const CoursesPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [userToken]);
 
   useEffect(() => {
     fetchCourses();
@@ -133,6 +148,12 @@ const CoursesPage: React.FC = () => {
     setPriceRange('');
   };
 
+  // Handle purchase success
+  const handlePurchaseSuccess = useCallback(() => {
+    // Refresh purchase status after successful purchase
+    // This function is no longer needed as purchase status is handled by backend
+  }, []);
+
   const content = useMemo(() => {
     if (loading) {
       return (
@@ -172,11 +193,12 @@ const CoursesPage: React.FC = () => {
             students={0}
             rating={4.8}
             instructor={'YT Academy'}
+            onPurchaseSuccess={handlePurchaseSuccess}
           />
         ))}
       </div>
     );
-  }, [filteredCourses, loading, error, courses.length]);
+  }, [filteredCourses, loading, error, courses.length, handlePurchaseSuccess]);
 
   return (
     <div className="min-h-screen bg-gray-50 py-12">

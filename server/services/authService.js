@@ -56,10 +56,16 @@ class AuthService {
    */
   async registerLocal(userData, profilePhoto = null) {
     try {
-      // Check if user already exists
+      // Check if user already exists with any authentication method
       const existingUser = await User.findOne({ email: userData.email });
+      
       if (existingUser) {
-        throw new Error('User with this email already exists');
+        // Check if the existing user is a Google OAuth user
+        if (existingUser.authProvider === 'google') {
+          throw new Error('This email is already registered with Google. Please sign in with Google instead.');
+        } else {
+          throw new Error('User with this email already exists. Please sign in or use a different email.');
+        }
       }
 
       // Create new user with isVerified: false
@@ -290,6 +296,41 @@ class AuthService {
   }
 
   /**
+   * Check if email is available for registration
+   * @param {string} email - Email to check
+   * @returns {Object} - Availability status and details
+   */
+  async checkEmailAvailability(email) {
+    try {
+      const existingUser = await User.findOne({ email: email });
+      
+      if (!existingUser) {
+        return {
+          available: true,
+          message: 'Email is available for registration'
+        };
+      }
+      
+      if (existingUser.authProvider === 'google') {
+        return {
+          available: false,
+          message: 'This email is already registered with Google. Please sign in with Google instead.',
+          authProvider: 'google'
+        };
+      } else {
+        return {
+          available: false,
+          message: 'This email is already registered. Please sign in or use a different email.',
+          authProvider: 'local'
+        };
+      }
+    } catch (error) {
+      console.error('❌ Email availability check error:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Handle Google OAuth authentication (no email verification required)
    * @param {Object} profile - Google profile data
    * @returns {Object} - User object and token
@@ -303,28 +344,53 @@ class AuthService {
         user = await User.findOne({ email: profile.emails[0].value });
         
         if (user) {
-          // Update existing user with Google ID
-          user.googleId = profile.id;
-          user.authProvider = 'google';
-          user.name = profile.displayName;
-          user.isVerified = true; // Google users are automatically verified
-          
-          // Handle Google profile photo
-          if (profile.photos && profile.photos[0]) {
-            try {
-              const profilePhotoKey = await s3Service.uploadGoogleProfilePhoto(
-                profile.photos[0].value,
-                user._id.toString()
-              );
-              if (profilePhotoKey) {
-                user.profilePhotoKey = profilePhotoKey;
+          // Link existing local account to Google OAuth
+          if (user.authProvider === 'local') {
+            console.log(`🔗 Linking existing local account to Google OAuth: ${user.email}`);
+            user.googleId = profile.id;
+            user.authProvider = 'google';
+            user.name = profile.displayName;
+            user.isVerified = true; // Google users are automatically verified
+            
+            // Handle Google profile photo
+            if (profile.photos && profile.photos[0]) {
+              try {
+                const profilePhotoKey = await s3Service.uploadGoogleProfilePhoto(
+                  profile.photos[0].value,
+                  user._id.toString()
+                );
+                if (profilePhotoKey) {
+                  user.profilePhotoKey = profilePhotoKey;
+                }
+              } catch (error) {
+                console.warn('Failed to upload Google profile photo:', error);
               }
-            } catch (error) {
-              console.warn('Failed to upload Google profile photo:', error);
+            }
+          } else {
+            // User already exists with Google OAuth but different Google ID
+            console.log(`🔄 Updating Google OAuth account: ${user.email}`);
+            user.googleId = profile.id;
+            user.name = profile.displayName;
+            user.isVerified = true;
+            
+            // Handle Google profile photo
+            if (profile.photos && profile.photos[0]) {
+              try {
+                const profilePhotoKey = await s3Service.uploadGoogleProfilePhoto(
+                  profile.photos[0].value,
+                  user._id.toString()
+                );
+                if (profilePhotoKey) {
+                  user.profilePhotoKey = profilePhotoKey;
+                }
+              } catch (error) {
+                console.warn('Failed to upload Google profile photo:', error);
+              }
             }
           }
         } else {
-          // Create new user
+          // Create new Google OAuth user
+          console.log(`🆕 Creating new Google OAuth user: ${profile.emails[0].value}`);
           user = new User({
             name: profile.displayName,
             email: profile.emails[0].value,

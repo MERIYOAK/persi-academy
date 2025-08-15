@@ -49,7 +49,13 @@ router.use(handleMulterError);
 // ========================================
 
 /**
- * Register new user with local authentication (requires email verification)
+ * Check email availability for registration
+ * POST /api/auth/check-email
+ */
+router.post('/check-email', authController.checkEmailAvailability);
+
+/**
+ * Register new user (requires email verification)
  * POST /api/auth/register
  * Body: { name, email, password, profilePhoto? }
  */

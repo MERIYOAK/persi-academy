@@ -2,6 +2,7 @@ const { createCheckoutSession, stripe, verifyWebhook } = require('../utils/strip
 const Course = require('../models/Course');
 const User = require('../models/User');
 const Payment = require('../models/Payment');
+const puppeteer = require('puppeteer');
 
 /**
  * Create a Stripe checkout session for course purchase
@@ -151,13 +152,17 @@ exports.webhook = async (req, res) => {
   console.log('🔧 Webhook received...');
   console.log(`   - Headers:`, req.headers);
   console.log(`   - Body length:`, req.rawBody ? req.rawBody.length : 'No raw body');
+  console.log(`   - NODE_ENV:`, process.env.NODE_ENV);
+  console.log(`   - STRIPE_SECRET_KEY:`, process.env.STRIPE_SECRET_KEY ? 'Set' : 'Not set');
 
   let event;
 
   try {
     // Verify webhook signature
+    console.log('🔧 Calling verifyWebhook function...');
     event = verifyWebhook(req);
     console.log(`✅ Webhook verified: ${event.type}`);
+    console.log(`✅ Event data:`, JSON.stringify(event, null, 2));
   } catch (error) {
     console.error('❌ Webhook signature verification failed:', error);
     return res.status(400).send(`Webhook Error: ${error.message}`);
@@ -561,13 +566,40 @@ exports.downloadReceipt = async (req, res) => {
     // Generate receipt HTML
     const receiptHtml = generateReceiptHTML(payment);
 
+    // Convert HTML to PDF using Puppeteer
+    const browser = await puppeteer.launch({ 
+      headless: true,
+      args: ['--no-sandbox', '--disable-setuid-sandbox']
+    });
+    const page = await browser.newPage();
+    
+    // Set content and wait for it to load
+    await page.setContent(receiptHtml, { waitUntil: 'networkidle0' });
+    
+    // Generate PDF
+    const pdfBuffer = await page.pdf({
+      format: 'A4',
+      printBackground: true,
+      margin: {
+        top: '20mm',
+        right: '20mm',
+        bottom: '20mm',
+        left: '20mm'
+      }
+    });
+
+    await browser.close();
+
     // Set response headers for PDF download
-    res.setHeader('Content-Type', 'text/html');
-    res.setHeader('Content-Disposition', `attachment; filename="receipt-${payment._id.toString().slice(-8)}.html"`);
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="receipt-${payment._id.toString().slice(-8)}.pdf"`);
+    res.setHeader('Content-Length', pdfBuffer.length);
 
-    console.log(`✅ Receipt downloaded for payment ${payment._id}`);
+    console.log(`✅ Receipt PDF generated for payment ${payment._id}`);
 
-    res.send(receiptHtml);
+    // Alternative approach: use res.write() and res.end() for binary data
+    res.write(pdfBuffer);
+    res.end();
 
   } catch (error) {
     console.error('❌ Error downloading receipt:', error);
@@ -580,7 +612,7 @@ exports.downloadReceipt = async (req, res) => {
 };
 
 /**
- * Download course resources
+ * Download course resources as PDF
  * GET /api/payment/download-resources/:courseId
  */
 exports.downloadResources = async (req, res) => {
@@ -613,8 +645,8 @@ exports.downloadResources = async (req, res) => {
       });
     }
 
-    // Find the course
-    const course = await Course.findById(courseId);
+    // Find the course with videos
+    const course = await Course.findById(courseId).populate('videos');
     if (!course) {
       console.log(`❌ Course not found: ${courseId}`);
       return res.status(404).json({ 
@@ -623,16 +655,43 @@ exports.downloadResources = async (req, res) => {
       });
     }
 
-    // Generate resources HTML
+    // Generate comprehensive resources HTML
     const resourcesHtml = generateResourcesHTML(course);
 
-    // Set response headers for download
-    res.setHeader('Content-Type', 'text/html');
-    res.setHeader('Content-Disposition', `attachment; filename="resources-${course.title.replace(/\s+/g, '-')}.html"`);
+    // Convert HTML to PDF using Puppeteer
+    const browser = await puppeteer.launch({ 
+      headless: true,
+      args: ['--no-sandbox', '--disable-setuid-sandbox']
+    });
+    const page = await browser.newPage();
+    
+    // Set content and wait for it to load
+    await page.setContent(resourcesHtml, { waitUntil: 'networkidle0' });
+    
+    // Generate PDF
+    const pdfBuffer = await page.pdf({
+      format: 'A4',
+      printBackground: true,
+      margin: {
+        top: '20mm',
+        right: '20mm',
+        bottom: '20mm',
+        left: '20mm'
+      }
+    });
 
-    console.log(`✅ Resources downloaded for course ${courseId}`);
+    await browser.close();
 
-    res.send(resourcesHtml);
+    // Set response headers for PDF download
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="resources-${course.title.replace(/\s+/g, '-')}.pdf"`);
+    res.setHeader('Content-Length', pdfBuffer.length);
+
+    console.log(`✅ Resources PDF generated for course ${courseId}`);
+
+    // Alternative approach: use res.write() and res.end() for binary data
+    res.write(pdfBuffer);
+    res.end();
 
   } catch (error) {
     console.error('❌ Error downloading resources:', error);
@@ -789,9 +848,28 @@ function generateReceiptHTML(payment) {
 }
 
 /**
- * Generate resources HTML
+ * Generate comprehensive resources HTML
  */
 function generateResourcesHTML(course) {
+  // Generate course outline from videos
+  const courseOutline = course.videos && course.videos.length > 0 
+    ? course.videos.map((video, index) => `
+        <div class="lesson-item">
+          <div class="lesson-number">${index + 1}</div>
+          <div class="lesson-content">
+            <div class="lesson-title">${video.title}</div>
+            <div class="lesson-duration">${video.duration ? `${Math.floor(video.duration / 60)}:${(video.duration % 60).toString().padStart(2, '0')}` : 'Duration not available'}</div>
+          </div>
+        </div>
+      `).join('')
+    : '<div class="lesson-item"><div class="lesson-content"><div class="lesson-title">Course content will be available soon</div></div></div>';
+
+  // Generate learning objectives based on course category
+  const learningObjectives = getLearningObjectives(course.category);
+  
+  // Generate practice exercises based on course category
+  const practiceExercises = getPracticeExercises(course.category);
+
   return `
 <!DOCTYPE html>
 <html lang="en">
@@ -805,6 +883,7 @@ function generateResourcesHTML(course) {
             margin: 0;
             padding: 20px;
             background-color: #f5f5f5;
+            line-height: 1.6;
         }
         .resources {
             max-width: 800px;
@@ -862,6 +941,67 @@ function generateResourcesHTML(course) {
             color: #6b7280;
             font-size: 14px;
         }
+        .lesson-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            padding: 10px;
+            background: #f9fafb;
+            border-radius: 6px;
+        }
+        .lesson-number {
+            background: #2563eb;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 15px;
+            flex-shrink: 0;
+        }
+        .lesson-content {
+            flex: 1;
+        }
+        .lesson-title {
+            font-weight: 500;
+            color: #1f2937;
+            margin-bottom: 2px;
+        }
+        .lesson-duration {
+            font-size: 12px;
+            color: #6b7280;
+        }
+        .objective-item {
+            margin-bottom: 8px;
+            padding-left: 20px;
+            position: relative;
+        }
+        .objective-item:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #059669;
+            font-weight: bold;
+        }
+        .exercise-item {
+            margin-bottom: 12px;
+            padding: 12px;
+            background: #f0f9ff;
+            border-radius: 6px;
+            border-left: 3px solid #0ea5e9;
+        }
+        .exercise-title {
+            font-weight: 500;
+            color: #0c4a6e;
+            margin-bottom: 5px;
+        }
+        .exercise-description {
+            font-size: 14px;
+            color: #0369a1;
+        }
         .footer {
             text-align: center;
             margin-top: 30px;
@@ -877,64 +1017,175 @@ function generateResourcesHTML(course) {
         <div class="header">
             <div class="logo">Persi Academy</div>
             <div class="course-title">${course.title}</div>
-            <div class="course-description">${course.description || 'Course resources and materials'}</div>
+            <div class="course-description">${course.description || 'Comprehensive course resources and learning materials'}</div>
         </div>
         
         <div class="section">
-            <div class="section-title">📚 Course Materials</div>
+            <div class="section-title">🎯 Learning Objectives</div>
             <div class="resource-item">
-                <div class="resource-title">Course Syllabus</div>
-                <div class="resource-description">Complete course outline and learning objectives</div>
+                <div class="resource-title">What You'll Learn</div>
+                <div class="resource-description">
+                    ${learningObjectives}
             </div>
-            <div class="resource-item">
-                <div class="resource-title">Study Guide</div>
-                <div class="resource-description">Comprehensive study materials and notes</div>
-            </div>
-            <div class="resource-item">
-                <div class="resource-title">Practice Exercises</div>
-                <div class="resource-description">Hands-on exercises and assignments</div>
             </div>
         </div>
-        
+
         <div class="section">
-            <div class="section-title">📖 Additional Resources</div>
+            <div class="section-title">📋 Course Outline</div>
             <div class="resource-item">
-                <div class="resource-title">Reference Materials</div>
-                <div class="resource-description">Additional reading materials and references</div>
-            </div>
-            <div class="resource-item">
-                <div class="resource-title">Cheat Sheets</div>
-                <div class="resource-description">Quick reference guides and summaries</div>
-            </div>
-            <div class="resource-item">
-                <div class="resource-title">Templates</div>
-                <div class="resource-description">Ready-to-use templates and examples</div>
+                <div class="resource-title">Lesson Structure</div>
+                <div class="resource-description">
+                    ${courseOutline}
+                </div>
             </div>
         </div>
         
         <div class="section">
-            <div class="section-title">🎯 Learning Support</div>
+            <div class="section-title">💡 Practice Exercises</div>
             <div class="resource-item">
-                <div class="resource-title">Progress Tracker</div>
-                <div class="resource-description">Track your learning progress and achievements</div>
+                <div class="resource-title">Hands-on Activities</div>
+                <div class="resource-description">
+                    ${practiceExercises}
             </div>
-            <div class="resource-item">
-                <div class="resource-title">Community Access</div>
-                <div class="resource-description">Join our student community for support and networking</div>
             </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">📚 Additional Resources</div>
             <div class="resource-item">
-                <div class="resource-title">Support Contact</div>
-                <div class="resource-description">Get help from our support team anytime</div>
+                <div class="resource-title">Study Materials</div>
+                <div class="resource-description">
+                    <div class="objective-item">Course notes and key takeaways from each lesson</div>
+                    <div class="objective-item">Reference guides and cheat sheets</div>
+                    <div class="objective-item">Recommended reading materials</div>
+                    <div class="objective-item">Online resources and tools</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="section">
+            <div class="section-title">🏆 Certification</div>
+            <div class="resource-item">
+                <div class="resource-title">Course Completion</div>
+                <div class="resource-description">
+                    <div class="objective-item">Complete all video lessons</div>
+                    <div class="objective-item">Finish all practice exercises</div>
+                    <div class="objective-item">Pass the final assessment (if applicable)</div>
+                    <div class="objective-item">Download your completion certificate</div>
+            </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">📞 Support & Community</div>
+            <div class="resource-item">
+                <div class="resource-title">Get Help When You Need It</div>
+                <div class="resource-description">
+                    <div class="objective-item">Email support: support@persiacademy.com</div>
+                    <div class="objective-item">Community forum for peer discussions</div>
+                    <div class="objective-item">Office hours for live Q&A sessions</div>
+                    <div class="objective-item">Technical support for platform issues</div>
+                </div>
             </div>
         </div>
         
         <div class="footer">
-            <p>Happy learning! 🚀</p>
-            <p>Access these resources anytime from your course dashboard.</p>
-            <p>For technical support: support@persiacademy.com</p>
+            <p><strong>Persi Academy</strong> - Empowering your learning journey</p>
+            <p>This resource guide is your companion throughout the course.</p>
+            <p>For technical support, contact us at support@persiacademy.com</p>
         </div>
     </div>
 </body>
 </html>
   `;
+}
+
+/**
+ * Get learning objectives based on course category
+ */
+function getLearningObjectives(category) {
+  const objectives = {
+    'youtube mastering': [
+      'Master YouTube algorithm optimization techniques',
+      'Create compelling thumbnails and titles that drive clicks',
+      'Develop effective content strategies for different niches',
+      'Understand analytics and data-driven decision making',
+      'Build a sustainable YouTube business model',
+      'Optimize video SEO and discoverability'
+    ],
+    'video editing': [
+      'Master professional video editing software',
+      'Learn advanced editing techniques and workflows',
+      'Create engaging visual effects and transitions',
+      'Understand color grading and audio enhancement',
+      'Develop efficient editing workflows',
+      'Export optimized videos for different platforms'
+    ],
+    'camera': [
+      'Master camera settings and manual controls',
+      'Understand composition and framing techniques',
+      'Learn lighting setup and natural light photography',
+      'Develop storytelling through visual imagery',
+      'Master different photography styles and genres',
+      'Optimize camera gear for various shooting conditions'
+    ]
+  };
+
+  const defaultObjectives = [
+    'Gain comprehensive knowledge in the subject area',
+    'Develop practical skills through hands-on exercises',
+    'Apply learned concepts to real-world scenarios',
+    'Build confidence in your abilities',
+    'Create a portfolio of work to showcase your skills'
+  ];
+
+  const categoryObjectives = objectives[category] || defaultObjectives;
+  
+  return categoryObjectives.map(objective => 
+    `<div class="objective-item">${objective}</div>`
+  ).join('');
+}
+
+/**
+ * Get practice exercises based on course category
+ */
+function getPracticeExercises(category) {
+  const exercises = {
+    'youtube mastering': [
+      { title: 'Channel Audit', description: 'Analyze your current channel and identify improvement opportunities' },
+      { title: 'Thumbnail Design', description: 'Create 5 different thumbnail designs for the same video' },
+      { title: 'Title Optimization', description: 'Write 10 different titles and test them for click-through rate' },
+      { title: 'Content Calendar', description: 'Plan a 30-day content calendar with specific topics and goals' },
+      { title: 'Analytics Review', description: 'Analyze your channel analytics and create an improvement plan' }
+    ],
+    'video editing': [
+      { title: 'Basic Editing Project', description: 'Edit a 2-minute video using basic cuts and transitions' },
+      { title: 'Color Grading Exercise', description: 'Apply different color grades to the same footage' },
+      { title: 'Audio Enhancement', description: 'Clean and enhance audio for a video project' },
+      { title: 'Visual Effects', description: 'Create a video with custom visual effects and overlays' },
+      { title: 'Multi-Camera Edit', description: 'Edit footage from multiple camera angles' }
+    ],
+    'camera': [
+      { title: 'Manual Mode Practice', description: 'Take 50 photos using only manual camera settings' },
+      { title: 'Composition Exercise', description: 'Practice rule of thirds, leading lines, and framing' },
+      { title: 'Lighting Setup', description: 'Create portraits using different lighting techniques' },
+      { title: 'Storytelling Series', description: 'Create a photo series that tells a complete story' },
+      { title: 'Gear Optimization', description: 'Test different lenses and settings for various scenarios' }
+    ]
+  };
+
+  const defaultExercises = [
+    { title: 'Practice Project 1', description: 'Apply the concepts learned in the first module' },
+    { title: 'Practice Project 2', description: 'Create a comprehensive project using multiple techniques' },
+    { title: 'Final Project', description: 'Complete a capstone project showcasing all learned skills' }
+  ];
+
+  const categoryExercises = exercises[category] || defaultExercises;
+  
+  return categoryExercises.map(exercise => 
+    `<div class="exercise-item">
+      <div class="exercise-title">${exercise.title}</div>
+      <div class="exercise-description">${exercise.description}</div>
+    </div>`
+  ).join('');
 }

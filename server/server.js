@@ -21,6 +21,7 @@ const videoRoutes = require('./routes/videoRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
 const userRoutes = require('./routes/userRoutes');
 const adminRoutes = require('./routes/adminRoutes');
+const progressRoutes = require('./routes/progressRoutes');
 
 // Import controllers for fallback routes
 const authController = require('./controllers/authController');
@@ -104,6 +105,7 @@ app.get('/health', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/my-courses', myCoursesRoutes);
+app.use('/api/progress', progressRoutes);
 
 // Fallback route for profile photo (backward compatibility)
 app.get('/api/users/me/photo', authMiddleware, (req, res) => {
@@ -128,6 +130,22 @@ app.use('/api/videos', videoRoutes);
 
 // Payment routes
 app.use('/api/payment', paymentRoutes);
+
+// Stripe webhook endpoint (at root level for Stripe compatibility)
+app.post('/webhook', express.raw({ type: 'application/json' }), (req, res) => {
+  console.log('🔧 Webhook endpoint hit at /webhook');
+  console.log(`   - Headers:`, Object.keys(req.headers));
+  console.log(`   - Body length:`, req.body ? req.body.length : 'No body');
+  console.log(`   - Raw body length:`, req.rawBody ? req.rawBody.length : 'No raw body');
+  console.log(`   - NODE_ENV:`, process.env.NODE_ENV);
+  console.log(`   - STRIPE_SECRET_KEY:`, process.env.STRIPE_SECRET_KEY ? 'Set' : 'Not set');
+  console.log(`   - Body type:`, typeof req.body);
+  console.log(`   - Raw body type:`, typeof req.rawBody);
+  
+  // Forward to payment controller webhook
+  const paymentController = require('./controllers/paymentController');
+  paymentController.webhook(req, res);
+});
 
 // User routes
 app.use('/api/user', userRoutes);

@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { Clock, Users, Star, Play } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Clock, Users, Star, Play, ShoppingCart, CheckCircle, Loader } from 'lucide-react';
 
 interface CourseCardProps {
   id: string;
@@ -13,6 +13,7 @@ interface CourseCardProps {
   rating: number;
   instructor: string;
   className?: string;
+  onPurchaseSuccess?: () => void;
 }
 
 const CourseCard: React.FC<CourseCardProps> = ({
@@ -25,13 +26,18 @@ const CourseCard: React.FC<CourseCardProps> = ({
   students,
   rating,
   instructor,
-  className = ''
+  className = '',
+  onPurchaseSuccess
 }) => {
+  const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(false);
+  const [purchaseStatus, setPurchaseStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+  const [errorMessage, setErrorMessage] = useState('');
+
   console.log(`🖼️ CourseCard rendering for course: "${title}"`);
   console.log(`   - Course ID: ${id}`);
+  console.log(`   - Price: $${price}`);
   console.log(`   - Thumbnail URL: ${thumbnail || 'NULL/EMPTY'}`);
-  console.log(`   - Thumbnail type: ${typeof thumbnail}`);
-  console.log(`   - Thumbnail length: ${thumbnail ? thumbnail.length : 0}`);
 
   const placeholderThumb = useMemo(
     () =>
@@ -69,6 +75,93 @@ const CourseCard: React.FC<CourseCardProps> = ({
     setImgSrc(placeholderThumb);
     setImgLoading(false);
     setImgError(true);
+  };
+
+  const handleBuyClick = async () => {
+    try {
+      setIsLoading(true);
+      setPurchaseStatus('loading');
+      setErrorMessage('');
+
+      console.log(`🔧 Initiating purchase for course: ${title} (${id})`);
+
+      // Check if user is authenticated
+      const token = localStorage.getItem('token');
+      if (!token) {
+        console.log('❌ No authentication token found');
+        navigate('/login');
+        return;
+      }
+
+      // Create checkout session
+      const response = await fetch('http://localhost:5000/api/payment/create-checkout-session', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          courseId: id
+        })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to create checkout session');
+      }
+
+      console.log(`✅ Checkout session created: ${data.sessionId}`);
+      console.log(`   - Redirect URL: ${data.url}`);
+
+      // Redirect to Stripe Checkout
+      window.location.href = data.url;
+
+    } catch (error) {
+      console.error('❌ Purchase error:', error);
+      setPurchaseStatus('error');
+      setErrorMessage(error instanceof Error ? error.message : 'Purchase failed');
+      
+      // Reset error after 5 seconds
+      setTimeout(() => {
+        setPurchaseStatus('idle');
+        setErrorMessage('');
+      }, 5000);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const renderActionButton = () => {
+    if (purchaseStatus === 'loading' || isLoading) {
+      return (
+        <button
+          disabled
+          className="w-full bg-gray-400 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 flex items-center justify-center space-x-2 cursor-not-allowed"
+        >
+          <Loader className="h-5 w-5 animate-spin" />
+          <span>Processing...</span>
+        </button>
+      );
+    }
+
+    if (purchaseStatus === 'error') {
+      return (
+        <div className="w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 flex items-center justify-center space-x-2">
+          <span>Error: {errorMessage}</span>
+        </div>
+      );
+    }
+
+    return (
+      <button
+        onClick={handleBuyClick}
+        className="w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center justify-center space-x-2"
+      >
+        <ShoppingCart className="h-5 w-5" />
+        <span>Buy Now - ${price}</span>
+      </button>
+    );
   };
 
   return (
@@ -134,12 +227,16 @@ const CourseCard: React.FC<CourseCardProps> = ({
           <span className="text-sm text-gray-500">by {instructor}</span>
         </div>
 
-        <Link
-          to={`/course/${id}`}
-          className="w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl text-center block mt-auto"
-        >
-          View Course
-        </Link>
+        <div className="space-y-3">
+          {renderActionButton()}
+          
+          <Link
+            to={`/course/${id}`}
+            className="w-full bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold py-3 px-6 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-sm hover:shadow-md text-center block"
+          >
+            View Details
+          </Link>
+        </div>
       </div>
     </div>
   );
