@@ -27,4 +27,7 @@ router.get('/next-video/:courseId/:currentVideoId', progressController.getNextVi
 // Get resume position for a video
 router.get('/resume/:courseId/:videoId', progressController.getResumePosition);
 
+// Reset video completion status (admin use only)
+router.post('/reset-completion', progressController.resetVideoCompletion);
+
 module.exports = router; 

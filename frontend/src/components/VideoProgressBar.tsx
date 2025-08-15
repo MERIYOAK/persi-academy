@@ -18,15 +18,15 @@ const VideoProgressBar: React.FC<VideoProgressBarProps> = ({
       <div className="mb-3">
         <h3 className="text-white font-semibold text-sm mb-2">Video Progress</h3>
         <div className="flex items-center justify-between text-xs text-gray-400">
-          <span>Watched: {watchedPercentage}%</span>
-          <span>Completion: {completionPercentage}%</span>
+          <span>Current Position: {watchedPercentage}%</span>
+          <span>Lesson Status: {completionPercentage}%</span>
         </div>
       </div>
       
-      {/* Watched Progress Bar */}
+      {/* Current Video Position Bar */}
       <div className="mb-3">
         <div className="flex items-center justify-between text-xs text-gray-400 mb-1">
-          <span>Watched Progress</span>
+          <span>Current Video Position</span>
           <span>{watchedPercentage}%</span>
         </div>
         <div className="bg-gray-700 rounded-full h-2">
@@ -37,10 +37,10 @@ const VideoProgressBar: React.FC<VideoProgressBarProps> = ({
         </div>
       </div>
       
-      {/* Completion Progress Bar */}
+      {/* Lesson Completion Status Bar */}
       <div className="mb-3">
         <div className="flex items-center justify-between text-xs text-gray-400 mb-1">
-          <span>Completion Status</span>
+          <span>Lesson Completion Status</span>
           <span>{completionPercentage}%</span>
         </div>
         <div className="bg-gray-700 rounded-full h-2">
@@ -61,12 +61,12 @@ const VideoProgressBar: React.FC<VideoProgressBarProps> = ({
           {isCompleted ? (
             <>
               <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-              <span className="text-xs text-green-400">Completed</span>
+              <span className="text-xs text-green-400">Lesson Completed</span>
             </>
           ) : (
             <>
               <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-              <span className="text-xs text-blue-400">In Progress</span>
+              <span className="text-xs text-blue-400">Lesson In Progress</span>
             </>
           )}
         </div>

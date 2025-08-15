@@ -58,8 +58,17 @@ exports.updateProgress = async (req, res) => {
     // Update video-level progress (real-time)
     await progress.updateVideoProgress(watchedDuration, totalDuration, timestamp);
 
-    // Get updated course progress
-    const courseProgress = await Progress.getOverallCourseProgress(userId, courseId);
+    // Get course to get total videos count
+    const course = await Course.findById(courseId);
+    if (!course) {
+      return res.status(404).json({
+        success: false,
+        message: 'Course not found'
+      });
+    }
+
+    // Get updated course progress with correct total videos count
+    const courseProgress = await Progress.getOverallCourseProgress(userId, courseId, course.videos.length);
 
     console.log(`✅ Video progress updated successfully`);
     console.log(`   - Video watched percentage: ${progress.watchedPercentage}%`);
@@ -146,8 +155,8 @@ exports.getCourseProgress = async (req, res) => {
       };
     });
 
-    // Get overall course progress
-    const overallProgress = await Progress.getOverallCourseProgress(userId, courseId);
+    // Get overall course progress with correct total videos count
+    const overallProgress = await Progress.getOverallCourseProgress(userId, courseId, course.videos.length);
 
     // Prepare video list with progress and URLs
     const videosWithProgress = await Promise.all(course.videos.map(async (video) => {
@@ -296,7 +305,7 @@ exports.getDashboardProgress = async (req, res) => {
     // Get progress for all purchased courses
     const coursesWithProgress = await Promise.all(
       user.purchasedCourses.map(async (course) => {
-        const courseProgressSummary = await Progress.getCourseProgressSummary(userId, course._id);
+        const courseProgressSummary = await Progress.getCourseProgressSummary(userId, course._id, course.videos ? course.videos.length : 0);
         
         return {
           _id: course._id,
@@ -385,11 +394,20 @@ exports.completeVideo = async (req, res) => {
       });
     }
 
+    // Get course to get total videos count
+    const course = await Course.findById(courseId);
+    if (!course) {
+      return res.status(404).json({
+        success: false,
+        message: 'Course not found'
+      });
+    }
+
     // Mark video as completed
     const progress = await Progress.markVideoCompleted(userId, courseId, videoId);
 
-    // Get updated course progress
-    const courseProgress = await Progress.getOverallCourseProgress(userId, courseId);
+    // Get updated course progress with correct total videos count
+    const courseProgress = await Progress.getOverallCourseProgress(userId, courseId, course.videos.length);
 
     console.log(`✅ Video marked as completed successfully`);
 
@@ -625,6 +643,78 @@ exports.getVideoProgress = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Failed to get video progress',
+      error: error.message
+    });
+  }
+};
+
+/**
+ * Reset video completion status (admin use only)
+ * POST /api/progress/reset-completion
+ */
+exports.resetVideoCompletion = async (req, res) => {
+  try {
+    const { courseId, videoId, userId: targetUserId } = req.body;
+    
+    // Validate user authentication
+    if (!req.user || (!req.user.userId && !req.user._id)) {
+      return res.status(401).json({ 
+        success: false, 
+        message: 'Authentication required' 
+      });
+    }
+    
+    const adminUserId = req.user.userId || req.user._id;
+
+    console.log(`🔧 Admin resetting video completion`);
+    console.log(`   - Admin User ID: ${adminUserId}`);
+    console.log(`   - Target User ID: ${targetUserId}`);
+    console.log(`   - Course ID: ${courseId}`);
+    console.log(`   - Video ID: ${videoId}`);
+
+    // Validate required fields
+    if (!courseId || !videoId || !targetUserId) {
+      return res.status(400).json({
+        success: false,
+        message: 'Missing required fields: courseId, videoId, userId'
+      });
+    }
+
+    // Check if admin user has admin privileges (you can add your admin check logic here)
+    // For now, we'll allow any authenticated user to reset completion
+    // In production, you should add proper admin role checking
+
+    // Reset video completion
+    const progress = await Progress.resetVideoCompletion(targetUserId, courseId, videoId);
+
+    if (!progress) {
+      return res.status(404).json({
+        success: false,
+        message: 'Video progress not found'
+      });
+    }
+
+    console.log(`✅ Video completion reset successfully`);
+
+    res.json({
+      success: true,
+      data: {
+        message: 'Video completion status reset successfully',
+        videoProgress: {
+          watchedDuration: progress.watchedDuration,
+          totalDuration: progress.totalDuration,
+          watchedPercentage: progress.watchedPercentage,
+          completionPercentage: progress.completionPercentage,
+          isCompleted: progress.isCompleted
+        }
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ Error resetting video completion:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to reset video completion',
       error: error.message
     });
   }

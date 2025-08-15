@@ -57,6 +57,11 @@ const VideoPlayerPage = () => {
   const [videoError, setVideoError] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState(0);
   const [isRetrying, setIsRetrying] = useState(false);
+  const [pauseStartTime, setPauseStartTime] = useState<number | null>(null);
+  const [lastPauseTime, setLastPauseTime] = useState<number | null>(null);
+  const [isPaused, setIsPaused] = useState(false);
+  const [currentVideoPosition, setCurrentVideoPosition] = useState(0); // Track actual video position
+  const [currentVideoPercentage, setCurrentVideoPercentage] = useState(0); // Track actual video percentage
   
   const videoRef = useRef<HTMLVideoElement>(null);
 
@@ -123,6 +128,64 @@ const VideoPlayerPage = () => {
     }
   };
 
+  // Check if presigned URL is expired or will expire soon (within 5 minutes)
+  const isPresignedUrlExpired = (url: string): boolean => {
+    try {
+      const urlObj = new URL(url);
+      const expiresParam = urlObj.searchParams.get('X-Amz-Date') || urlObj.searchParams.get('Expires');
+      if (expiresParam) {
+        const expiryTime = parseInt(expiresParam);
+        const currentTime = Math.floor(Date.now() / 1000);
+        const fiveMinutesFromNow = currentTime + (5 * 60); // 5 minutes buffer
+        return fiveMinutesFromNow > expiryTime;
+      }
+      return false;
+    } catch (error) {
+      console.log('🔍 [VideoPlayer] Could not parse presigned URL for expiry check:', error);
+      return false;
+    }
+  };
+
+  // Refresh presigned URL for a specific video
+  const refreshVideoUrl = async (videoId: string): Promise<string | null> => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        console.error('❌ [VideoPlayer] No authentication token for URL refresh');
+        return null;
+      }
+
+      console.log(`🔄 [VideoPlayer] Refreshing presigned URL for video: ${videoId}`);
+      
+      const response = await fetch(`http://localhost:5000/api/progress/course/${id}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        const videoData = result.data.videos.find((v: any) => v._id === videoId);
+        
+        if (videoData && videoData.videoUrl) {
+          console.log('✅ [VideoPlayer] Successfully refreshed presigned URL');
+          // Cache the new URL
+          cacheVideoUrl(videoId, videoData.videoUrl);
+          return videoData.videoUrl;
+        } else {
+          console.error('❌ [VideoPlayer] No video data found for URL refresh');
+          return null;
+        }
+      } else {
+        console.error('❌ [VideoPlayer] Failed to refresh presigned URL:', response.status);
+        return null;
+      }
+    } catch (error) {
+      console.error('❌ [VideoPlayer] Error refreshing presigned URL:', error);
+      return null;
+    }
+  };
+
   const retryVideoLoad = async () => {
     if (!currentVideo || retryCount >= 3) {
       console.log('❌ [VideoPlayer] Max retries reached or no current video');
@@ -145,35 +208,44 @@ const VideoPlayerPage = () => {
       // Wait a moment before retrying
       await new Promise(resolve => setTimeout(resolve, 1000));
 
-      // Try to get a fresh video URL
-      const token = localStorage.getItem('token');
-      if (token) {
-        const response = await fetch(`http://localhost:5000/api/progress/course/${id}`, {
-          headers: {
-            'Authorization': `Bearer ${token}`
+      // Try to refresh the presigned URL
+      const freshVideoUrl = await refreshVideoUrl(currentVideoId);
+      
+      if (freshVideoUrl) {
+        console.log('✅ [VideoPlayer] Got fresh presigned URL, retrying...');
+        
+        // Validate the video URL before setting it
+        const videoUrl = freshVideoUrl.trim();
+        if (videoUrl && videoUrl !== '' && videoUrl !== window.location.href) {
+          // Update the video source
+          if (videoRef.current) {
+            videoRef.current.src = videoUrl;
+            videoRef.current.load();
+            console.log('🔧 [VideoPlayer] Set video source to fresh presigned URL');
           }
-        });
-
-        if (response.ok) {
-          const result = await response.json();
-          const videoData = result.data.videos.find((v: any) => v._id === currentVideoId);
           
-          if (videoData && videoData.videoUrl) {
-            console.log('✅ [VideoPlayer] Got fresh video URL, retrying...');
-            
-            // Update the video source
-            if (videoRef.current) {
-              videoRef.current.src = videoData.videoUrl;
-              videoRef.current.load();
-            }
-          } else {
-            throw new Error('Could not get fresh video URL');
-          }
+          // Update the course data with the fresh URL
+          setCourseData(prev => {
+            if (!prev) return null;
+            return {
+              ...prev,
+              videos: prev.videos.map(video => 
+                video.id === currentVideoId 
+                  ? { ...video, videoUrl: freshVideoUrl }
+                  : video
+              )
+            };
+          });
         } else {
-          throw new Error('Failed to fetch fresh video URL');
+          console.error('❌ [VideoPlayer] Invalid presigned URL received:', {
+            videoUrl,
+            isEmpty: videoUrl === '',
+            isPageUrl: videoUrl === window.location.href
+          });
+          throw new Error('Invalid presigned URL received from server');
         }
       } else {
-        throw new Error('No authentication token');
+        throw new Error('Could not refresh presigned URL');
       }
     } catch (error) {
       console.error('❌ [VideoPlayer] Retry failed:', error);
@@ -196,10 +268,33 @@ const VideoPlayerPage = () => {
       readyState: video.readyState
     });
 
+    // Additional debugging for video source issues
+    console.log('🔍 [VideoPlayer] Video source debugging:', {
+      currentVideoId,
+      currentVideo: currentVideo ? {
+        id: currentVideo.id,
+        title: currentVideo.title,
+        videoUrl: currentVideo.videoUrl
+      } : null,
+      videoSrc: video.src,
+      videoCurrentSrc: video.currentSrc,
+      videoSrcIsPageUrl: video.src === window.location.href,
+      videoSrcIsUndefined: video.src === undefined,
+      videoSrcIsEmpty: video.src === ''
+    });
+
     const errorDetails = getVideoErrorDetails(e);
     console.log('🔍 [VideoPlayer] Error analysis:', errorDetails);
 
-    // Check if it's a URL expiry issue
+    // Check if it's a presigned URL expiry issue
+    if (video.src && isPresignedUrlExpired(video.src)) {
+      console.log('🔍 [VideoPlayer] Detected expired presigned URL, will refresh');
+      setVideoError('Video link expired. Refreshing...');
+      retryVideoLoad();
+      return;
+    }
+
+    // Check if it's a URL expiry issue (fallback)
     if (video.src && isUrlExpired(video.src)) {
       console.log('🔍 [VideoPlayer] Detected expired URL, will retry with fresh URL');
       setVideoError('Video link expired. Retrying with fresh link...');
@@ -290,6 +385,8 @@ const VideoPlayerPage = () => {
             setCurrentVideoProgress(result.data.videoProgress.watchedPercentage || 0);
             console.log('🔧 [VideoPlayer] Updated video progress display:', result.data.videoProgress.watchedPercentage);
             console.log('🔧 [VideoPlayer] Video completion percentage:', result.data.videoProgress.completionPercentage);
+            console.log('🔧 [VideoPlayer] Actual video position:', currentVideoPosition, 'seconds');
+            console.log('🔧 [VideoPlayer] Actual video percentage:', currentVideoPercentage, '%');
           }
         }
       }
@@ -297,6 +394,86 @@ const VideoPlayerPage = () => {
       console.error('Error updating progress:', error);
     }
   }, [id, currentVideoId, courseData, lastProgressUpdate]);
+
+  // Immediate progress saving function (for pause and navigation)
+  const saveProgressImmediately = useCallback(async (watchedDuration: number, totalDuration: number, timestamp: number) => {
+    if (!id || !currentVideoId) return;
+
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      console.log('💾 [VideoPlayer] Saving progress immediately:', {
+        watchedDuration,
+        totalDuration,
+        timestamp,
+        percentage: totalDuration > 0 ? Math.round((watchedDuration / totalDuration) * 100) : 0,
+        actualPosition: currentVideoPosition,
+        actualPercentage: currentVideoPercentage
+      });
+
+      const response = await fetch('http://localhost:5000/api/progress/update', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          courseId: id,
+          videoId: currentVideoId,
+          watchedDuration,
+          totalDuration,
+          timestamp
+        })
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log('✅ [VideoPlayer] Progress saved immediately');
+        
+        // Update course data with new progress
+        if (courseData && result.data.courseProgress) {
+          setCourseData(prev => {
+            if (!prev) return null;
+            
+            // Update overall progress
+            const updatedCourseData = {
+              ...prev,
+              overallProgress: result.data.courseProgress
+            };
+            
+            // Update current video's progress if we have video progress data
+            if (result.data.videoProgress && currentVideoId) {
+              updatedCourseData.videos = prev.videos.map(video => 
+                video.id === currentVideoId 
+                  ? { 
+                      ...video, 
+                      progress: {
+                        ...video.progress,
+                        watchedPercentage: result.data.videoProgress.watchedPercentage,
+                        completionPercentage: result.data.videoProgress.completionPercentage,
+                        watchedDuration: result.data.videoProgress.watchedDuration,
+                        totalDuration: result.data.videoProgress.totalDuration,
+                        isCompleted: result.data.videoProgress.isCompleted
+                      }
+                    }
+                  : video
+              );
+            }
+            
+            return updatedCourseData;
+          });
+          
+          // Update current video progress display (but keep actual position tracking separate)
+          if (result.data.videoProgress) {
+            setCurrentVideoProgress(result.data.videoProgress.watchedPercentage || 0);
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error saving progress immediately:', error);
+    }
+  }, [id, currentVideoId, courseData, currentVideoPosition, currentVideoPercentage]);
 
   // Fetch course and video data with progress
   useEffect(() => {
@@ -435,7 +612,15 @@ const VideoPlayerPage = () => {
           setTimeout(() => {
             if (videoRef.current && resumePosition > 0) {
               videoRef.current.currentTime = resumePosition;
-              console.log(`✅ [VideoPlayer] Resumed video at ${resumePosition}s`);
+              
+              // Update the actual video position and percentage
+              setCurrentVideoPosition(resumePosition);
+              if (videoRef.current.duration > 0) {
+                const actualPercentage = Math.round((resumePosition / videoRef.current.duration) * 100);
+                setCurrentVideoPercentage(actualPercentage);
+              }
+              
+              console.log(`✅ [VideoPlayer] Resumed video at ${resumePosition}s (${Math.round((resumePosition / videoRef.current.duration) * 100)}%)`);
             }
           }, 1000);
         }
@@ -454,6 +639,27 @@ const VideoPlayerPage = () => {
   }, [videoId]);
 
   const currentVideo = courseData?.videos.find(v => v.id === currentVideoId);
+
+  // Debug logging for video URL issues
+  useEffect(() => {
+    if (currentVideo) {
+      console.log('🔧 [VideoPlayer] Current video details:', {
+        id: currentVideo.id,
+        title: currentVideo.title,
+        videoUrl: currentVideo.videoUrl,
+        hasVideoUrl: !!currentVideo.videoUrl,
+        videoUrlLength: currentVideo.videoUrl?.length || 0,
+        videoUrlTrimmed: currentVideo.videoUrl?.trim() || ''
+      });
+    } else {
+      console.log('🔧 [VideoPlayer] No current video found:', {
+        courseDataExists: !!courseData,
+        videosCount: courseData?.videos?.length || 0,
+        currentVideoId,
+        availableVideoIds: courseData?.videos?.map(v => v.id) || []
+      });
+    }
+  }, [currentVideo, courseData, currentVideoId]);
 
   // Format time
   const formatTime = (time: number) => {
@@ -475,6 +681,13 @@ const VideoPlayerPage = () => {
       
       setCurrentTime(currentTime);
       setDuration(duration);
+      
+      // Track actual video position and percentage (independent of completion status)
+      setCurrentVideoPosition(currentTime);
+      if (duration > 0) {
+        const actualPercentage = Math.round((currentTime / duration) * 100);
+        setCurrentVideoPercentage(actualPercentage);
+      }
 
       // Update progress every 5 seconds
       if (progressUpdateTimeout) {
@@ -488,6 +701,126 @@ const VideoPlayerPage = () => {
       setProgressUpdateTimeout(timeout);
     }
   };
+
+  // Handle video pause
+  const handleVideoPause = () => {
+    setIsPlaying(false);
+    setIsPaused(true);
+    setPauseStartTime(Date.now());
+    
+    if (videoRef.current) {
+      const currentTime = videoRef.current.currentTime;
+      const duration = videoRef.current.duration;
+      
+      console.log('⏸️ [VideoPlayer] Video paused at:', currentTime, 'seconds');
+      
+      // Save progress immediately when paused
+      saveProgressImmediately(currentTime, duration, currentTime);
+    }
+  };
+
+  // Handle video play
+  const handleVideoPlay = () => {
+    setIsPlaying(true);
+    setIsPaused(false);
+    
+    // Check if video was paused for more than 5 seconds
+    if (pauseStartTime && Date.now() - pauseStartTime > 5000) {
+      console.log('▶️ [VideoPlayer] Video resumed after pause > 5 seconds');
+      setLastPauseTime(pauseStartTime);
+    }
+    
+    setPauseStartTime(null);
+  };
+
+  // Check for long pauses and save progress
+  useEffect(() => {
+    if (isPaused && pauseStartTime) {
+      const checkPauseDuration = setTimeout(() => {
+        const pauseDuration = Date.now() - pauseStartTime;
+        if (pauseDuration >= 5000) { // 5 seconds
+          console.log('⏰ [VideoPlayer] Video paused for 5+ seconds, ensuring progress is saved');
+          if (videoRef.current) {
+            const currentTime = videoRef.current.currentTime;
+            const duration = videoRef.current.duration;
+            saveProgressImmediately(currentTime, duration, currentTime);
+          }
+        }
+      }, 5000);
+
+      return () => clearTimeout(checkPauseDuration);
+    }
+  }, [isPaused, pauseStartTime, saveProgressImmediately]);
+
+  // Handle page navigation and save progress
+  useEffect(() => {
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      if (videoRef.current && isPlaying) {
+        const currentTime = videoRef.current.currentTime;
+        const duration = videoRef.current.duration;
+        
+        console.log('🚪 [VideoPlayer] Page unload detected, saving progress');
+        
+        // Use synchronous storage to ensure data is saved
+        localStorage.setItem('pendingProgress', JSON.stringify({
+          courseId: id,
+          videoId: currentVideoId,
+          watchedDuration: currentTime,
+          totalDuration: duration,
+          timestamp: currentTime,
+          savedAt: Date.now()
+        }));
+      }
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.hidden && videoRef.current && isPlaying) {
+        const currentTime = videoRef.current.currentTime;
+        const duration = videoRef.current.duration;
+        
+        console.log('👁️ [VideoPlayer] Page hidden, saving progress');
+        saveProgressImmediately(currentTime, duration, currentTime);
+      }
+    };
+
+    // Add event listeners
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    // Cleanup
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [id, currentVideoId, isPlaying, saveProgressImmediately]);
+
+  // Handle pending progress on page load
+  useEffect(() => {
+    const pendingProgress = localStorage.getItem('pendingProgress');
+    if (pendingProgress) {
+      try {
+        const progress = JSON.parse(pendingProgress);
+        const savedAt = progress.savedAt;
+        const now = Date.now();
+        
+        // Only process if saved within the last 5 minutes
+        if (now - savedAt < 5 * 60 * 1000) {
+          console.log('🔄 [VideoPlayer] Processing pending progress from page unload');
+          saveProgressImmediately(
+            progress.watchedDuration,
+            progress.totalDuration,
+            progress.timestamp
+          );
+        }
+        
+        // Clear pending progress
+        localStorage.removeItem('pendingProgress');
+      } catch (error) {
+        console.error('Error processing pending progress:', error);
+        localStorage.removeItem('pendingProgress');
+      }
+    }
+  }, [saveProgressImmediately]);
 
   // Handle video end
   const handleVideoEnd = async () => {
@@ -552,12 +885,37 @@ const VideoPlayerPage = () => {
   }, [playbackRate, playerReady]);
 
   // Handle video selection
-  const handleVideoSelect = (newVideoId: string) => {
+  const handleVideoSelect = async (newVideoId: string) => {
+    console.log('🔧 [VideoPlayer] Switching to video:', newVideoId);
+    
+    // Check if the new video has a valid presigned URL
+    const newVideo = courseData?.videos.find(v => v.id === newVideoId);
+    if (newVideo && (!newVideo.videoUrl || newVideo.videoUrl === 'undefined' || isPresignedUrlExpired(newVideo.videoUrl))) {
+      console.log('🔧 [VideoPlayer] New video has invalid/expired presigned URL, refreshing...');
+      const freshUrl = await refreshVideoUrl(newVideoId);
+      if (freshUrl) {
+        // Update the course data with the fresh URL
+        setCourseData(prev => {
+          if (!prev) return null;
+          return {
+            ...prev,
+            videos: prev.videos.map(video => 
+              video.id === newVideoId 
+                ? { ...video, videoUrl: freshUrl }
+                : video
+            )
+          };
+        });
+      }
+    }
+    
     setCurrentVideoId(newVideoId);
     setIsPlaying(false);
     setPlayerReady(false);
     setCurrentTime(0);
     setDuration(0);
+    setCurrentVideoPosition(0);
+    setCurrentVideoPercentage(0);
     // Reset error states when changing videos
     setVideoError(null);
     setRetryCount(0);
@@ -604,6 +962,8 @@ const VideoPlayerPage = () => {
       // Update video current time
       videoRef.current.currentTime = newTime;
       setCurrentTime(newTime);
+      setCurrentVideoPosition(newTime);
+      setCurrentVideoPercentage(Math.round(clickPercentage * 100));
       
       console.log('🎯 Seeking to:', newTime.toFixed(2), 'seconds (', (clickPercentage * 100).toFixed(1), '%)');
     }
@@ -679,8 +1039,26 @@ const VideoPlayerPage = () => {
       if (progressUpdateTimeout) {
         clearTimeout(progressUpdateTimeout);
       }
+      
+      // Save progress when component unmounts
+      if (videoRef.current && isPlaying) {
+        const currentTime = videoRef.current.currentTime;
+        const duration = videoRef.current.duration;
+        
+        console.log('🔚 [VideoPlayer] Component unmounting, saving final progress');
+        
+        // Use synchronous storage to ensure data is saved
+        localStorage.setItem('pendingProgress', JSON.stringify({
+          courseId: id,
+          videoId: currentVideoId,
+          watchedDuration: currentTime,
+          totalDuration: duration,
+          timestamp: currentTime,
+          savedAt: Date.now()
+        }));
+      }
     };
-  }, [controlsTimeout, progressUpdateTimeout]);
+  }, [controlsTimeout, progressUpdateTimeout, id, currentVideoId, isPlaying]);
 
   // Reset error states when course or video changes
   useEffect(() => {
@@ -792,6 +1170,42 @@ const VideoPlayerPage = () => {
     return null;
   }, []);
 
+  // Proactive presigned URL refresh
+  useEffect(() => {
+    if (!currentVideo?.videoUrl) return;
+
+    const checkAndRefreshUrl = async () => {
+      // Check if the current presigned URL will expire soon (within 10 minutes)
+      if (isPresignedUrlExpired(currentVideo.videoUrl)) {
+        console.log('🔍 [VideoPlayer] Presigned URL will expire soon, refreshing proactively');
+        const freshUrl = await refreshVideoUrl(currentVideoId);
+        if (freshUrl) {
+          // Update the course data with the fresh URL
+          setCourseData(prev => {
+            if (!prev) return null;
+            return {
+              ...prev,
+              videos: prev.videos.map(video => 
+                video.id === currentVideoId 
+                  ? { ...video, videoUrl: freshUrl }
+                  : video
+              )
+            };
+          });
+          console.log('✅ [VideoPlayer] Proactively refreshed presigned URL');
+        }
+      }
+    };
+
+    // Check every 5 minutes
+    const interval = setInterval(checkAndRefreshUrl, 5 * 60 * 1000);
+    
+    // Also check immediately
+    checkAndRefreshUrl();
+
+    return () => clearInterval(interval);
+  }, [currentVideo?.videoUrl, currentVideoId]);
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-900 text-white">
@@ -879,14 +1293,17 @@ const VideoPlayerPage = () => {
             onMouseMove={showControlsOverlay}
             onMouseLeave={hideControls}
           >
-            {currentVideo?.videoUrl ? (
+            {currentVideo?.videoUrl && 
+             currentVideo.videoUrl.trim() !== '' && 
+             currentVideo.videoUrl !== window.location.href &&
+             currentVideo.videoUrl !== 'undefined' ? (
                 <video
                   ref={videoRef}
                   className="w-full h-full object-contain"
                   src={currentVideo.videoUrl}
                   preload="metadata"
-                  onPlay={() => setIsPlaying(true)}
-                  onPause={() => setIsPlaying(false)}
+                  onPlay={handleVideoPlay}
+                  onPause={handleVideoPause}
                   onLoadedData={() => setPlayerReady(true)}
                   onEnded={() => {
                     if (videoRef.current) {
@@ -969,7 +1386,12 @@ const VideoPlayerPage = () => {
                   <div>
                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-500 mx-auto mb-4"></div>
                     <p>Loading video...</p>
-                    <p className="text-sm mt-2">This may take a few moments</p>
+                    <p className="text-sm mt-2">
+                      {!currentVideo?.videoUrl || currentVideo.videoUrl === 'undefined' 
+                        ? 'Refreshing video link...' 
+                        : 'This may take a few moments'
+                      }
+                    </p>
                     {videoLoading && (
                       <div className="mt-4 w-64 mx-auto">
                         <div className="bg-gray-700 rounded-full h-2 mb-2">
@@ -1010,7 +1432,7 @@ const VideoPlayerPage = () => {
                     >
                       <div 
                         className="h-1 bg-red-500 rounded-full transition-all duration-100"
-                        style={{ width: `${duration > 0 ? (currentTime / duration) * 100 : 0}%` }}
+                        style={{ width: `${currentVideoPercentage}%` }}
                       />
                     </div>
                   </div>
@@ -1035,7 +1457,7 @@ const VideoPlayerPage = () => {
                   </div>
 
                       <div className="flex items-center space-x-2 text-white text-sm">
-                        <span>{formatTime(currentTime)}</span>
+                        <span>{formatTime(currentVideoPosition)}</span>
                         <span>/</span>
                         <span>{formatTime(duration)}</span>
                     </div>
@@ -1075,7 +1497,7 @@ const VideoPlayerPage = () => {
               <div className="flex items-center space-x-4">
                 <span>Duration: {currentVideo.duration}</span>
                 <span>•</span>
-                <span>Progress: {currentVideoProgress}%</span>
+                <span>Current Position: {currentVideoPercentage}%</span>
                     </div>
               <div className="flex items-center space-x-2">
                     {currentVideo.completed && (
@@ -1094,7 +1516,7 @@ const VideoPlayerPage = () => {
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Video Progress Bar */}
                 <VideoProgressBar
-                  watchedPercentage={currentVideo?.progress?.watchedPercentage || 0}
+                  watchedPercentage={currentVideoPercentage}
                   completionPercentage={currentVideo?.progress?.completionPercentage || 0}
                   isCompleted={currentVideo?.progress?.isCompleted || false}
                 />
