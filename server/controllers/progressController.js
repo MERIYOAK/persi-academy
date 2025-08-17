@@ -2,8 +2,13 @@ const Progress = require('../models/Progress');
 const Course = require('../models/Course');
 const User = require('../models/User');
 
+// Udemy-style progress tracking: Request deduplication and batching
+const pendingProgressUpdates = new Map(); // Track pending requests per user-video
+const PROGRESS_UPDATE_INTERVAL = 30000; // 30 seconds minimum between updates
+const lastUpdateTimes = new Map(); // Track last update time per user-video
+
 /**
- * Update video progress (real-time video-level tracking)
+ * Update video progress (Udemy-style with deduplication and batching)
  * POST /api/progress/update
  */
 exports.updateProgress = async (req, res) => {
@@ -19,12 +24,13 @@ exports.updateProgress = async (req, res) => {
     }
     
     const userId = req.user.userId || req.user._id;
+    const progressKey = `${userId}-${courseId}-${videoId}`;
+    const now = Date.now();
 
-    console.log(`🔧 Updating video progress for user ${userId}`);
+    console.log(`🔧 [Udemy-Style] Progress update request for user ${userId}`);
     console.log(`   - Course ID: ${courseId}`);
     console.log(`   - Video ID: ${videoId}`);
     console.log(`   - Watched: ${watchedDuration}s / ${totalDuration}s`);
-    console.log(`   - Timestamp: ${timestamp}s`);
 
     // Validate required fields
     if (!courseId || !videoId || watchedDuration === undefined || totalDuration === undefined) {
@@ -34,64 +40,165 @@ exports.updateProgress = async (req, res) => {
       });
     }
 
-    // Check if user has purchased the course
-    const user = await User.findById(userId);
-    if (!user || !user.purchasedCourses || !user.purchasedCourses.includes(courseId)) {
-      return res.status(403).json({
-        success: false,
-        message: 'You must purchase this course to track progress'
+    // Udemy-style: Check if update is too frequent
+    const lastUpdate = lastUpdateTimes.get(progressKey);
+    if (lastUpdate && (now - lastUpdate) < PROGRESS_UPDATE_INTERVAL) {
+      console.log(`⏱️ [Udemy-Style] Update too frequent, skipping (${Math.round((now - lastUpdate) / 1000)}s ago)`);
+      return res.json({
+        success: true,
+        message: 'Update skipped - too frequent',
+        data: { skipped: true }
       });
     }
 
-    // Find or create progress entry
-    let progress = await Progress.findOne({ userId, courseId, videoId });
-    
-    if (!progress) {
-      progress = new Progress({
-        userId,
-        courseId,
-        videoId,
-        totalDuration
-      });
-    }
-
-    // Update video-level progress (real-time)
-    await progress.updateVideoProgress(watchedDuration, totalDuration, timestamp);
-
-    // Get course to get total videos count
-    const course = await Course.findById(courseId);
-    if (!course) {
-      return res.status(404).json({
-        success: false,
-        message: 'Course not found'
-      });
-    }
-
-    // Get updated course progress with correct total videos count
-    const courseProgress = await Progress.getOverallCourseProgress(userId, courseId, course.videos.length);
-
-    console.log(`✅ Video progress updated successfully`);
-    console.log(`   - Video watched percentage: ${progress.watchedPercentage}%`);
-    console.log(`   - Video completion percentage: ${progress.completionPercentage}%`);
-    console.log(`   - Course progress: ${courseProgress.courseProgressPercentage}%`);
-
-    res.json({
-      success: true,
-      data: {
-        videoProgress: {
-          watchedDuration: progress.watchedDuration,
-          totalDuration: progress.totalDuration,
-          watchedPercentage: progress.watchedPercentage,
-          completionPercentage: progress.completionPercentage,
-          isCompleted: progress.isCompleted,
-          lastPosition: progress.getLastPosition()
-        },
-        courseProgress: courseProgress
+    // Udemy-style: Check if there's already a pending request
+    if (pendingProgressUpdates.has(progressKey)) {
+      console.log(`🔄 [Udemy-Style] Cancelling previous request for ${progressKey}`);
+      const previousRequest = pendingProgressUpdates.get(progressKey);
+      if (previousRequest && previousRequest.abort) {
+        previousRequest.abort();
       }
-    });
+    }
+
+    // Create abort controller for this request
+    const abortController = new AbortController();
+    pendingProgressUpdates.set(progressKey, abortController);
+
+    try {
+      // Check if user has purchased the course
+      const user = await User.findById(userId);
+      if (!user || !user.purchasedCourses || !user.purchasedCourses.includes(courseId)) {
+        return res.status(403).json({
+          success: false,
+          message: 'You must purchase this course to track progress'
+        });
+      }
+
+      // Find or create progress entry using atomic operation
+      let progress = await Progress.findOneAndUpdate(
+        { userId, courseId, videoId },
+        {
+          $setOnInsert: {
+            userId,
+            courseId,
+            videoId,
+            totalDuration,
+            firstWatchedAt: new Date()
+          }
+        },
+        { upsert: true, new: true }
+      );
+
+      // Update video-level progress using atomic operation
+      const updatedProgress = await Progress.findOneAndUpdate(
+        { _id: progress._id },
+        {
+          $set: {
+            totalDuration: totalDuration,
+            lastWatchedAt: new Date(),
+            watchedPercentage: Math.min(100, Math.round((watchedDuration / totalDuration) * 100))
+          },
+          $max: {
+            watchedDuration: watchedDuration // Safe concurrent updates
+          },
+          $inc: {
+            watchCount: 1
+          },
+          $push: {
+            watchHistory: {
+              $each: [{
+                timestamp: Math.round(timestamp || watchedDuration),
+                watchedAt: new Date()
+              }],
+              $slice: -10 // Keep only last 10 entries
+            }
+          }
+        },
+        { new: true, runValidators: true }
+      );
+
+      // Handle completion logic
+      const watchedPercentage = updatedProgress.watchedPercentage;
+      let completionUpdate = {};
+
+      if (updatedProgress.isCompleted) {
+        // Maintain 100% completion if already completed
+        completionUpdate = {
+          completionPercentage: 100,
+          watchedPercentage: 100
+        };
+      } else if (watchedPercentage >= 90) {
+        // Mark as completed if watched 90% or more
+        completionUpdate = {
+          isCompleted: true,
+          completedAt: new Date(),
+          completionPercentage: watchedPercentage
+        };
+      } else {
+        completionUpdate = {
+          completionPercentage: watchedPercentage
+        };
+      }
+
+      // Apply completion update if needed
+      if (Object.keys(completionUpdate).length > 0) {
+        await Progress.findByIdAndUpdate(updatedProgress._id, { $set: completionUpdate });
+      }
+
+      // Get course to get total videos count
+      const course = await Course.findById(courseId);
+      if (!course) {
+        return res.status(404).json({
+          success: false,
+          message: 'Course not found'
+        });
+      }
+
+      // Get updated course progress
+      const courseProgress = await Progress.getOverallCourseProgress(userId, courseId, course.videos.length);
+
+      // Check if course is completed and auto-generate certificate
+      if (courseProgress.courseProgressPercentage >= 90) {
+        try {
+          const certificateController = require('./certificateController');
+          await certificateController.autoGenerateCertificate(userId, courseId);
+          console.log(`🎓 [Certificate] Auto-generated certificate for completed course`);
+        } catch (certError) {
+          console.error('❌ [Certificate] Error auto-generating certificate:', certError);
+          // Don't fail the progress update if certificate generation fails
+        }
+      }
+
+      // Update last update time
+      lastUpdateTimes.set(progressKey, now);
+
+      console.log(`✅ [Udemy-Style] Video progress updated successfully`);
+      console.log(`   - Video watched percentage: ${watchedPercentage}%`);
+      console.log(`   - Video completion percentage: ${completionUpdate.completionPercentage || updatedProgress.completionPercentage}%`);
+      console.log(`   - Course progress: ${courseProgress.courseProgressPercentage}%`);
+
+      res.json({
+        success: true,
+        data: {
+          videoProgress: {
+            watchedDuration: updatedProgress.watchedDuration,
+            totalDuration: updatedProgress.totalDuration,
+            watchedPercentage: watchedPercentage,
+            completionPercentage: completionUpdate.completionPercentage || updatedProgress.completionPercentage,
+            isCompleted: completionUpdate.isCompleted || updatedProgress.isCompleted,
+            lastPosition: updatedProgress.getLastPosition()
+          },
+          courseProgress: courseProgress
+        }
+      });
+
+    } finally {
+      // Clean up pending request
+      pendingProgressUpdates.delete(progressKey);
+    }
 
   } catch (error) {
-    console.error('❌ Error updating video progress:', error);
+    console.error('❌ [Udemy-Style] Error updating video progress:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to update video progress',

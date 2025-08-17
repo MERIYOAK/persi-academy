@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { ChevronLeft, BookOpen, Clock, CheckCircle, Play, Pause, Volume2, VolumeX, Maximize, SkipForward } from 'lucide-react';
+import { ChevronLeft, BookOpen, CheckCircle } from 'lucide-react';
 import VideoPlaylist from '../components/VideoPlaylist';
 import VideoProgressBar from '../components/VideoProgressBar';
+import EnhancedVideoPlayer from '../components/EnhancedVideoPlayer';
 
 interface Video {
   id: string;
@@ -17,7 +18,7 @@ interface Video {
     watchedPercentage: number;
     completionPercentage: number;
     isCompleted: boolean;
-    lastPosition: number;
+    lastPosition?: number;
   };
 }
 
@@ -49,8 +50,7 @@ const VideoPlayerPage = () => {
   const [isMuted, setIsMuted] = useState(false);
   const [controlsVisible, setControlsVisible] = useState(true);
   const [controlsTimeout, setControlsTimeout] = useState<ReturnType<typeof setTimeout> | null>(null);
-  const [progressUpdateTimeout, setProgressUpdateTimeout] = useState<ReturnType<typeof setTimeout> | null>(null);
-  const [lastProgressUpdate, setLastProgressUpdate] = useState(0);
+
   const [videoLoading, setVideoLoading] = useState(false);
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [currentVideoProgress, setCurrentVideoProgress] = useState(0);
@@ -63,7 +63,13 @@ const VideoPlayerPage = () => {
   const [currentVideoPosition, setCurrentVideoPosition] = useState(0); // Track actual video position
   const [currentVideoPercentage, setCurrentVideoPercentage] = useState(0); // Track actual video percentage
   
-  const videoRef = useRef<HTMLVideoElement>(null);
+  // Udemy-style progress tracking: Request deduplication and batching
+  const pendingProgressRequest = useRef<AbortController | null>(null);
+  const progressUpdateTimeout = useRef<NodeJS.Timeout | null>(null);
+  const lastProgressUpdate = useRef(0);
+  const PROGRESS_UPDATE_INTERVAL = 30000; // 30 seconds minimum between updates
+  
+  // Note: videoRef is no longer needed as EnhancedVideoPlayer handles video element internally
 
   // Enhanced error handling functions
   const getVideoErrorDetails = (error: any): { type: string; message: string; userMessage: string } => {
@@ -199,12 +205,6 @@ const VideoPlayerPage = () => {
     console.log(`🔄 [VideoPlayer] Retrying video load (attempt ${retryCount + 1}/3)`);
 
     try {
-      // Clear current video source
-      if (videoRef.current) {
-        videoRef.current.src = '';
-        videoRef.current.load();
-      }
-
       // Wait a moment before retrying
       await new Promise(resolve => setTimeout(resolve, 1000));
 
@@ -217,13 +217,6 @@ const VideoPlayerPage = () => {
         // Validate the video URL before setting it
         const videoUrl = freshVideoUrl.trim();
         if (videoUrl && videoUrl !== '' && videoUrl !== window.location.href) {
-          // Update the video source
-          if (videoRef.current) {
-            videoRef.current.src = videoUrl;
-            videoRef.current.load();
-            console.log('🔧 [VideoPlayer] Set video source to fresh presigned URL');
-          }
-          
           // Update the course data with the fresh URL
           setCourseData(prev => {
             if (!prev) return null;
@@ -249,58 +242,14 @@ const VideoPlayerPage = () => {
       }
     } catch (error) {
       console.error('❌ [VideoPlayer] Retry failed:', error);
-      const errorDetails = getVideoErrorDetails({ target: videoRef.current });
-      setVideoError(errorDetails.userMessage);
+      setVideoError('Failed to load video. Please try again.');
     } finally {
       setIsRetrying(false);
     }
   };
 
-  const handleVideoError = (e: React.SyntheticEvent<HTMLVideoElement, Event>) => {
-    const error = e.nativeEvent as Event;
-    const video = error.target as HTMLVideoElement;
-    
-    console.error('❌ [VideoPlayer] Video error occurred:', {
-      error,
-      video,
-      currentSrc: video.src,
-      networkState: video.networkState,
-      readyState: video.readyState
-    });
-
-    // Additional debugging for video source issues
-    console.log('🔍 [VideoPlayer] Video source debugging:', {
-      currentVideoId,
-      currentVideo: currentVideo ? {
-        id: currentVideo.id,
-        title: currentVideo.title,
-        videoUrl: currentVideo.videoUrl
-      } : null,
-      videoSrc: video.src,
-      videoCurrentSrc: video.currentSrc,
-      videoSrcIsPageUrl: video.src === window.location.href,
-      videoSrcIsUndefined: video.src === undefined,
-      videoSrcIsEmpty: video.src === ''
-    });
-
-    const errorDetails = getVideoErrorDetails(e);
-    console.log('🔍 [VideoPlayer] Error analysis:', errorDetails);
-
-    // Check if it's a presigned URL expiry issue
-    if (video.src && isPresignedUrlExpired(video.src)) {
-      console.log('🔍 [VideoPlayer] Detected expired presigned URL, will refresh');
-      setVideoError('Video link expired. Refreshing...');
-      retryVideoLoad();
-      return;
-    }
-
-    // Check if it's a URL expiry issue (fallback)
-    if (video.src && isUrlExpired(video.src)) {
-      console.log('🔍 [VideoPlayer] Detected expired URL, will retry with fresh URL');
-      setVideoError('Video link expired. Retrying with fresh link...');
-      retryVideoLoad();
-      return;
-    }
+  const handleVideoError = (error: any) => {
+    console.error('❌ [VideoPlayer] Video error occurred:', error);
 
     // Check if we should retry
     if (retryCount < 3) {
@@ -312,21 +261,43 @@ const VideoPlayerPage = () => {
 
     // Max retries reached, show final error
     console.log('❌ [VideoPlayer] Max retries reached, showing final error');
-    setVideoError(errorDetails.userMessage);
-    setError(`Video Error: ${errorDetails.message}`);
+    setVideoError('Video playback error. Please try refreshing the page.');
+    setError('Video Error: Playback failed');
   };
 
-  // Progress tracking function
+  // Udemy-style progress tracking function with request deduplication
   const updateProgress = useCallback(async (watchedDuration: number, totalDuration: number, timestamp: number) => {
     if (!id || !currentVideoId) return;
 
-    // Only update progress every 5 seconds to avoid too many API calls
     const now = Date.now();
-    if (now - lastProgressUpdate < 5000) return;
+    
+    // Udemy-style: Check if update is too frequent
+    if (now - lastProgressUpdate.current < PROGRESS_UPDATE_INTERVAL) {
+      console.log(`⏱️ [Udemy-Style] Progress update too frequent, skipping (${Math.round((now - lastProgressUpdate.current) / 1000)}s ago)`);
+      return;
+    }
+
+    // Udemy-style: Cancel previous request if it exists
+    if (pendingProgressRequest.current) {
+      console.log('🔄 [Udemy-Style] Cancelling previous progress request');
+      pendingProgressRequest.current.abort();
+    }
+
+    // Clear any pending timeout
+    if (progressUpdateTimeout.current) {
+      clearTimeout(progressUpdateTimeout.current);
+      progressUpdateTimeout.current = null;
+    }
 
     try {
       const token = localStorage.getItem('token');
       if (!token) return;
+
+      // Create new abort controller for this request
+      const abortController = new AbortController();
+      pendingProgressRequest.current = abortController;
+
+      console.log(`🔧 [Udemy-Style] Sending progress update: ${watchedDuration}s / ${totalDuration}s`);
 
       const response = await fetch('http://localhost:5000/api/progress/update', {
         method: 'POST',
@@ -340,12 +311,116 @@ const VideoPlayerPage = () => {
           watchedDuration,
           totalDuration,
           timestamp
-        })
+        }),
+        signal: abortController.signal
       });
 
       if (response.ok) {
         const result = await response.json();
-        setLastProgressUpdate(now);
+        
+        // Only update if not skipped
+        if (!result.data?.skipped) {
+          lastProgressUpdate.current = now;
+          
+          // Update course data with new progress
+          if (courseData && result.data.courseProgress) {
+            setCourseData(prev => {
+              if (!prev) return null;
+              
+              // Update overall progress
+              const updatedCourseData = {
+                ...prev,
+                overallProgress: result.data.courseProgress
+              };
+              
+              // Update current video's progress if we have video progress data
+              if (result.data.videoProgress && currentVideoId) {
+                updatedCourseData.videos = prev.videos.map(video => 
+                  video.id === currentVideoId 
+                    ? { 
+                        ...video, 
+                        progress: {
+                          ...video.progress,
+                          watchedPercentage: result.data.videoProgress.watchedPercentage,
+                          completionPercentage: result.data.videoProgress.completionPercentage,
+                          watchedDuration: result.data.videoProgress.watchedDuration,
+                          totalDuration: result.data.videoProgress.totalDuration,
+                          isCompleted: result.data.videoProgress.isCompleted
+                        }
+                      }
+                    : video
+                );
+              }
+              
+              return updatedCourseData;
+            });
+            
+            // Update current video progress display
+            if (result.data.videoProgress) {
+              setCurrentVideoProgress(result.data.videoProgress.watchedPercentage || 0);
+              console.log('✅ [Udemy-Style] Progress updated successfully:', result.data.videoProgress.watchedPercentage + '%');
+            }
+          }
+        } else {
+          console.log('⏭️ [Udemy-Style] Progress update skipped by server');
+        }
+      }
+    } catch (error: any) {
+      if (error.name === 'AbortError') {
+        console.log('🔄 [Udemy-Style] Progress request was cancelled');
+      } else {
+        console.error('❌ [Udemy-Style] Error updating progress:', error);
+      }
+    } finally {
+      // Clean up
+      pendingProgressRequest.current = null;
+    }
+  }, [id, currentVideoId, courseData]);
+
+  // Immediate progress saving function (for pause and navigation) - Udemy-style
+  const saveProgressImmediately = useCallback(async (watchedDuration: number, totalDuration: number, timestamp: number) => {
+    if (!id || !currentVideoId) return;
+
+    // Udemy-style: Force immediate update regardless of time interval
+    console.log('💾 [Udemy-Style] Saving progress immediately:', {
+      watchedDuration,
+      totalDuration,
+      timestamp,
+      percentage: totalDuration > 0 ? Math.round((watchedDuration / totalDuration) * 100) : 0
+    });
+
+    // Cancel any pending progress request
+    if (pendingProgressRequest.current) {
+      pendingProgressRequest.current.abort();
+    }
+
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      // Create new abort controller for immediate request
+      const abortController = new AbortController();
+      pendingProgressRequest.current = abortController;
+
+      const response = await fetch('http://localhost:5000/api/progress/update', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          courseId: id,
+          videoId: currentVideoId,
+          watchedDuration,
+          totalDuration,
+          timestamp
+        }),
+        signal: abortController.signal
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log('✅ [Udemy-Style] Progress saved immediately');
         
         // Update course data with new progress
         if (courseData && result.data.courseProgress) {
@@ -383,97 +458,20 @@ const VideoPlayerPage = () => {
           // Update current video progress display
           if (result.data.videoProgress) {
             setCurrentVideoProgress(result.data.videoProgress.watchedPercentage || 0);
-            console.log('🔧 [VideoPlayer] Updated video progress display:', result.data.videoProgress.watchedPercentage);
-            console.log('🔧 [VideoPlayer] Video completion percentage:', result.data.videoProgress.completionPercentage);
-            console.log('🔧 [VideoPlayer] Actual video position:', currentVideoPosition, 'seconds');
-            console.log('🔧 [VideoPlayer] Actual video percentage:', currentVideoPercentage, '%');
           }
         }
       }
-    } catch (error) {
-      console.error('Error updating progress:', error);
-    }
-  }, [id, currentVideoId, courseData, lastProgressUpdate]);
-
-  // Immediate progress saving function (for pause and navigation)
-  const saveProgressImmediately = useCallback(async (watchedDuration: number, totalDuration: number, timestamp: number) => {
-    if (!id || !currentVideoId) return;
-
-    try {
-      const token = localStorage.getItem('token');
-      if (!token) return;
-
-      console.log('💾 [VideoPlayer] Saving progress immediately:', {
-        watchedDuration,
-        totalDuration,
-        timestamp,
-        percentage: totalDuration > 0 ? Math.round((watchedDuration / totalDuration) * 100) : 0,
-        actualPosition: currentVideoPosition,
-        actualPercentage: currentVideoPercentage
-      });
-
-      const response = await fetch('http://localhost:5000/api/progress/update', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          courseId: id,
-          videoId: currentVideoId,
-          watchedDuration,
-          totalDuration,
-          timestamp
-        })
-      });
-
-      if (response.ok) {
-        const result = await response.json();
-        console.log('✅ [VideoPlayer] Progress saved immediately');
-        
-        // Update course data with new progress
-        if (courseData && result.data.courseProgress) {
-          setCourseData(prev => {
-            if (!prev) return null;
-            
-            // Update overall progress
-            const updatedCourseData = {
-              ...prev,
-              overallProgress: result.data.courseProgress
-            };
-            
-            // Update current video's progress if we have video progress data
-            if (result.data.videoProgress && currentVideoId) {
-              updatedCourseData.videos = prev.videos.map(video => 
-                video.id === currentVideoId 
-                  ? { 
-                      ...video, 
-                      progress: {
-                        ...video.progress,
-                        watchedPercentage: result.data.videoProgress.watchedPercentage,
-                        completionPercentage: result.data.videoProgress.completionPercentage,
-                        watchedDuration: result.data.videoProgress.watchedDuration,
-                        totalDuration: result.data.videoProgress.totalDuration,
-                        isCompleted: result.data.videoProgress.isCompleted
-                      }
-                    }
-                  : video
-              );
-            }
-            
-            return updatedCourseData;
-          });
-          
-          // Update current video progress display (but keep actual position tracking separate)
-          if (result.data.videoProgress) {
-            setCurrentVideoProgress(result.data.videoProgress.watchedPercentage || 0);
-          }
-        }
+    } catch (error: any) {
+      if (error.name === 'AbortError') {
+        console.log('🔄 [Udemy-Style] Immediate progress request was cancelled');
+      } else {
+        console.error('❌ [Udemy-Style] Error saving progress immediately:', error);
       }
-    } catch (error) {
-      console.error('Error saving progress immediately:', error);
+    } finally {
+      // Clean up
+      pendingProgressRequest.current = null;
     }
-  }, [id, currentVideoId, courseData, currentVideoPosition, currentVideoPercentage]);
+  }, [id, currentVideoId, courseData]);
 
   // Fetch course and video data with progress
   useEffect(() => {
@@ -608,21 +606,8 @@ const VideoPlayerPage = () => {
           const resumeResult = await resumeResponse.json();
           const resumePosition = resumeResult.data.resumePosition;
 
-          // Set video to resume position after a short delay
-          setTimeout(() => {
-            if (videoRef.current && resumePosition > 0) {
-              videoRef.current.currentTime = resumePosition;
-              
-              // Update the actual video position and percentage
-              setCurrentVideoPosition(resumePosition);
-              if (videoRef.current.duration > 0) {
-                const actualPercentage = Math.round((resumePosition / videoRef.current.duration) * 100);
-                setCurrentVideoPercentage(actualPercentage);
-              }
-              
-              console.log(`✅ [VideoPlayer] Resumed video at ${resumePosition}s (${Math.round((resumePosition / videoRef.current.duration) * 100)}%)`);
-            }
-          }, 1000);
+          // Note: Resume position is now handled by EnhancedVideoPlayer's initialTime prop
+          console.log(`✅ [VideoPlayer] Resume position set to ${resumePosition}s`);
         }
       } catch (error) {
         console.error('Error fetching resume position:', error);
@@ -673,50 +658,18 @@ const VideoPlayerPage = () => {
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   };
 
-  // Handle video time update
-  const handleTimeUpdate = () => {
-    if (videoRef.current) {
-      const currentTime = videoRef.current.currentTime;
-      const duration = videoRef.current.duration;
-      
-      setCurrentTime(currentTime);
-      setDuration(duration);
-      
-      // Track actual video position and percentage (independent of completion status)
-      setCurrentVideoPosition(currentTime);
-      if (duration > 0) {
-        const actualPercentage = Math.round((currentTime / duration) * 100);
-        setCurrentVideoPercentage(actualPercentage);
-      }
-
-      // Update progress every 5 seconds
-      if (progressUpdateTimeout) {
-        clearTimeout(progressUpdateTimeout);
-      }
-
-      const timeout = setTimeout(() => {
-        updateProgress(currentTime, duration, currentTime);
-      }, 5000);
-
-      setProgressUpdateTimeout(timeout);
-    }
-  };
+  // Note: Time updates are now handled by EnhancedVideoPlayer's onTimeUpdate callback
 
   // Handle video pause
   const handleVideoPause = () => {
     setIsPlaying(false);
     setIsPaused(true);
     setPauseStartTime(Date.now());
-    
-    if (videoRef.current) {
-      const currentTime = videoRef.current.currentTime;
-      const duration = videoRef.current.duration;
       
       console.log('⏸️ [VideoPlayer] Video paused at:', currentTime, 'seconds');
       
       // Save progress immediately when paused
       saveProgressImmediately(currentTime, duration, currentTime);
-    }
   };
 
   // Handle video play
@@ -740,25 +693,18 @@ const VideoPlayerPage = () => {
         const pauseDuration = Date.now() - pauseStartTime;
         if (pauseDuration >= 5000) { // 5 seconds
           console.log('⏰ [VideoPlayer] Video paused for 5+ seconds, ensuring progress is saved');
-          if (videoRef.current) {
-            const currentTime = videoRef.current.currentTime;
-            const duration = videoRef.current.duration;
             saveProgressImmediately(currentTime, duration, currentTime);
-          }
         }
       }, 5000);
 
       return () => clearTimeout(checkPauseDuration);
     }
-  }, [isPaused, pauseStartTime, saveProgressImmediately]);
+  }, [isPaused, pauseStartTime, saveProgressImmediately, currentTime, duration]);
 
   // Handle page navigation and save progress
   useEffect(() => {
-    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
-      if (videoRef.current && isPlaying) {
-        const currentTime = videoRef.current.currentTime;
-        const duration = videoRef.current.duration;
-        
+    const handleBeforeUnload = () => {
+      if (isPlaying) {
         console.log('🚪 [VideoPlayer] Page unload detected, saving progress');
         
         // Use synchronous storage to ensure data is saved
@@ -774,10 +720,7 @@ const VideoPlayerPage = () => {
     };
 
     const handleVisibilityChange = () => {
-      if (document.hidden && videoRef.current && isPlaying) {
-        const currentTime = videoRef.current.currentTime;
-        const duration = videoRef.current.duration;
-        
+      if (document.hidden && isPlaying) {
         console.log('👁️ [VideoPlayer] Page hidden, saving progress');
         saveProgressImmediately(currentTime, duration, currentTime);
       }
@@ -792,7 +735,7 @@ const VideoPlayerPage = () => {
       window.removeEventListener('beforeunload', handleBeforeUnload);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [id, currentVideoId, isPlaying, saveProgressImmediately]);
+  }, [id, currentVideoId, isPlaying, saveProgressImmediately, currentTime, duration]);
 
   // Handle pending progress on page load
   useEffect(() => {
@@ -867,22 +810,7 @@ const VideoPlayerPage = () => {
     }
   };
 
-  // Handle playback rate change
-  const handlePlaybackRateChange = (newRate: number) => {
-    if (videoRef.current) {
-      videoRef.current.playbackRate = newRate;
-      setPlaybackRate(newRate);
-      console.log('🎚️ Playback rate changed to:', newRate);
-    }
-  };
 
-  // Apply playback rate when it changes
-  useEffect(() => {
-    if (videoRef.current && playerReady) {
-      videoRef.current.playbackRate = playbackRate;
-      console.log('🎚️ Applied playback rate:', playbackRate);
-    }
-  }, [playbackRate, playerReady]);
 
   // Handle video selection
   const handleVideoSelect = async (newVideoId: string) => {
@@ -924,128 +852,31 @@ const VideoPlayerPage = () => {
     window.history.pushState(null, '', `/course/${id}/watch/${newVideoId}`);
   };
 
-  // Toggle mute
-  const toggleMute = () => {
-    if (videoRef.current) {
-      const newMutedState = !isMuted;
-      videoRef.current.muted = newMutedState;
-      setIsMuted(newMutedState);
-    }
-  };
 
-  // Toggle fullscreen
-  const toggleFullscreen = () => {
-    const videoContainer = document.querySelector('.video-container');
-    if (videoContainer) {
-      if (!document.fullscreenElement) {
-        videoContainer.requestFullscreen?.() || 
-        (videoContainer as any).webkitRequestFullscreen?.() || 
-        (videoContainer as any).msRequestFullscreen?.();
-      } else {
-        document.exitFullscreen?.() || 
-        (document as any).webkitExitFullscreen?.() || 
-        (document as any).msExitFullscreen?.();
-      }
-    }
-  };
 
-  // Handle progress bar click for video seeking
-  const handleProgressClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (videoRef.current && duration > 0) {
-      const progressBar = e.currentTarget;
-      const rect = progressBar.getBoundingClientRect();
-      const clickX = e.clientX - rect.left;
-      const progressWidth = rect.width;
-      const clickPercentage = clickX / progressWidth;
-      const newTime = clickPercentage * duration;
-      
-      // Update video current time
-      videoRef.current.currentTime = newTime;
-      setCurrentTime(newTime);
-      setCurrentVideoPosition(newTime);
-      setCurrentVideoPercentage(Math.round(clickPercentage * 100));
-      
-      console.log('🎯 Seeking to:', newTime.toFixed(2), 'seconds (', (clickPercentage * 100).toFixed(1), '%)');
-    }
-  };
+  // Note: Progress seeking, play/pause, and manual play are now handled by EnhancedVideoPlayer
 
-  // Handle play/pause toggle
-  const handlePlayPause = () => {
-    console.log('🎮 Play/Pause button clicked');
-    console.log('🎮 Current player ready state:', playerReady);
-    console.log('🎮 Current playing state:', isPlaying);
-    
-    if (videoRef.current && playerReady) {
-      if (isPlaying) {
-        videoRef.current.pause();
-      } else {
-        videoRef.current.play().catch(error => {
-          console.error('❌ Failed to play video:', error);
-          setError(`Play failed: ${error.message}`);
-        });
-      }
-    } else {
-      console.log('❌ Player not ready yet, cannot play');
-    }
-  };
-
-  // Handle manual play button click
-  const handleManualPlayClick = () => {
-    console.log('🎮 Manual play button clicked');
-    console.log('🎮 Current player ready state:', playerReady);
-    
-    if (videoRef.current && playerReady) {
-      videoRef.current.play().catch(error => {
-        console.error('❌ Failed to play video:', error);
-        setError(`Play failed: ${error.message}`);
-      });
-    } else {
-      console.log('❌ Player not ready, cannot play');
-    }
-  };
-
-  // Handle mouse events for controls visibility
-  const showControlsOverlay = () => {
-    setControlsVisible(true);
-    if (controlsTimeout) {
-      clearTimeout(controlsTimeout);
-    }
-    const timeout = setTimeout(() => {
-      if (isPlaying) {
-        setControlsVisible(false);
-      }
-    }, 3000);
-    setControlsTimeout(timeout);
-  };
-
-  const hideControls = () => {
-    if (controlsTimeout) {
-      clearTimeout(controlsTimeout);
-    }
-    if (isPlaying) {
-      const timeout = setTimeout(() => {
-        setControlsVisible(false);
-      }, 3000);
-      setControlsTimeout(timeout);
-    }
-  };
+  // Note: Controls visibility is now handled by EnhancedVideoPlayer
 
   // Cleanup timeout on unmount
   useEffect(() => {
     return () => {
+      // Cancel any pending progress requests
+      if (pendingProgressRequest.current) {
+        pendingProgressRequest.current.abort();
+      }
+      
+      // Clear timeouts
       if (controlsTimeout) {
         clearTimeout(controlsTimeout);
       }
-      if (progressUpdateTimeout) {
-        clearTimeout(progressUpdateTimeout);
+      if (progressUpdateTimeout.current) {
+        clearTimeout(progressUpdateTimeout.current);
       }
       
       // Save progress when component unmounts
-      if (videoRef.current && isPlaying) {
-        const currentTime = videoRef.current.currentTime;
-        const duration = videoRef.current.duration;
-        
-        console.log('🔚 [VideoPlayer] Component unmounting, saving final progress');
+      if (isPlaying) {
+        console.log('🔚 [Udemy-Style] Component unmounting, saving final progress');
         
         // Use synchronous storage to ensure data is saved
         localStorage.setItem('pendingProgress', JSON.stringify({
@@ -1058,7 +889,7 @@ const VideoPlayerPage = () => {
         }));
       }
     };
-  }, [controlsTimeout, progressUpdateTimeout, id, currentVideoId, isPlaying]);
+  }, [controlsTimeout, id, currentVideoId, isPlaying]);
 
   // Reset error states when course or video changes
   useEffect(() => {
@@ -1287,64 +1118,44 @@ const VideoPlayerPage = () => {
       <div className="flex-1 flex">
         {/* Video Player Section */}
         <div className="flex-1 flex flex-col">
-          {/* Player */}
-          <div 
-            className="relative bg-black flex-1 flex items-center justify-center"
-            onMouseMove={showControlsOverlay}
-            onMouseLeave={hideControls}
-          >
+          {/* Enhanced Video Player */}
+          <div className="flex-1">
             {currentVideo?.videoUrl && 
              currentVideo.videoUrl.trim() !== '' && 
              currentVideo.videoUrl !== window.location.href &&
              currentVideo.videoUrl !== 'undefined' ? (
-                <video
-                  ref={videoRef}
-                  className="w-full h-full object-contain"
+              <EnhancedVideoPlayer
                   src={currentVideo.videoUrl}
-                  preload="metadata"
+                title={courseData?.title}
+                playing={isPlaying}
+                playbackRate={playbackRate}
                   onPlay={handleVideoPlay}
                   onPause={handleVideoPause}
-                  onLoadedData={() => setPlayerReady(true)}
-                  onEnded={() => {
-                    if (videoRef.current) {
-                      videoRef.current.currentTime = 0;
-                    }
-                    handleVideoEnd(); // Call the new handleVideoEnd
-                  }}
-                  onTimeUpdate={handleTimeUpdate}
-                  onLoadedMetadata={(e) => {
-                    const video = e.target as HTMLVideoElement;
-                    setDuration(video.duration);
-                  }}
+                onEnded={handleVideoEnd}
                   onError={handleVideoError}
-                  onLoadStart={() => {
-                    console.log('🔧 [VideoPlayer] Video loading started');
-                    setVideoLoading(true);
-                    setLoadingProgress(0);
-                  }}
-                  onCanPlay={() => {
-                    console.log('🔧 [VideoPlayer] Video can start playing');
-                    setVideoLoading(false);
-                    setLoadingProgress(100);
-                  }}
-                  onProgress={(e) => {
-                    const video = e.target as HTMLVideoElement;
-                    if (video.buffered.length > 0) {
-                      const bufferedEnd = video.buffered.end(video.buffered.length - 1);
-                      const duration = video.duration;
+                onReady={() => setPlayerReady(true)}
+                onTimeUpdate={(currentTime, duration) => {
+                  setCurrentTime(currentTime);
+                  setDuration(duration);
+                  setCurrentVideoPosition(currentTime);
                       if (duration > 0) {
-                        const progress = (bufferedEnd / duration) * 100;
-                        setLoadingProgress(Math.min(progress, 100));
-                      }
-                    }
-                  }}
-                  muted={isMuted}
+                    const actualPercentage = Math.round((currentTime / duration) * 100);
+                    setCurrentVideoPercentage(actualPercentage);
+                  }
+                }}
+                onProgress={(watchedDuration, totalDuration) => {
+                  updateProgress(watchedDuration, totalDuration, watchedDuration);
+                }}
+                onPlaybackRateChange={setPlaybackRate}
+                onControlsToggle={setControlsVisible}
+                className="w-full h-full"
+                initialTime={currentVideo?.progress?.lastPosition || 0}
                 />
             ) : (
-              <div className="text-center text-gray-400">
+              <div className="w-full h-full flex items-center justify-center text-gray-400">
                 {videoError ? (
                   // Error state
-                  <div className="space-y-4">
+                  <div className="space-y-4 text-center">
                     <div className="text-red-400">
                       <svg className="w-16 h-16 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
@@ -1383,7 +1194,7 @@ const VideoPlayerPage = () => {
                   </div>
                 ) : (
                   // Loading state
-                  <div>
+                  <div className="text-center">
                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-500 mx-auto mb-4"></div>
                     <p>Loading video...</p>
                     <p className="text-sm mt-2">
@@ -1405,87 +1216,6 @@ const VideoPlayerPage = () => {
                     )}
                   </div>
                 )}
-              </div>
-            )}
-
-            {/* Manual Play Button */}
-            {!isPlaying && playerReady && (
-                      <button
-                onClick={handleManualPlayClick}
-                className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 hover:bg-opacity-40 transition-all duration-200"
-                      >
-                <div className="bg-white bg-opacity-90 rounded-full p-4 hover:bg-opacity-100 transition-all duration-200">
-                  <Play className="h-12 w-12 text-gray-900 ml-1" />
-                </div>
-                      </button>
-            )}
-
-            {/* Controls Overlay */}
-            {controlsVisible && (
-              <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent pointer-events-none">
-                <div className="absolute bottom-0 left-0 right-0 p-4 pointer-events-auto">
-                  {/* Progress Bar */}
-                  <div className="mb-4">
-                    <div 
-                      className="w-full h-1 bg-gray-600 rounded-full cursor-pointer"
-                      onClick={handleProgressClick}
-                    >
-                      <div 
-                        className="h-1 bg-red-500 rounded-full transition-all duration-100"
-                        style={{ width: `${currentVideoPercentage}%` }}
-                      />
-                    </div>
-                  </div>
-
-                  {/* Control Buttons */}
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-4">
-                      <button
-                        onClick={handlePlayPause}
-                        className="text-white hover:text-gray-300 transition-colors duration-200"
-                      >
-                        {isPlaying ? <Pause className="h-6 w-6" /> : <Play className="h-6 w-6" />}
-                      </button>
-
-                      <div className="flex items-center space-x-2 text-white">
-                    <button
-                          onClick={() => setIsMuted(!isMuted)}
-                          className="hover:text-gray-300 transition-colors duration-200"
-                    >
-                          {isMuted ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
-                    </button>
-                  </div>
-
-                      <div className="flex items-center space-x-2 text-white text-sm">
-                        <span>{formatTime(currentVideoPosition)}</span>
-                        <span>/</span>
-                        <span>{formatTime(duration)}</span>
-                    </div>
-                  </div>
-
-                    <div className="flex items-center space-x-4">
-                      <select
-                        value={playbackRate}
-                        onChange={(e) => setPlaybackRate(Number(e.target.value))}
-                        className="bg-gray-800 text-white text-sm rounded px-2 py-1 border border-gray-600"
-                      >
-                        <option value={0.5}>0.5x</option>
-                        <option value={0.75}>0.75x</option>
-                        <option value={1}>1x</option>
-                        <option value={1.25}>1.25x</option>
-                        <option value={1.5}>1.5x</option>
-                        <option value={2}>2x</option>
-                      </select>
-
-                  <button
-                        onClick={() => videoRef.current?.requestFullscreen()}
-                        className="text-white hover:text-gray-300 transition-colors duration-200"
-                  >
-                        <Maximize className="h-5 w-5" />
-                  </button>
-                    </div>
-                  </div>
-                </div>
               </div>
             )}
           </div>
@@ -1578,7 +1308,6 @@ const VideoPlayerPage = () => {
                 handleVideoSelect(videoId);
                 setShowPlaylist(false);
               }}
-              courseTitle={courseData.title}
             />
           </div>
           <div

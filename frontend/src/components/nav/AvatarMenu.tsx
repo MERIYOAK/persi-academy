@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { User, LogOut, LayoutDashboard, Upload } from 'lucide-react';
+import { User, LogOut, LayoutDashboard, Upload, Award } from 'lucide-react';
 import { useAdminAuth } from '../../contexts/AdminAuthContext';
 
 interface AvatarMenuProps {
@@ -87,6 +87,9 @@ const AvatarMenu: React.FC<AvatarMenuProps> = ({ variant, profileImageUrl }) => 
               <>
                 <Link to="/dashboard" className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
                   <LayoutDashboard className="h-4 w-4 mr-2" /> Dashboard
+                </Link>
+                <Link to="/certificates" className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                  <Award className="h-4 w-4 mr-2" /> My Certificates
                 </Link>
               </>
             )}

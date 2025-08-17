@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { BookOpen, Search, Filter, Trophy, TrendingUp, Clock, Users } from 'lucide-react';
 import DashboardCard from '../components/DashboardCard';
+import CertificateDownload from '../components/CertificateDownload';
 
 interface UserData {
   name: string;

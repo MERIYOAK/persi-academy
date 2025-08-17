@@ -2,6 +2,7 @@ const { createCheckoutSession, stripe, verifyWebhook } = require('../utils/strip
 const Course = require('../models/Course');
 const User = require('../models/User');
 const Payment = require('../models/Payment');
+const mongoose = require('mongoose');
 const puppeteer = require('puppeteer');
 
 /**
@@ -388,10 +389,19 @@ exports.getReceipt = async (req, res) => {
 
     // Validate courseId format
     if (!courseId || courseId === 'undefined' || courseId === 'null') {
-      console.log('❌ Invalid course ID provided');
+      console.log('❌ Invalid course ID provided:', courseId);
       return res.status(400).json({ 
         success: false, 
         message: 'Invalid course ID' 
+      });
+    }
+
+    // Validate courseId is a valid MongoDB ObjectId
+    if (!mongoose.Types.ObjectId.isValid(courseId)) {
+      console.log('❌ Invalid MongoDB ObjectId format:', courseId);
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Invalid course ID format' 
       });
     }
 

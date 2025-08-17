@@ -52,54 +52,59 @@ progressSchema.virtual('videoProgressPercentage').get(function() {
   return Math.min(100, Math.round((this.watchedDuration / this.totalDuration) * 100));
 });
 
-// Method to update video-level progress (real-time)
+// Method to update video-level progress (real-time) - Udemy-style atomic update
 progressSchema.methods.updateVideoProgress = function(watchedDuration, totalDuration, timestamp = null) {
-  this.watchedDuration = Math.max(this.watchedDuration, watchedDuration);
-  this.totalDuration = totalDuration;
-  this.lastWatchedAt = new Date();
-  this.watchCount += 1;
-  
-  // Update video-level progress (real-time)
-  this.watchedPercentage = this.videoProgressPercentage;
-  
+  // Use atomic operations to prevent version conflicts
+  const updateData = {
+    $set: {
+      totalDuration: totalDuration,
+      lastWatchedAt: new Date(),
+      watchedPercentage: this.videoProgressPercentage
+    },
+    $max: {
+      watchedDuration: watchedDuration // Safe concurrent updates - only increase, never decrease
+    },
+    $inc: {
+      watchCount: 1
+    }
+  };
+
   // STICKY COMPLETION LOGIC: Once completed, maintain 100% completion
   if (this.isCompleted) {
-    // If already completed, maintain 100% completion regardless of current watch progress
-    this.completionPercentage = 100;
-    this.watchedPercentage = 100;
+    updateData.$set.completionPercentage = 100;
+    updateData.$set.watchedPercentage = 100;
     console.log(`🔒 [Progress] Video already completed, maintaining 100% completion status`);
   } else {
     // Only update completion percentage if not already completed
-    this.completionPercentage = this.watchedPercentage;
+    updateData.$set.completionPercentage = this.videoProgressPercentage;
     
     // Mark as completed if watched 90% or more
-    if (this.completionPercentage >= 90 && !this.isCompleted) {
-      this.isCompleted = true;
-      this.completedAt = new Date();
-      console.log(`✅ [Progress] Video marked as completed at ${this.completionPercentage}%`);
+    if (this.videoProgressPercentage >= 90 && !this.isCompleted) {
+      updateData.$set.isCompleted = true;
+      updateData.$set.completedAt = new Date();
+      console.log(`✅ [Progress] Video marked as completed at ${this.videoProgressPercentage}%`);
     }
   }
   
   // Add to watch history if timestamp provided
   if (timestamp !== null) {
-    this.watchHistory.push({
-      timestamp: Math.round(timestamp),
-      watchedAt: new Date()
-    });
-    
-    // Keep only last 10 entries to prevent bloat
-    if (this.watchHistory.length > 10) {
-      this.watchHistory = this.watchHistory.slice(-10);
-    }
+    updateData.$push = {
+      watchHistory: {
+        $each: [{
+          timestamp: Math.round(timestamp),
+          watchedAt: new Date()
+        }],
+        $slice: -10 // Keep only last 10 entries
+      }
+    };
   }
   
-  // Calculate average watch time
-  if (this.watchHistory.length > 1) {
-    const totalTime = this.watchHistory.reduce((sum, entry) => sum + entry.timestamp, 0);
-    this.averageWatchTime = Math.round(totalTime / this.watchHistory.length);
-  }
-  
-  return this.save();
+  // Use findOneAndUpdate for atomic operation without version conflicts
+  return this.constructor.findOneAndUpdate(
+    { _id: this._id },
+    updateData,
+    { new: true, runValidators: true }
+  );
 };
 
 // Method to get last watched position

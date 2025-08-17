@@ -4,15 +4,17 @@ import { Play, CheckCircle, Clock, Lock } from 'lucide-react';
 interface VideoProgress {
   watchedDuration: number;
   totalDuration: number;
+  watchedPercentage: number;
   completionPercentage: number;
   isCompleted: boolean;
-  lastPosition: number;
+  lastPosition?: number;
 }
 
 interface Video {
   id: string;
   title: string;
   duration: string;
+  videoUrl: string;
   completed?: boolean;
   locked?: boolean;
   progress?: VideoProgress;

@@ -22,6 +22,7 @@ const paymentRoutes = require('./routes/paymentRoutes');
 const userRoutes = require('./routes/userRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const progressRoutes = require('./routes/progressRoutes');
+const certificateRoutes = require('./routes/certificateRoutes');
 
 // Import controllers for fallback routes
 const authController = require('./controllers/authController');
@@ -75,6 +76,264 @@ app.use(passport.session());
 // Serve static files for local uploads
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
+// Serve certificate PDFs (public access)
+app.get('/certificates/:filename', (req, res) => {
+  const filename = req.params.filename;
+  const filePath = path.join(__dirname, 'uploads', 'certificates', filename);
+  
+  // Check if file exists
+  if (!require('fs').existsSync(filePath)) {
+    return res.status(404).json({ error: 'Certificate not found' });
+  }
+  
+  // Check if it's a preview request (no download)
+  const isPreview = req.query.preview === 'true';
+  
+  // Set proper headers
+  res.setHeader('Content-Type', 'application/pdf');
+  if (!isPreview) {
+    // Download mode
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+  } else {
+    // Preview mode - display in browser
+    res.setHeader('Content-Disposition', `inline; filename="${filename}"`);
+  }
+  
+  res.sendFile(filePath);
+});
+
+// Public certificate preview route
+app.get('/certificate-preview/:certificateId', async (req, res) => {
+  try {
+    const { certificateId } = req.params;
+    
+    // Import Certificate model
+    const Certificate = require('./models/Certificate');
+    
+    // Find certificate by ID
+    const certificate = await Certificate.getByCertificateId(certificateId);
+    
+    if (!certificate) {
+      return res.status(404).send(`
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Certificate Not Found</title>
+          <script src="https://cdn.tailwindcss.com"></script>
+        </head>
+        <body class="min-h-screen bg-gradient-to-br from-red-50 to-pink-50 flex items-center justify-center">
+          <div class="text-center max-w-md mx-auto p-8">
+            <div class="text-red-500 mb-4">
+              <svg class="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+              </svg>
+            </div>
+            <h2 class="text-2xl font-bold mb-4 text-gray-900">Certificate Not Found</h2>
+            <p class="text-gray-600 mb-6">The certificate you're looking for doesn't exist or has been removed.</p>
+            <a href="http://localhost:5173" class="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg transition-colors duration-200">
+              Go to Homepage
+            </a>
+          </div>
+        </body>
+        </html>
+      `);
+    }
+    
+    // Extract filename from pdfUrl
+    const filename = certificate.pdfUrl.split('/').pop();
+    const filePath = path.join(__dirname, 'uploads', 'certificates', filename);
+    
+    // Check if file exists
+    if (!require('fs').existsSync(filePath)) {
+      return res.status(404).send(`
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Certificate PDF Not Found</title>
+          <script src="https://cdn.tailwindcss.com"></script>
+        </head>
+        <body class="min-h-screen bg-gradient-to-br from-red-50 to-pink-50 flex items-center justify-center">
+          <div class="text-center max-w-md mx-auto p-8">
+            <div class="text-red-500 mb-4">
+              <svg class="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+              </svg>
+            </div>
+            <h2 class="text-2xl font-bold mb-4 text-gray-900">Certificate PDF Not Found</h2>
+            <p class="text-gray-600 mb-6">The certificate file could not be located.</p>
+            <a href="http://localhost:5173" class="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg transition-colors duration-200">
+              Go to Homepage
+            </a>
+          </div>
+        </body>
+        </html>
+      `);
+    }
+    
+    // Format dates for display
+    const formatDate = (dateString) => {
+      return new Date(dateString).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+    };
+    
+    // Create HTML page with PDF viewer and verify button
+    const html = `
+      <!DOCTYPE html>
+      <html lang="en">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Certificate of Completion - ${certificate.courseTitle}</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+        <style>
+          .pdf-container {
+            height: calc(100vh - 200px);
+            min-height: 500px;
+          }
+          @media (max-width: 768px) {
+            .pdf-container {
+              height: calc(100vh - 300px);
+              min-height: 400px;
+            }
+          }
+        </style>
+      </head>
+      <body class="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
+        <!-- Animated Background -->
+        <div class="fixed inset-0 overflow-hidden pointer-events-none">
+          <div class="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-blue-400 to-purple-600 rounded-full opacity-10 animate-pulse"></div>
+          <div class="absolute -bottom-40 -left-40 w-80 h-80 bg-gradient-to-br from-green-400 to-blue-600 rounded-full opacity-10 animate-pulse" style="animation-delay: 2s;"></div>
+        </div>
+        
+        <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <!-- Header -->
+          <div class="text-center mb-8">
+            <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full mb-4 shadow-lg">
+              <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">Certificate of Completion</h1>
+            <p class="text-lg text-gray-600">${certificate.courseTitle}</p>
+            <p class="text-sm text-gray-500 mt-2">Issued to ${certificate.studentName} on ${formatDate(certificate.dateIssued)}</p>
+          </div>
+          
+          <!-- Certificate Info Card -->
+          <div class="bg-white rounded-xl shadow-lg p-6 mb-6 max-w-2xl mx-auto">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
+              <div>
+                <div class="text-2xl font-bold text-green-600">${certificate.completionPercentage}%</div>
+                <div class="text-sm text-gray-600">Completion</div>
+              </div>
+              <div>
+                <div class="text-2xl font-bold text-blue-600">${certificate.completedLessons}/${certificate.totalLessons}</div>
+                <div class="text-sm text-gray-600">Lessons Completed</div>
+              </div>
+              <div>
+                <div class="text-2xl font-bold text-purple-600">${certificate.certificateId.slice(-8)}</div>
+                <div class="text-sm text-gray-600">Certificate ID</div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- PDF Viewer -->
+          <div class="bg-white rounded-xl shadow-lg overflow-hidden mb-6">
+            <div class="bg-gradient-to-r from-gray-50 to-gray-100 px-6 py-4 border-b">
+              <h3 class="text-lg font-semibold text-gray-900">Certificate Preview</h3>
+              <p class="text-sm text-gray-600">View your certificate of completion below</p>
+            </div>
+            <div class="pdf-container">
+              <iframe 
+                src="/certificates/${filename}?preview=true" 
+                class="w-full h-full border-0"
+                title="Certificate PDF"
+              ></iframe>
+            </div>
+          </div>
+          
+          <!-- Action Buttons -->
+          <div class="flex flex-col sm:flex-row gap-4 justify-center max-w-2xl mx-auto">
+            <a
+              href="/api/certificates/verify/${certificate.certificateId}"
+              target="_blank"
+              class="flex items-center justify-center space-x-2 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white px-8 py-4 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg font-medium"
+            >
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+              </svg>
+              <span>Verify Certificate</span>
+            </a>
+            
+            <a
+              href="/certificates/${filename}"
+              download
+              class="flex items-center justify-center space-x-2 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white px-8 py-4 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg font-medium"
+            >
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              <span>Download Certificate</span>
+            </a>
+          </div>
+          
+          <!-- Footer -->
+          <div class="text-center mt-8 text-sm text-gray-500">
+            <p>This certificate is issued by ${certificate.platformName || 'Learning Platform'}</p>
+            <p class="mt-1">Certificate ID: ${certificate.certificateId}</p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+    
+    res.send(html);
+    
+  } catch (error) {
+    console.error('Error serving certificate preview:', error);
+    res.status(500).send(`
+      <!DOCTYPE html>
+      <html lang="en">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Error - Certificate Preview</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+      </head>
+      <body class="min-h-screen bg-gradient-to-br from-red-50 to-pink-50 flex items-center justify-center">
+        <div class="text-center max-w-md mx-auto p-8">
+          <div class="text-red-500 mb-4">
+            <svg class="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+            </svg>
+          </div>
+          <h2 class="text-2xl font-bold mb-4 text-gray-900">Error Loading Certificate</h2>
+          <p class="text-gray-600 mb-6">There was an error loading the certificate. Please try again later.</p>
+          <a href="http://localhost:5173" class="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg transition-colors duration-200">
+            Go to Homepage
+          </a>
+        </div>
+      </body>
+      </html>
+    `);
+  }
+});
+
+// Serve favicon
+app.get('/favicon.ico', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'favicon.svg'));
+});
+
+app.get('/favicon.svg', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'favicon.svg'));
+});
+
 // Database connection
 const MONGODB_URI = process.env.MONGODB_URI;
 
@@ -106,6 +365,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/my-courses', myCoursesRoutes);
 app.use('/api/progress', progressRoutes);
+app.use('/api/certificates', certificateRoutes);
 
 // Fallback route for profile photo (backward compatibility)
 app.get('/api/users/me/photo', authMiddleware, (req, res) => {
@@ -128,20 +388,22 @@ app.use('/api/archive', archiveRoutes);
 // Video routes
 app.use('/api/videos', videoRoutes);
 
+// Health check endpoint
+app.get('/api/health', (req, res) => {
+  res.json({ 
+    status: 'ok', 
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime()
+  });
+});
+
 // Payment routes
 app.use('/api/payment', paymentRoutes);
 
-// Stripe webhook endpoint (at root level for Stripe compatibility)
+// Stripe webhook endpoint (at root level for Stripe compatibility) - DEPRECATED
+// Now handled by /api/payment/webhook route
 app.post('/webhook', express.raw({ type: 'application/json' }), (req, res) => {
-  console.log('🔧 Webhook endpoint hit at /webhook');
-  console.log(`   - Headers:`, Object.keys(req.headers));
-  console.log(`   - Body length:`, req.body ? req.body.length : 'No body');
-  console.log(`   - Raw body length:`, req.rawBody ? req.rawBody.length : 'No raw body');
-  console.log(`   - NODE_ENV:`, process.env.NODE_ENV);
-  console.log(`   - STRIPE_SECRET_KEY:`, process.env.STRIPE_SECRET_KEY ? 'Set' : 'Not set');
-  console.log(`   - Body type:`, typeof req.body);
-  console.log(`   - Raw body type:`, typeof req.rawBody);
-  
+  console.log('🔧 Legacy webhook endpoint hit at /webhook - redirecting to /api/payment/webhook');
   // Forward to payment controller webhook
   const paymentController = require('./controllers/paymentController');
   paymentController.webhook(req, res);
