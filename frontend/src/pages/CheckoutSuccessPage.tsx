@@ -35,6 +35,19 @@ const CheckoutSuccessPage = () => {
   const [firstVideoId, setFirstVideoId] = useState<string | null>(null);
 
   const courseId = searchParams.get('courseId');
+  
+  // Debug logging for courseId
+  console.log('🔍 CheckoutSuccessPage - courseId from URL:', courseId);
+  console.log('🔍 CheckoutSuccessPage - full URL search params:', searchParams.toString());
+  
+  // Fallback: Try to get courseId from sessionStorage if not in URL
+  const fallbackCourseId = courseId || sessionStorage.getItem('pendingCourseId');
+  if (fallbackCourseId && !courseId) {
+    console.log('🔍 CheckoutSuccessPage - Using fallback courseId from sessionStorage:', fallbackCourseId);
+  }
+
+  // Define effectiveCourseId at component level
+  const effectiveCourseId = courseId || fallbackCourseId;
 
   // Function to fetch actual amount paid from user's purchase history
   const fetchActualAmountPaid = async () => {
@@ -58,7 +71,7 @@ const CheckoutSuccessPage = () => {
         // Find the course in user's purchased courses
         // purchasedCourses contains course IDs (strings), not course objects
         const purchasedCourseId = purchasedCourses.find((purchasedId: string) => 
-          purchasedId === courseId
+          purchasedId === effectiveCourseId
         );
         
         if (purchasedCourseId) {
@@ -70,7 +83,7 @@ const CheckoutSuccessPage = () => {
             setActualAmountPaid(course.price);
             setCorrectCourseTitle(course.title);
             // Only set as wrong course if it's different from the current course
-            if (purchasedCourseId !== courseId) {
+            if (purchasedCourseId !== effectiveCourseId) {
             setIsWrongCourse(true);
             }
             console.log(`✅ Purchase amount: $${course.price}`);
@@ -99,17 +112,25 @@ const CheckoutSuccessPage = () => {
 
   useEffect(() => {
     const fetchData = async () => {
-      if (!courseId) {
+      if (!effectiveCourseId) {
+        console.log('❌ No courseId found in URL parameters or sessionStorage');
+        console.log('   - Available search params:', searchParams.toString());
+        console.log('   - All search params:');
+        for (const [key, value] of searchParams.entries()) {
+          console.log(`     ${key}: ${value}`);
+        }
         setLoading(false);
         return;
       }
 
+      console.log('🔧 Using courseId:', effectiveCourseId);
+
       try {
         console.log('🔧 Fetching course and payment info for success page...');
-        console.log(`   - Course ID: ${courseId}`);
+        console.log(`   - Course ID: ${effectiveCourseId}`);
 
         // Fetch course information
-        const courseResponse = await fetch(`http://localhost:5000/api/courses/${courseId}`);
+        const courseResponse = await fetch(`http://localhost:5000/api/courses/${effectiveCourseId}`);
         
         if (!courseResponse.ok) {
           throw new Error('Failed to fetch course information');
@@ -132,21 +153,31 @@ const CheckoutSuccessPage = () => {
 
         // Fetch receipt information
         const token = localStorage.getItem('token');
-        if (token) {
+        if (token && effectiveCourseId) {
           try {
-            const receiptResponse = await fetch(`http://localhost:5000/api/payment/receipt/${courseId}`, {
+            console.log(`🔧 Fetching receipt for courseId: ${effectiveCourseId}`);
+            const receiptUrl = `http://localhost:5000/api/payment/receipt/${effectiveCourseId}`;
+            console.log(`🔧 Receipt URL: ${receiptUrl}`);
+            
+            const receiptResponse = await fetch(receiptUrl, {
               headers: {
                 'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json'
               }
             });
 
+            console.log(`📊 Receipt response status: ${receiptResponse.status}`);
+            console.log(`📊 Receipt response ok: ${receiptResponse.ok}`);
+
             if (receiptResponse.ok) {
               const receiptData = await receiptResponse.json();
               setReceiptInfo(receiptData.receipt);
               console.log('✅ Receipt info fetched:', receiptData.receipt);
             } else {
-              console.log('⚠️  Receipt not available yet (payment may still be processing)');
+              const errorText = await receiptResponse.text();
+              console.log(`⚠️  Receipt not available yet (status: ${receiptResponse.status})`);
+              console.log(`⚠️  Error response: ${errorText}`);
+              
               // Set fallback receipt data using course info
               if (course) {
                 setReceiptInfo({
@@ -162,6 +193,7 @@ const CheckoutSuccessPage = () => {
               }
             }
           } catch (receiptError) {
+            console.error('❌ Error fetching receipt:', receiptError);
             console.log('⚠️  Could not fetch receipt info (this is normal for development mode)');
             // Set fallback receipt data using course info
             if (course) {
@@ -177,8 +209,11 @@ const CheckoutSuccessPage = () => {
               });
             }
           }
-        } else {
-          console.log('⚠️  No authentication token found');
+                  } else {
+            console.log('⚠️  No authentication token or courseId found');
+            console.log(`   - Token: ${token ? 'Present' : 'Missing'}`);
+            console.log(`   - CourseId: ${effectiveCourseId || 'Missing'}`);
+          
           // Set fallback receipt data using course info
           if (course) {
             setReceiptInfo({
@@ -209,14 +244,14 @@ const CheckoutSuccessPage = () => {
 
     // Retry mechanism to check if payment has been processed
     const retryInterval = setInterval(async () => {
-      if (!courseId) return;
+      if (!effectiveCourseId) return;
 
       try {
         const token = localStorage.getItem('token');
         if (!token) return;
 
         // Check if user has purchased the course
-        const purchaseResponse = await fetch(`http://localhost:5000/api/payment/check-purchase/${courseId}`, {
+        const purchaseResponse = await fetch(`http://localhost:5000/api/payment/check-purchase/${effectiveCourseId}`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
@@ -230,7 +265,7 @@ const CheckoutSuccessPage = () => {
             
             // Try to fetch receipt again
             try {
-              const receiptResponse = await fetch(`http://localhost:5000/api/payment/receipt/${courseId}`, {
+              const receiptResponse = await fetch(`http://localhost:5000/api/payment/receipt/${effectiveCourseId}`, {
                 headers: {
                   'Authorization': `Bearer ${token}`,
                   'Content-Type': 'application/json'
@@ -264,19 +299,19 @@ const CheckoutSuccessPage = () => {
     return () => {
       clearInterval(retryInterval);
     };
-  }, [courseId]);
+  }, [effectiveCourseId]);
 
   useEffect(() => {
     // Track successful purchase
     console.log('🎉 Purchase completed successfully');
-    console.log(`   - Course ID: ${courseId}`);
+    console.log(`   - Course ID: ${effectiveCourseId}`);
     
     // You could also send analytics here
-    // analytics.track('Purchase Completed', { courseId, amount: courseInfo?.price });
-  }, [courseId]);
+    // analytics.track('Purchase Completed', { effectiveCourseId, amount: courseInfo?.price });
+  }, [effectiveCourseId]);
 
   const handleDownloadReceipt = async () => {
-    if (!courseId) return;
+    if (!effectiveCourseId) return;
 
     setDownloadingReceipt(true);
     try {
@@ -285,7 +320,7 @@ const CheckoutSuccessPage = () => {
         throw new Error('Authentication required');
       }
 
-      const response = await fetch(`http://localhost:5000/api/payment/download-receipt/${courseId}`, {
+      const response = await fetch(`http://localhost:5000/api/payment/download-receipt/${effectiveCourseId}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         }
@@ -321,7 +356,7 @@ const CheckoutSuccessPage = () => {
   };
 
   const handleDownloadResources = async () => {
-    if (!courseId) return;
+    if (!effectiveCourseId) return;
 
     setDownloadingResources(true);
     try {
@@ -330,7 +365,7 @@ const CheckoutSuccessPage = () => {
         throw new Error('Authentication required');
       }
 
-      const response = await fetch(`http://localhost:5000/api/payment/download-resources/${courseId}`, {
+      const response = await fetch(`http://localhost:5000/api/payment/download-resources/${effectiveCourseId}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         }

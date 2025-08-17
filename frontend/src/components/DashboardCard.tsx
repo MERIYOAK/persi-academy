@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Play, Clock, CheckCircle, BookOpen, Trophy } from 'lucide-react';
+import { Play, Clock, CheckCircle, BookOpen, Trophy, Award, Sparkles, Eye } from 'lucide-react';
 import CourseProgressBar from './CourseProgressBar';
 
 interface DashboardCardProps {
@@ -28,6 +28,11 @@ const DashboardCard: React.FC<DashboardCardProps> = ({
   videos,
   isCompleted = false
 }) => {
+  const [generating, setGenerating] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [certificateExists, setCertificateExists] = useState(false);
+  const [certificateId, setCertificateId] = useState<string | null>(null);
+
   // Debug logging
   console.log('🔧 DashboardCard rendering:', {
     title,
@@ -44,6 +49,134 @@ const DashboardCard: React.FC<DashboardCardProps> = ({
 
   // Determine if course is completed (90% or more progress)
   const courseCompleted = isCompleted || progress >= 90;
+
+  // Check if certificate exists for this course
+  useEffect(() => {
+    if (courseCompleted) {
+      checkCertificateExists();
+    }
+  }, [courseCompleted, _id]);
+
+  const checkCertificateExists = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      const response = await fetch(`http://localhost:5000/api/certificates/course/${_id}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        if (result.data.certificate) {
+          setCertificateExists(true);
+          setCertificateId(result.data.certificate.certificateId);
+        } else {
+          setCertificateExists(false);
+          setCertificateId(null);
+        }
+      } else if (response.status === 404) {
+        setCertificateExists(false);
+        setCertificateId(null);
+      }
+    } catch (error) {
+      console.error('Error checking certificate:', error);
+      setCertificateExists(false);
+      setCertificateId(null);
+    }
+  };
+
+  // Generate certificate function
+  const generateCertificate = async () => {
+    try {
+      setGenerating(true);
+      const token = localStorage.getItem('token');
+      
+      if (!token) {
+        console.error('No authentication token found');
+        return;
+      }
+
+      const response = await fetch('http://localhost:5000/api/certificates/generate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          courseId: _id
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to generate certificate');
+      }
+
+      const result = await response.json();
+      
+      // Update certificate state
+      setCertificateExists(true);
+      setCertificateId(result.data.certificate.certificateId);
+      
+      // Show success message
+      setShowSuccess(true);
+      setTimeout(() => setShowSuccess(false), 3000);
+      
+    } catch (error) {
+      console.error('Error generating certificate:', error);
+    } finally {
+      setGenerating(false);
+    }
+  };
+
+  // View certificate function
+  const viewCertificate = () => {
+    if (certificateId) {
+      // Navigate to certificates page with the specific certificate
+      window.open(`/certificates?certificate=${certificateId}`, '_blank');
+    } else {
+      // Navigate to general certificates page
+      window.open('/certificates', '_blank');
+    }
+  };
+
+  // Get course condition text
+  const getCourseCondition = () => {
+    if (courseCompleted) {
+      return {
+        text: "🎉 Course completed! You've earned your certificate.",
+        color: "text-green-700",
+        bgColor: "bg-green-50",
+        borderColor: "border-green-200"
+      };
+    } else if (progress >= 50) {
+      return {
+        text: "🚀 Great progress! You're more than halfway through.",
+        color: "text-blue-700",
+        bgColor: "bg-blue-50",
+        borderColor: "border-blue-200"
+      };
+    } else if (progress > 0) {
+      return {
+        text: "📚 Keep going! You're making good progress.",
+        color: "text-orange-700",
+        bgColor: "bg-orange-50",
+        borderColor: "border-orange-200"
+      };
+    } else {
+      return {
+        text: "🎯 Ready to start your learning journey!",
+        color: "text-gray-700",
+        bgColor: "bg-gray-50",
+        borderColor: "border-gray-200"
+      };
+    }
+  };
+
+  const condition = getCourseCondition();
 
   return (
     <div className={`bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden group relative ${
@@ -146,7 +279,7 @@ const DashboardCard: React.FC<DashboardCardProps> = ({
           />
         </div>
 
-        <div className="flex space-x-3">
+        <div className="flex space-x-3 mb-4">
           <Link
             to={watchLink}
             className={`flex-1 font-semibold py-2 px-4 rounded-lg transition-all duration-200 text-center text-sm ${
@@ -165,11 +298,61 @@ const DashboardCard: React.FC<DashboardCardProps> = ({
           </Link>
         </div>
 
-        {/* Completion status */}
+        {/* Course Condition Explanation */}
+        <div className={`p-3 rounded-lg border ${condition.bgColor} ${condition.borderColor} mb-3`}>
+          <p className={`text-sm font-medium ${condition.color}`}>
+            {condition.text}
+          </p>
+        </div>
+
+        {/* Certificate Actions */}
         {courseCompleted && (
-          <div className="mt-4 flex items-center justify-center space-x-2 text-green-600 bg-green-50 py-2 px-3 rounded-lg">
-            <CheckCircle className="h-4 w-4" />
-            <span className="text-sm font-medium">Course Completed!</span>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2 text-sm text-gray-600">
+              <Award className="h-4 w-4 text-green-500" />
+              <span>
+                {certificateExists ? 'Certificate ready' : 'Certificate available'}
+              </span>
+            </div>
+            <div className="flex space-x-2">
+              {certificateExists ? (
+                <button
+                  onClick={viewCertificate}
+                  className="flex items-center space-x-1 bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded-lg transition-all duration-200 text-xs font-medium"
+                >
+                  <Eye className="w-3 h-3" />
+                  <span>View</span>
+                </button>
+              ) : (
+                <button
+                  onClick={generateCertificate}
+                  disabled={generating}
+                  className="flex items-center space-x-1 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white px-3 py-1 rounded-lg transition-all duration-200 text-xs font-medium"
+                >
+                  {generating ? (
+                    <>
+                      <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>
+                      <span>Generating...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-3 h-3" />
+                      <span>Generate</span>
+                    </>
+                  )}
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Success Message */}
+        {showSuccess && (
+          <div className="mt-3 p-2 bg-green-50 border border-green-200 rounded-lg">
+            <div className="flex items-center space-x-2 text-green-800">
+              <CheckCircle className="w-4 h-4" />
+              <span className="text-sm">Certificate generated successfully!</span>
+            </div>
           </div>
         )}
       </div>

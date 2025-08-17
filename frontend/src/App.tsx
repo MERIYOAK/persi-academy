@@ -11,6 +11,7 @@ import VerifyEmailPage from './pages/VerifyEmailPage';
 import ResendVerificationPage from './pages/ResendVerificationPage';
 import ProfilePage from './pages/ProfilePage';
 import CertificatesPage from './pages/CertificatesPage';
+import CertificateVerificationPage from './pages/CertificateVerificationPage';
 import CourseDetailPage from './pages/CourseDetailPage';
 import DashboardPage from './pages/DashboardPage';
 import VideoPlayerPage from './pages/VideoPlayerPage';
@@ -45,6 +46,7 @@ function App() {
           <Route path="/resend-verification" element={<ResendVerificationPage />} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/certificates" element={<CertificatesPage />} />
+          <Route path="/verify/:certificateId" element={<CertificateVerificationPage />} />
           <Route path="/course/:id" element={<CourseDetailPage />} />
           <Route path="/courses" element={<CoursesPage />} />
           <Route path="/dashboard" element={<DashboardPage />} />
