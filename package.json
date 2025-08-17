@@ -9,7 +9,8 @@
     "test": "jest",
     "lint": "eslint .",
     "migrate": "node scripts/migrate.js",
-    "seed": "node scripts/seed.js"
+    "seed": "node scripts/seed.js",
+    "security-scan": "node security-scan.js"
   },
   "keywords": [
     "mern",
