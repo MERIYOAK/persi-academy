@@ -3,8 +3,13 @@ const Certificate = require('./models/Certificate');
 
 async function fixCertificateHashes() {
   try {
-    // Connect to remote MongoDB Atlas database
-    await mongoose.connect('mongodb+srv://meron:07448717@persi-edu-platform.giuvi3i.mongodb.net/?retryWrites=true&w=majority&appName=persi-edu-platform');
+    // Connect to remote MongoDB Atlas database using environment variable
+    const MONGODB_URI = process.env.MONGODB_URI;
+    if (!MONGODB_URI) {
+      throw new Error('MONGODB_URI environment variable is not set');
+    }
+    
+    await mongoose.connect(MONGODB_URI);
     console.log('Connected to remote MongoDB Atlas database');
 
     // Get all certificates
