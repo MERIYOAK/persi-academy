@@ -86,7 +86,7 @@ const AdminCourseEditPage: React.FC = () => {
         throw new Error('Admin token not found');
       }
 
-      const response = await fetch(buildApiUrl(`/api/courses/${courseId}`, {
+      const response = await fetch(buildApiUrl(`/api/courses/${courseId}`), {
         headers: {
           'Authorization': `Bearer ${adminToken}`,
           'Content-Type': 'application/json',
@@ -196,7 +196,7 @@ const AdminCourseEditPage: React.FC = () => {
         message: 'Preparing to update course...'
       }));
 
-      const response = await fetch(buildApiUrl(`/api/courses/${courseId}`, {
+      const response = await fetch(buildApiUrl(`/api/courses/${courseId}`), {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${adminToken}`,
@@ -281,7 +281,7 @@ const AdminCourseEditPage: React.FC = () => {
         message: 'Uploading thumbnail to server...'
       }));
 
-      const response = await fetch(buildApiUrl(`/api/courses/thumbnail/${courseId}`, {
+      const response = await fetch(buildApiUrl(`/api/courses/thumbnail/${courseId}`), {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${adminToken}`,
@@ -352,7 +352,7 @@ const AdminCourseEditPage: React.FC = () => {
       }
 
       // Update course with the restored thumbnail URL
-      const response = await fetch(buildApiUrl(`/api/courses/${courseId}`, {
+      const response = await fetch(buildApiUrl(`/api/courses/${courseId}`), {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${adminToken}`,

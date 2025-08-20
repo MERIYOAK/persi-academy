@@ -113,9 +113,9 @@ const AdminAnalyticsPage: React.FC = () => {
 
       // Fetch all analytics data in parallel
       const [generalResponse, courseResponse, videoResponse] = await Promise.all([
-        fetch(buildApiUrl('/api/admin/stats', { headers }),
-        fetch(buildApiUrl('/api/courses/admin/statistics', { headers }),
-        fetch(buildApiUrl('/api/videos/admin/statistics', { headers })
+        fetch(buildApiUrl('/api/admin/stats'), { headers }),
+        fetch(buildApiUrl('/api/courses/admin/statistics'), { headers }),
+        fetch(buildApiUrl('/api/videos/admin/statistics'), { headers })
       ]);
 
       if (!generalResponse.ok || !courseResponse.ok || !videoResponse.ok) {

@@ -64,7 +64,7 @@ const AdminCoursesPage: React.FC = () => {
         throw new Error('Admin token not found');
       }
 
-      const response = await fetch(buildApiUrl('/api/courses?status=all', {
+      const response = await fetch(buildApiUrl('/api/courses?status=all'), {
         headers: {
           'Authorization': `Bearer ${adminToken}`,
           'Content-Type': 'application/json',

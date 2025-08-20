@@ -66,7 +66,7 @@ const ResetPasswordPage = () => {
       setError('');
       setMessage('');
 
-      const response = await fetch(buildApiUrl('/api/auth/forgot-password', {
+      const response = await fetch(buildApiUrl('/api/auth/forgot-password'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -116,7 +116,7 @@ const ResetPasswordPage = () => {
         return;
       }
 
-      const response = await fetch(buildApiUrl('/api/auth/reset-password', {
+      const response = await fetch(buildApiUrl('/api/auth/reset-password'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -37,7 +37,7 @@ const ResendVerificationPage = () => {
     setIsLoading(true);
     
     try {
-      const response = await fetch(buildApiUrl('/api/auth/resend-verification', {
+      const response = await fetch(buildApiUrl('/api/auth/resend-verification'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -96,7 +96,7 @@ const CourseCard: React.FC<CourseCardProps> = ({
       }
 
       // Create checkout session
-      const response = await fetch(buildApiUrl('/api/payment/create-checkout-session', {
+      const response = await fetch(buildApiUrl('/api/payment/create-checkout-session'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -64,7 +64,7 @@ const DashboardCard: React.FC<DashboardCardProps> = ({
       const token = localStorage.getItem('token');
       if (!token) return;
 
-      const response = await fetch(buildApiUrl(`/api/certificates/course/${_id}`, {
+      const response = await fetch(buildApiUrl(`/api/certificates/course/${_id}`), {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -101,7 +101,7 @@ const DashboardCard: React.FC<DashboardCardProps> = ({
         return;
       }
 
-      const response = await fetch(buildApiUrl('/api/certificates/generate', {
+      const response = await fetch(buildApiUrl('/api/certificates/generate'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

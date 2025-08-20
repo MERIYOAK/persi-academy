@@ -42,7 +42,7 @@ export const AdminAuthProvider: React.FC<AdminAuthProviderProps> = ({ children }
     }
 
     try {
-      const response = await fetch(buildApiUrl('/api/admin/validate', {
+      const response = await fetch(buildApiUrl('/api/admin/validate'), {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,

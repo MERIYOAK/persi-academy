@@ -50,7 +50,7 @@ const AdminVideoUploadPage: React.FC = () => {
         throw new Error('Admin token not found');
       }
 
-      const response = await fetch(buildApiUrl(`/api/courses/${courseId}`, {
+      const response = await fetch(buildApiUrl(`/api/courses/${courseId}`), {
         headers: {
           'Authorization': `Bearer ${adminToken}`,
           'Content-Type': 'application/json',

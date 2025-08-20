@@ -68,7 +68,7 @@ const AdminCourseVideosPage: React.FC = () => {
         throw new Error('Admin token not found');
       }
 
-      const response = await fetch(buildApiUrl(`/api/courses/${courseId}`, {
+      const response = await fetch(buildApiUrl(`/api/courses/${courseId}`), {
         headers: {
           'Authorization': `Bearer ${adminToken}`,
           'Content-Type': 'application/json',
@@ -146,7 +146,7 @@ const AdminCourseVideosPage: React.FC = () => {
         message: 'Preparing delete request...'
       }));
 
-      const response = await fetch(buildApiUrl(`/api/videos/${videoId}`, {
+      const response = await fetch(buildApiUrl(`/api/videos/${videoId}`), {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${adminToken}`,
@@ -232,7 +232,7 @@ const AdminCourseVideosPage: React.FC = () => {
         message: 'Preparing update request...'
       }));
 
-      const response = await fetch(buildApiUrl(`/api/videos/${editingVideo}`, {
+      const response = await fetch(buildApiUrl(`/api/videos/${editingVideo}`), {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${adminToken}`,
@@ -296,7 +296,7 @@ const AdminCourseVideosPage: React.FC = () => {
 
       const promises = selectedVideos.map(videoId => {
         if (bulkAction === 'delete') {
-          return fetch(buildApiUrl(`/api/videos/${videoId}`, {
+          return fetch(buildApiUrl(`/api/videos/${videoId}`), {
             method: 'DELETE',
             headers: {
               'Authorization': `Bearer ${adminToken}`,
@@ -337,7 +337,7 @@ const AdminCourseVideosPage: React.FC = () => {
         throw new Error('Admin token not found');
       }
 
-      const response = await fetch(buildApiUrl(`/api/videos/${videoId}/free-preview`, {
+      const response = await fetch(buildApiUrl(`/api/videos/${videoId}/free-preview`), {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${adminToken}`,

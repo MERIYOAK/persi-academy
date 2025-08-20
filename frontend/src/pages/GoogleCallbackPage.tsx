@@ -40,7 +40,7 @@ const GoogleCallbackPage: React.FC = () => {
         localStorage.setItem('token', token);
 
         // Verify the token by making a request to the backend
-        const response = await fetch(buildApiUrl('/api/auth/verify-token', {
+        const response = await fetch(buildApiUrl('/api/auth/verify-token'), {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

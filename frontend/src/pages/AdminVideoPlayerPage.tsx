@@ -60,7 +60,7 @@ const AdminVideoPlayerPage = () => {
         }
         
         // Fetch course details
-        const courseResponse = await fetch(buildApiUrl(`/api/courses/${courseId}`, {
+        const courseResponse = await fetch(buildApiUrl(`/api/courses/${courseId}`), {
           headers: {
             'Authorization': `Bearer ${adminToken}`,
             'Content-Type': 'application/json',
@@ -91,7 +91,7 @@ const AdminVideoPlayerPage = () => {
             
             console.log('Fetching video with ID:', videoIdString);
             
-            const videoResponse = await fetch(buildApiUrl(`/api/videos/${videoIdString}`, {
+            const videoResponse = await fetch(buildApiUrl(`/api/videos/${videoIdString}`), {
               headers: {
                 'Authorization': `Bearer ${adminToken}`,
                 'Content-Type': 'application/json',
