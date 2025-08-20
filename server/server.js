@@ -33,10 +33,12 @@ const adminAuthMiddleware = require('./middleware/adminAuthMiddleware');
 
 const app = express();
 
-// CORS configuration for development
+// CORS configuration for development and production
 const allowedOrigins = [
   process.env.FRONTEND_URL || 'http://localhost:5173',
   process.env.CLIENT_URL || 'http://localhost:5173',
+  'https://youtubeacademy.vercel.app', // Vercel production domain
+  'https://persi-academy.vercel.app', // Alternative Vercel domain
   'http://localhost:3000',
   'http://localhost:4173',
   'http://localhost:8080'
@@ -73,6 +75,26 @@ app.use(session({
 // Initialize Passport
 app.use(passport.initialize());
 app.use(passport.session());
+
+// Health check route
+app.get('/health', (req, res) => {
+  res.json({ 
+    status: 'OK', 
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'development',
+    cors: {
+      allowedOrigins: allowedOrigins
+    }
+  });
+});
+
+// Test API route
+app.get('/api/test', (req, res) => {
+  res.json({ 
+    message: 'API is working!',
+    timestamp: new Date().toISOString()
+  });
+});
 
 // Note: Certificate PDFs are now served directly from S3 with public-read ACL
 // No local file serving needed for certificates
