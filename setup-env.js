@@ -1,4 +1,25 @@
-# =============================================================================
+#!/usr/bin/env node
+
+const fs = require('fs');
+const path = require('path');
+
+console.log('🔧 Setting up environment files...\n');
+
+// Frontend environment file
+const frontendEnvContent = `# Frontend Environment Variables
+VITE_API_BASE_URL=http://localhost:5000
+VITE_FRONTEND_URL=http://localhost:5173
+VITE_APP_NAME=YT Academy
+VITE_APP_DESCRIPTION=Master YouTube Success
+VITE_S3_BUCKET_URL=https://persi-edu-platform.s3.us-east-1.amazonaws.com
+VITE_S3_IMAGE_PATH=/persi-academy/Ig-images/ig-image.jpeg
+VITE_S3_BUCKET_URL_DOMAIN=persi-edu-platform.s3.us-east-1.amazonaws.com
+VITE_STRIPE_PUBLISHABLE_KEY=pk_test_your_stripe_publishable_key_here
+VITE_GOOGLE_CLIENT_ID=your_google_client_id_here
+`;
+
+// Backend environment file
+const backendEnvContent = `# =============================================================================
 # MONGODB CONFIGURATION
 # =============================================================================
 MONGODB_URI=mongodb://localhost:27017/persi-academy
@@ -77,24 +98,31 @@ GOOGLE_CLIENT_SECRET=your_google_client_secret_here
 # =============================================================================
 # Set to true to enable detailed logging
 DEBUG=true
+`;
 
-# =============================================================================
-# STRIPE TEST CARD NUMBERS
-# =============================================================================
-# Use these test card numbers in Stripe Checkout:
-# - Success: 4242 4242 4242 4242
-# - Decline: 4000 0000 0000 0002
-# - Requires Authentication: 4000 0025 0000 3155
-# 
-# Test card details:
-# - Expiry: 12/34
-# - CVC: 123
-# - ZIP: 12345
+try {
+  // Create frontend .env file
+  const frontendEnvPath = path.join(__dirname, 'frontend', '.env');
+  fs.writeFileSync(frontendEnvPath, frontendEnvContent);
+  console.log('✅ Created frontend/.env');
 
-# =============================================================================
-# WEBHOOK SETUP INSTRUCTIONS
-# =============================================================================
-# 1. Install Stripe CLI: https://stripe.com/docs/stripe-cli
-# 2. Login: stripe login
-# 3. Forward webhooks: stripe listen --forward-to localhost:5000/api/payment/webhook
-# 4. Copy the webhook secret from the CLI output to STRIPE_WEBHOOK_SECRET 
+  // Create backend .env file
+  const backendEnvPath = path.join(__dirname, 'server', '.env');
+  fs.writeFileSync(backendEnvPath, backendEnvContent);
+  console.log('✅ Created server/.env');
+
+  console.log('\n🎉 Environment files created successfully!');
+  console.log('\n📝 Next steps:');
+  console.log('1. Update the values in both .env files with your actual credentials');
+  console.log('2. Start MongoDB if you haven\'t already');
+  console.log('3. Start the backend server: cd server && npm start');
+  console.log('4. Start the frontend: cd frontend && npm run dev');
+  console.log('\n⚠️  Note: Make sure to update the JWT_SECRET and other sensitive values before production!');
+
+} catch (error) {
+  console.error('❌ Error creating environment files:', error.message);
+  console.log('\n📝 Manual setup:');
+  console.log('1. Copy frontend/env.example to frontend/.env');
+  console.log('2. Copy server/env.example to server/.env');
+  console.log('3. Update the values in both files');
+}

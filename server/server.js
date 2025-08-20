@@ -35,11 +35,12 @@ const app = express();
 
 // CORS configuration for development
 const allowedOrigins = [
+  process.env.FRONTEND_URL || 'http://localhost:5173',
+  process.env.CLIENT_URL || 'http://localhost:5173',
   'http://localhost:3000',
-  'http://localhost:5173',
   'http://localhost:4173',
   'http://localhost:8080'
-];
+].filter(Boolean); // Remove any undefined values
 
 // Middleware
 app.use(cors({
@@ -106,7 +107,7 @@ app.get('/certificate-preview/:certificateId', async (req, res) => {
             </div>
             <h2 class="text-2xl font-bold mb-4 text-gray-900">Certificate Not Found</h2>
             <p class="text-gray-600 mb-6">The certificate you're looking for doesn't exist or has been removed.</p>
-            <a href="http://localhost:5173" class="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg transition-colors duration-200">
+            <a href="${process.env.FRONTEND_URL || 'http://localhost:5173'}" class="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg transition-colors duration-200">
               Go to Homepage
             </a>
           </div>
@@ -137,7 +138,7 @@ app.get('/certificate-preview/:certificateId', async (req, res) => {
              </div>
              <h2 class="text-2xl font-bold mb-4 text-gray-900">Certificate PDF Not Found</h2>
              <p class="text-gray-600 mb-6">The certificate file could not be located.</p>
-             <a href="http://localhost:5173" class="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg transition-colors duration-200">
+             <a href="${process.env.FRONTEND_URL || 'http://localhost:5173'}" class="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg transition-colors duration-200">
                Go to Homepage
              </a>
            </div>
@@ -287,7 +288,7 @@ app.get('/certificate-preview/:certificateId', async (req, res) => {
           </div>
           <h2 class="text-2xl font-bold mb-4 text-gray-900">Error Loading Certificate</h2>
           <p class="text-gray-600 mb-6">There was an error loading the certificate. Please try again later.</p>
-          <a href="http://localhost:5173" class="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg transition-colors duration-200">
+          <a href="${process.env.FRONTEND_URL || 'http://localhost:5173'}" class="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg transition-colors duration-200">
             Go to Homepage
           </a>
         </div>
@@ -320,7 +321,13 @@ mongoose.connect(MONGODB_URI, {
     console.error('❌ MongoDB connection error:', error);
     console.log('💡 Make sure MongoDB is running or create a .env file with MONGODB_URI');
     console.log('💡 Example: MONGODB_URI=mongodb://localhost:27017/persi-academy');
-    process.exit(1);
+    
+    // In development, don't exit on MongoDB connection failure
+    if (process.env.NODE_ENV === 'production') {
+      process.exit(1);
+    } else {
+      console.log('⚠️  Continuing without MongoDB connection in development mode');
+    }
   });
 
 // Health check endpoint
@@ -511,6 +518,7 @@ const optionalEnvVars = [
 // Set fallback values for development
 if (process.env.NODE_ENV !== 'production') {
   process.env.JWT_SECRET = process.env.JWT_SECRET || 'dev-jwt-secret-change-in-production';
+  process.env.MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/persi-academy';
   process.env.AWS_REGION = process.env.AWS_REGION || 'us-east-1';
   process.env.FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
   process.env.BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:5000';
@@ -525,7 +533,22 @@ const missingOptionalVars = optionalEnvVars.filter(varName => !process.env[varNa
 if (missingRequiredVars.length > 0) {
   console.error('❌ Missing required environment variables:', missingRequiredVars);
   console.log('💡 Create a .env file with the required variables');
-  process.exit(1);
+  console.log('💡 For development, these will be set to default values');
+  
+  // In development, set default values instead of exiting
+  if (process.env.NODE_ENV !== 'production') {
+    console.log('🔄 Setting default values for development...');
+    if (!process.env.MONGODB_URI) {
+      process.env.MONGODB_URI = 'mongodb://localhost:27017/persi-academy';
+      console.log('   MONGODB_URI set to default');
+    }
+    if (!process.env.JWT_SECRET) {
+      process.env.JWT_SECRET = 'dev-jwt-secret-change-in-production';
+      console.log('   JWT_SECRET set to default');
+    }
+  } else {
+    process.exit(1);
+  }
 }
 
 if (missingOptionalVars.length > 0 && process.env.NODE_ENV !== 'production') {

@@ -307,7 +307,7 @@ exports.verifyCertificate = async (req, res) => {
 exports.downloadCertificate = async (req, res) => {
   try {
     const { certificateId } = req.params;
-
+    
     console.log(`🔧 [Certificate] Public download request for certificate: ${certificateId}`);
 
     const certificate = await Certificate.getByCertificateId(certificateId);
@@ -350,7 +350,7 @@ async function generateCertificatePDF(certificate) {
     const { width, height } = page.getSize();
     const centerX = width / 2;
     const centerY = height / 2;
-    
+
     // Embed fonts
     const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
     const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
@@ -387,7 +387,7 @@ async function generateCertificatePDF(certificate) {
       borderWidth: borderWidth,
       color: rgb(1, 1, 1)
     });
-    
+
     // Inner border (navy)
     page.drawRectangle({
       x: borderWidth + borderGradient,
