@@ -106,52 +106,52 @@ const AdminDashboardPage = () => {
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-500"></div>
+        <div className="animate-spin rounded-full h-10 w-10 xxs:h-12 xxs:w-12 border-b-2 border-red-500"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+    <div className="min-h-screen bg-gray-50 pt-16">
+      <div className="max-w-7xl mx-auto px-3 xxs:px-4 sm:px-6 lg:px-8 py-4 xxs:py-6 sm:py-8 space-y-4 xxs:space-y-6 sm:space-y-8">
         {/* Page title */}
-        <div className="flex items-baseline justify-between">
+        <div className="flex flex-col xxs:flex-row xxs:items-baseline xxs:justify-between space-y-4 xxs:space-y-0">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
-            <p className="text-sm text-gray-500">Welcome back{adminUser?.email ? `, ${adminUser.email}` : ''}</p>
+            <h1 className="text-xl xxs:text-2xl font-bold text-gray-900">Admin Dashboard</h1>
+            <p className="text-xs xxs:text-sm text-gray-500">Welcome back{adminUser?.email ? `, ${adminUser.email}` : ''}</p>
           </div>
           
           {/* Quick Actions */}
-          <div className="flex space-x-4">
+          <div className="flex flex-col xxs:flex-row space-y-2 xxs:space-y-0 xxs:space-x-2 sm:space-x-4">
             <Link
               to="/admin/upload"
-              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+              className="inline-flex items-center justify-center px-3 xxs:px-4 py-2 text-xs xxs:text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
             >
-              <Plus className="h-4 w-4 mr-2" />
+              <Plus className="h-3 w-3 xxs:h-4 xxs:w-4 mr-1 xxs:mr-2" />
               Upload Course
             </Link>
             <Link
               to="/admin/courses"
-              className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+              className="inline-flex items-center justify-center px-3 xxs:px-4 py-2 border border-gray-300 text-xs xxs:text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
             >
               View All Courses
-              <ArrowRight className="h-4 w-4 ml-2" />
+              <ArrowRight className="h-3 w-3 xxs:h-4 xxs:w-4 ml-1 xxs:ml-2" />
             </Link>
           </div>
         </div>
 
         {/* Stats Grid */}
         <section>
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 xxs:grid-cols-2 md:grid-cols-2 xl:grid-cols-4 gap-3 xxs:gap-4 sm:gap-6">
             {adminStats.map((stat) => (
-              <div key={stat.title} className="bg-white rounded-lg shadow-sm p-6">
+              <div key={stat.title} className="bg-white rounded-lg shadow-sm p-3 xxs:p-4 sm:p-6">
                 <div className="flex items-center">
-                  <div className={`flex-shrink-0 p-3 rounded-lg ${stat.color}`}>
-                    <stat.icon className="h-6 w-6 text-white" />
+                  <div className={`flex-shrink-0 p-2 xxs:p-3 rounded-lg ${stat.color}`}>
+                    <stat.icon className="h-4 w-4 xxs:h-5 xxs:w-5 sm:h-6 sm:w-6 text-white" />
                   </div>
-                  <div className="ml-4">
-                    <p className="text-sm font-medium text-gray-500">{stat.title}</p>
-                    <p className="text-2xl font-semibold text-gray-900">{stat.value}</p>
+                  <div className="ml-2 xxs:ml-3 sm:ml-4">
+                    <p className="text-xs xxs:text-sm font-medium text-gray-500">{stat.title}</p>
+                    <p className="text-lg xxs:text-xl sm:text-2xl font-semibold text-gray-900">{stat.value}</p>
                   </div>
                 </div>
               </div>
@@ -161,49 +161,49 @@ const AdminDashboardPage = () => {
 
         {/* Quick Actions Grid */}
         <section>
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <h2 className="text-base xxs:text-lg font-semibold text-gray-900 mb-3 xxs:mb-4">Quick Actions</h2>
+          <div className="grid grid-cols-1 xxs:grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 xxs:gap-4 sm:gap-6">
             <Link
               to="/admin/upload"
-              className="bg-white rounded-lg shadow-sm p-6 hover:shadow-md transition-shadow duration-200"
+              className="bg-white rounded-lg shadow-sm p-3 xxs:p-4 sm:p-6 hover:shadow-md transition-shadow duration-200"
             >
               <div className="flex items-center">
-                <div className="flex-shrink-0 p-3 rounded-lg bg-red-100">
-                  <Plus className="h-6 w-6 text-red-600" />
+                <div className="flex-shrink-0 p-2 xxs:p-3 rounded-lg bg-red-100">
+                  <Plus className="h-4 w-4 xxs:h-5 xxs:w-5 sm:h-6 sm:w-6 text-red-600" />
                 </div>
-                <div className="ml-4">
-                  <h3 className="text-lg font-medium text-gray-900">Upload Course</h3>
-                  <p className="text-sm text-gray-500">Add a new course to the platform</p>
+                <div className="ml-2 xxs:ml-3 sm:ml-4">
+                  <h3 className="text-sm xxs:text-base sm:text-lg font-medium text-gray-900">Upload Course</h3>
+                  <p className="text-xs xxs:text-sm text-gray-500">Add a new course to the platform</p>
                 </div>
               </div>
             </Link>
 
             <Link
               to="/admin/courses"
-              className="bg-white rounded-lg shadow-sm p-6 hover:shadow-md transition-shadow duration-200"
+              className="bg-white rounded-lg shadow-sm p-3 xxs:p-4 sm:p-6 hover:shadow-md transition-shadow duration-200"
             >
               <div className="flex items-center">
-                <div className="flex-shrink-0 p-3 rounded-lg bg-blue-100">
-                  <BookOpen className="h-6 w-6 text-blue-600" />
+                <div className="flex-shrink-0 p-2 xxs:p-3 rounded-lg bg-blue-100">
+                  <BookOpen className="h-4 w-4 xxs:h-5 xxs:w-5 sm:h-6 sm:w-6 text-blue-600" />
                 </div>
-                <div className="ml-4">
-                  <h3 className="text-lg font-medium text-gray-900">Manage Courses</h3>
-                  <p className="text-sm text-gray-500">View and edit existing courses</p>
+                <div className="ml-2 xxs:ml-3 sm:ml-4">
+                  <h3 className="text-sm xxs:text-base sm:text-lg font-medium text-gray-900">Manage Courses</h3>
+                  <p className="text-xs xxs:text-sm text-gray-500">View and edit existing courses</p>
                 </div>
               </div>
             </Link>
 
             <Link
               to="/admin/users"
-              className="bg-white rounded-lg shadow-sm p-6 hover:shadow-md transition-shadow duration-200"
+              className="bg-white rounded-lg shadow-sm p-3 xxs:p-4 sm:p-6 hover:shadow-md transition-shadow duration-200"
             >
               <div className="flex items-center">
-                <div className="flex-shrink-0 p-3 rounded-lg bg-green-100">
-                  <Users className="h-6 w-6 text-green-600" />
+                <div className="flex-shrink-0 p-2 xxs:p-3 rounded-lg bg-green-100">
+                  <Users className="h-4 w-4 xxs:h-5 xxs:w-5 sm:h-6 sm:w-6 text-green-600" />
                 </div>
-                <div className="ml-4">
-                  <h3 className="text-lg font-medium text-gray-900">User Management</h3>
-                  <p className="text-sm text-gray-500">Manage user accounts and permissions</p>
+                <div className="ml-2 xxs:ml-3 sm:ml-4">
+                  <h3 className="text-sm xxs:text-base sm:text-lg font-medium text-gray-900">User Management</h3>
+                  <p className="text-xs xxs:text-sm text-gray-500">Manage user accounts and permissions</p>
                 </div>
               </div>
             </Link>

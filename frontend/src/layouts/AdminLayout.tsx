@@ -2,6 +2,7 @@ import React from 'react';
 import { Outlet, Navigate, useLocation } from 'react-router-dom';
 import { useAdminAuth } from '../contexts/AdminAuthContext';
 import AdminNavbar from '../components/nav/AdminNavbar';
+import ScrollToTop from '../components/ScrollToTop';
 
 const AdminLayout: React.FC = () => {
   const location = useLocation();
@@ -36,6 +37,7 @@ const AdminLayout: React.FC = () => {
       <main className="flex-grow">
         <Outlet />
       </main>
+      <ScrollToTop />
     </div>
   );
 };

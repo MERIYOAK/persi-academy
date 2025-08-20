@@ -1,10 +1,14 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { BookOpen, Mail, Phone, MapPin, Youtube, Twitter, Instagram } from 'lucide-react';
+import { BookOpen, Mail, Phone, MapPin, Youtube, Twitter, Instagram, Shield } from 'lucide-react';
 
-const Footer = () => {
+interface FooterProps {
+  className?: string;
+}
+
+const Footer: React.FC<FooterProps> = ({ className = '' }) => {
   return (
-    <footer className="bg-gray-900 text-white">
+    <footer className={`bg-gray-900 text-white ${className}`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {/* Brand Section */}
@@ -36,7 +40,7 @@ const Footer = () => {
             <h3 className="text-lg font-semibold text-white">Quick Links</h3>
             <ul className="space-y-2">
               <li>
-                <Link to="/" className="text-gray-400 hover:text-white transition-colors duration-200">
+                <Link to="/courses" className="text-gray-400 hover:text-white transition-colors duration-200">
                   All Courses
                 </Link>
               </li>
@@ -56,6 +60,17 @@ const Footer = () => {
                 </Link>
               </li>
             </ul>
+            
+            {/* Verify Certificate Button */}
+            <div className="pt-2">
+              <Link 
+                to="/verify" 
+                className="inline-flex items-center space-x-2 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white px-4 py-2 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg"
+              >
+                <Shield className="h-4 w-4" />
+                <span className="text-sm font-medium">Verify Certificate</span>
+              </Link>
+            </div>
           </div>
 
           {/* Support */}
@@ -63,24 +78,24 @@ const Footer = () => {
             <h3 className="text-lg font-semibold text-white">Support</h3>
             <ul className="space-y-2">
               <li>
-                <a href="#" className="text-gray-400 hover:text-white transition-colors duration-200">
+                <Link to="/help-center" className="text-gray-400 hover:text-white transition-colors duration-200">
                   Help Center
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="#" className="text-gray-400 hover:text-white transition-colors duration-200">
+                <Link to="/terms-of-service" className="text-gray-400 hover:text-white transition-colors duration-200">
                   Terms of Service
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="#" className="text-gray-400 hover:text-white transition-colors duration-200">
+                <Link to="/privacy-policy" className="text-gray-400 hover:text-white transition-colors duration-200">
                   Privacy Policy
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="#" className="text-gray-400 hover:text-white transition-colors duration-200">
+                <Link to="/refund-policy" className="text-gray-400 hover:text-white transition-colors duration-200">
                   Refund Policy
-                </a>
+                </Link>
               </li>
             </ul>
           </div>
@@ -111,15 +126,19 @@ const Footer = () => {
               © 2024 YT Academy. All rights reserved.
             </p>
             <div className="flex space-x-6 mt-4 md:mt-0">
-              <a href="#" className="text-gray-400 hover:text-white text-sm transition-colors duration-200">
+              <Link to="/privacy-policy" className="text-gray-400 hover:text-white text-sm transition-colors duration-200">
                 Privacy
-              </a>
-              <a href="#" className="text-gray-400 hover:text-white text-sm transition-colors duration-200">
+              </Link>
+              <Link to="/terms-of-service" className="text-gray-400 hover:text-white text-sm transition-colors duration-200">
                 Terms
-              </a>
-              <a href="#" className="text-gray-400 hover:text-white text-sm transition-colors duration-200">
-                Cookies
-              </a>
+              </Link>
+              <Link to="/help-center" className="text-gray-400 hover:text-white text-sm transition-colors duration-200">
+                Help
+              </Link>
+              <Link to="/verify" className="text-gray-400 hover:text-white text-sm transition-colors duration-200 flex items-center space-x-1">
+                <Shield className="h-3 w-3" />
+                <span>Verify Certificate</span>
+              </Link>
             </div>
           </div>
         </div>

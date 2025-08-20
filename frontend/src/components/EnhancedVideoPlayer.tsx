@@ -60,6 +60,7 @@ const EnhancedVideoPlayer: React.FC<EnhancedVideoPlayerProps> = ({
   const [currentPlaybackRate, setCurrentPlaybackRate] = useState(playbackRate);
   const [showSettings, setShowSettings] = useState(false);
   const [showVolumeSlider, setShowVolumeSlider] = useState(false);
+  const [showKeyboardHints, setShowKeyboardHints] = useState(true);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [buffered, setBuffered] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
@@ -325,6 +326,7 @@ const EnhancedVideoPlayer: React.FC<EnhancedVideoPlayerProps> = ({
       if (isPlaying) {
         setControlsVisible(false);
         onControlsToggle?.(false);
+        setShowKeyboardHints(false); // Hide keyboard hints when controls hide
       }
     }, 3000);
     
@@ -354,6 +356,14 @@ const EnhancedVideoPlayer: React.FC<EnhancedVideoPlayerProps> = ({
     hideControls();
   };
 
+  // Handle clicks to hide volume slider
+  const handleContainerClick = (e: React.MouseEvent) => {
+    // If clicking on the container but not on volume controls, hide volume slider
+    if (!e.currentTarget.querySelector('.volume-controls')?.contains(e.target as Node)) {
+      setShowVolumeSlider(false);
+    }
+  };
+
   // Effects
   useEffect(() => {
     // Set up keyboard event listeners
@@ -366,6 +376,11 @@ const EnhancedVideoPlayer: React.FC<EnhancedVideoPlayerProps> = ({
     
     document.addEventListener('fullscreenchange', handleFullscreenChange);
 
+    // Auto-hide keyboard hints after 5 seconds
+    const keyboardHintsTimeout = setTimeout(() => {
+      setShowKeyboardHints(false);
+    }, 5000);
+
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
       document.removeEventListener('fullscreenchange', handleFullscreenChange);
@@ -377,6 +392,8 @@ const EnhancedVideoPlayer: React.FC<EnhancedVideoPlayerProps> = ({
       if (controlsTimeout) {
         clearTimeout(controlsTimeout);
       }
+
+      clearTimeout(keyboardHintsTimeout);
     };
   }, [handleKeyDown, controlsTimeout]);
 
@@ -412,6 +429,7 @@ const EnhancedVideoPlayer: React.FC<EnhancedVideoPlayerProps> = ({
       onDragStart={handleDragStart}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
+      onClick={handleContainerClick}
       style={{
         userSelect: 'none',
         WebkitUserSelect: 'none',
@@ -549,7 +567,7 @@ const EnhancedVideoPlayer: React.FC<EnhancedVideoPlayerProps> = ({
 
                 {/* Volume Control */}
                 <div 
-                  className="relative flex items-center"
+                  className="relative flex items-center volume-controls"
                   onMouseEnter={() => setShowVolumeSlider(true)}
                   onMouseLeave={() => setShowVolumeSlider(false)}
                 >
@@ -562,7 +580,11 @@ const EnhancedVideoPlayer: React.FC<EnhancedVideoPlayerProps> = ({
                   </button>
                   
                   {showVolumeSlider && (
-                    <div className="absolute bottom-full left-0 mb-2 bg-gray-800 rounded-lg p-2">
+                    <div 
+                      className="absolute bottom-full left-0 mb-2 bg-gray-800 rounded-lg p-2"
+                      onMouseDown={(e) => e.stopPropagation()}
+                      onClick={(e) => e.stopPropagation()}
+                    >
                       <input
                         type="range"
                         min="0"
@@ -634,13 +656,14 @@ const EnhancedVideoPlayer: React.FC<EnhancedVideoPlayerProps> = ({
       )}
 
       {/* Keyboard Shortcuts Hint */}
-      {controlsVisible && (
-        <div className="absolute top-4 right-4 bg-black bg-opacity-75 text-white text-xs p-2 rounded opacity-75 hover:opacity-100 transition-opacity duration-200">
-          <div>Space: Play/Pause</div>
-          <div>M: Mute</div>
-          <div>←/→: Skip 10s</div>
-          <div>↑/↓: Volume</div>
-          <div>F: Fullscreen</div>
+      {controlsVisible && showKeyboardHints && (
+        <div 
+          className="absolute top-4 right-4 bg-black bg-opacity-75 text-white text-xs p-2 rounded opacity-75 hover:opacity-100 transition-opacity duration-200 cursor-pointer"
+          onClick={() => setShowKeyboardHints(false)}
+          title="Click to hide"
+        >
+          <div>Space: Play/Pause | M: Mute</div>
+          <div>←/→: Skip 10s | F: Fullscreen</div>
         </div>
       )}
 

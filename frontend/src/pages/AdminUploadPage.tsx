@@ -7,6 +7,7 @@ interface Video {
   title: string;
   description: string;
   file?: File;
+  isFreePreview?: boolean;
 }
 
 interface Course {
@@ -99,7 +100,8 @@ const AdminUploadPage = () => {
     const newVideo: Video = {
       id: Date.now().toString(),
       title: '',
-      description: ''
+      description: '',
+      isFreePreview: false // Default to false
     };
     setCourse(prev => ({
       ...prev,
@@ -342,6 +344,7 @@ const AdminUploadPage = () => {
           videoFormData.append('description', video.description);
           videoFormData.append('courseId', courseId);
           videoFormData.append('order', (i + 1).toString());
+          videoFormData.append('isFreePreview', video.isFreePreview ? 'true' : 'false');
           videoFormData.append('file', video.file);
 
           await xhrUpload({
@@ -419,15 +422,15 @@ const AdminUploadPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12">
-      <div className={`max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 ${isLoading || progressOverlay.isVisible ? 'blur-[2px] pointer-events-none' : ''}`}>
+    <div className="min-h-screen bg-gray-50 pt-20 pb-12">
+      <div className={`max-w-4xl mx-auto px-3 sm:px-4 lg:px-6 xl:px-8 ${isLoading || progressOverlay.isVisible ? 'blur-[2px] pointer-events-none' : ''}`}>
         <div className="bg-white rounded-2xl shadow-2xl overflow-hidden">
-          <div className="bg-gradient-to-r from-red-600 to-red-700 px-8 py-6">
-            <h1 className="text-3xl font-bold text-white">Upload New Course</h1>
-            <p className="text-red-100 mt-2">Create and publish your educational content</p>
+          <div className="bg-gradient-to-r from-red-600 to-red-700 px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-white">Upload New Course</h1>
+            <p className="text-red-100 mt-2 text-sm sm:text-base">Create and publish your educational content</p>
           </div>
 
-          <form onSubmit={handleSubmit} className="p-8 space-y-8" noValidate>
+          <form onSubmit={handleSubmit} className="p-4 sm:p-6 lg:p-8 space-y-6 sm:space-y-8" noValidate>
             {/* Error Notification */}
             {error && (
               <div className="bg-red-50 border border-red-200 rounded-lg p-4">
@@ -463,13 +466,13 @@ const AdminUploadPage = () => {
             )}
 
             {/* Course Basic Info */}
-            <div className="space-y-6">
-              <h2 className="text-2xl font-bold text-gray-800 border-b border-gray-200 pb-2">
+            <div className="space-y-4 sm:space-y-6">
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-800 border-b border-gray-200 pb-2">
                 Course Information
               </h2>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="md:col-span-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+                <div className="sm:col-span-2">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Course Title *
                   </label>
@@ -483,7 +486,7 @@ const AdminUploadPage = () => {
                   />
                 </div>
 
-                <div className="md:col-span-2">
+                <div className="sm:col-span-2">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Course Description *
                   </label>
@@ -630,6 +633,23 @@ const AdminUploadPage = () => {
                 </div>
               </div>
 
+              {/* Free Preview Info Alert */}
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                <div className="flex items-center">
+                  <div className="flex-shrink-0">
+                    <svg className="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                  <div className="ml-3">
+                    <h3 className="text-sm font-medium text-green-800">Free Preview Lessons</h3>
+                    <p className="text-sm text-green-700 mt-1">
+                      Mark lessons as "Free Preview" to allow users to watch them without purchasing the course. This helps attract potential students by giving them a taste of your content.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
               <div className="flex items-center justify-between">
                 <h2 className="text-2xl font-bold text-gray-800 border-b border-gray-200 pb-2">
                   Video Lessons
@@ -715,6 +735,32 @@ const AdminUploadPage = () => {
                         </span>
                       </label>
                     </div>
+                  </div>
+
+                  {/* Free Preview Toggle */}
+                  <div className="flex items-center justify-between p-4 bg-blue-50 rounded-lg border border-blue-200">
+                    <div className="flex items-center space-x-3">
+                      <input
+                        type="checkbox"
+                        id={`free-preview-${video.id}`}
+                        checked={video.isFreePreview || false}
+                        onChange={(e) => updateVideo(video.id, { isFreePreview: e.target.checked })}
+                        className="h-5 w-5 text-red-600 focus:ring-red-500 border-gray-300 rounded"
+                      />
+                      <div>
+                        <label htmlFor={`free-preview-${video.id}`} className="text-sm font-medium text-gray-700 cursor-pointer">
+                          Free Preview Lesson
+                        </label>
+                        <p className="text-xs text-gray-500 mt-1">
+                          Allow users to watch this lesson without purchasing the course
+                        </p>
+                      </div>
+                    </div>
+                    {video.isFreePreview && (
+                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                        🔓 Free Preview
+                      </span>
+                    )}
                   </div>
                 </div>
               ))}

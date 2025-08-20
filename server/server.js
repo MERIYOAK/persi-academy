@@ -73,34 +73,8 @@ app.use(session({
 app.use(passport.initialize());
 app.use(passport.session());
 
-// Serve static files for local uploads
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-
-// Serve certificate PDFs (public access)
-app.get('/certificates/:filename', (req, res) => {
-  const filename = req.params.filename;
-  const filePath = path.join(__dirname, 'uploads', 'certificates', filename);
-  
-  // Check if file exists
-  if (!require('fs').existsSync(filePath)) {
-    return res.status(404).json({ error: 'Certificate not found' });
-  }
-  
-  // Check if it's a preview request (no download)
-  const isPreview = req.query.preview === 'true';
-  
-  // Set proper headers
-  res.setHeader('Content-Type', 'application/pdf');
-  if (!isPreview) {
-    // Download mode
-    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
-  } else {
-    // Preview mode - display in browser
-    res.setHeader('Content-Disposition', `inline; filename="${filename}"`);
-  }
-  
-  res.sendFile(filePath);
-});
+// Note: Certificate PDFs are now served directly from S3 with public-read ACL
+// No local file serving needed for certificates
 
 // Public certificate preview route
 app.get('/certificate-preview/:certificateId', async (req, res) => {
@@ -141,50 +115,48 @@ app.get('/certificate-preview/:certificateId', async (req, res) => {
       `);
     }
     
-    // Extract filename from pdfUrl
-    const filename = certificate.pdfUrl.split('/').pop();
-    const filePath = path.join(__dirname, 'uploads', 'certificates', filename);
-    
-    // Check if file exists
-    if (!require('fs').existsSync(filePath)) {
-      return res.status(404).send(`
-        <!DOCTYPE html>
-        <html lang="en">
-        <head>
-          <meta charset="UTF-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <title>Certificate PDF Not Found</title>
-          <script src="https://cdn.tailwindcss.com"></script>
-        </head>
-        <body class="min-h-screen bg-gradient-to-br from-red-50 to-pink-50 flex items-center justify-center">
-          <div class="text-center max-w-md mx-auto p-8">
-            <div class="text-red-500 mb-4">
-              <svg class="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
-              </svg>
-            </div>
-            <h2 class="text-2xl font-bold mb-4 text-gray-900">Certificate PDF Not Found</h2>
-            <p class="text-gray-600 mb-6">The certificate file could not be located.</p>
-            <a href="http://localhost:5173" class="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg transition-colors duration-200">
-              Go to Homepage
-            </a>
-          </div>
-        </body>
-        </html>
-      `);
-    }
-    
-    // Format dates for display
-    const formatDate = (dateString) => {
-      return new Date(dateString).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-      });
-    };
-    
-    // Create HTML page with PDF viewer and verify button
-    const html = `
+         // Use the S3 URL directly - no need to check local file
+     const s3Url = certificate.pdfUrl;
+     
+     if (!s3Url) {
+       return res.status(404).send(`
+         <!DOCTYPE html>
+         <html lang="en">
+         <head>
+           <meta charset="UTF-8">
+           <meta name="viewport" content="width=device-width, initial-scale=1.0">
+           <title>Certificate PDF Not Found</title>
+           <script src="https://cdn.tailwindcss.com"></script>
+         </head>
+         <body class="min-h-screen bg-gradient-to-br from-red-50 to-pink-50 flex items-center justify-center">
+           <div class="text-center max-w-md mx-auto p-8">
+             <div class="text-red-500 mb-4">
+               <svg class="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+               </svg>
+             </div>
+             <h2 class="text-2xl font-bold mb-4 text-gray-900">Certificate PDF Not Found</h2>
+             <p class="text-gray-600 mb-6">The certificate file could not be located.</p>
+             <a href="http://localhost:5173" class="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg transition-colors duration-200">
+               Go to Homepage
+             </a>
+           </div>
+         </body>
+         </html>
+       `);
+     }
+     
+     // Format dates for display
+     const formatDate = (dateString) => {
+       return new Date(dateString).toLocaleDateString('en-US', {
+         year: 'numeric',
+         month: 'long',
+         day: 'numeric'
+       });
+     };
+     
+     // Create HTML page with PDF viewer and verify button
+     const html = `
       <!DOCTYPE html>
       <html lang="en">
       <head>
@@ -251,7 +223,7 @@ app.get('/certificate-preview/:certificateId', async (req, res) => {
             </div>
             <div class="pdf-container">
               <iframe 
-                src="/certificates/${filename}?preview=true" 
+                src="${s3Url}" 
                 class="w-full h-full border-0"
                 title="Certificate PDF"
               ></iframe>
@@ -272,7 +244,7 @@ app.get('/certificate-preview/:certificateId', async (req, res) => {
             </a>
             
             <a
-              href="/certificates/${filename}"
+              href="${s3Url}"
               download
               class="flex items-center justify-center space-x-2 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white px-8 py-4 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg font-medium"
             >
@@ -291,9 +263,9 @@ app.get('/certificate-preview/:certificateId', async (req, res) => {
         </div>
       </body>
       </html>
-    `;
-    
-    res.send(html);
+     `;
+     
+     res.send(html);
     
   } catch (error) {
     console.error('Error serving certificate preview:', error);
@@ -399,15 +371,6 @@ app.get('/api/health', (req, res) => {
 
 // Payment routes
 app.use('/api/payment', paymentRoutes);
-
-// Stripe webhook endpoint (at root level for Stripe compatibility) - DEPRECATED
-// Now handled by /api/payment/webhook route
-app.post('/webhook', express.raw({ type: 'application/json' }), (req, res) => {
-  console.log('🔧 Legacy webhook endpoint hit at /webhook - redirecting to /api/payment/webhook');
-  // Forward to payment controller webhook
-  const paymentController = require('./controllers/paymentController');
-  paymentController.webhook(req, res);
-});
 
 // User routes
 app.use('/api/user', userRoutes);

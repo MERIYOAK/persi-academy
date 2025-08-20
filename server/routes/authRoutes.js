@@ -76,11 +76,32 @@ router.post('/verify-email', authController.verifyEmail);
 router.post('/resend-verification', authController.resendVerification);
 
 /**
+ * Send password reset email
+ * POST /api/auth/forgot-password
+ * Body: { email }
+ */
+router.post('/forgot-password', authController.forgotPassword);
+
+/**
+ * Reset password with token
+ * POST /api/auth/reset-password
+ * Body: { token, newPassword }
+ */
+router.post('/reset-password', authController.resetPassword);
+
+/**
  * Login user with local authentication
  * POST /api/auth/login
  * Body: { email, password }
  */
 router.post('/login', authController.login);
+
+/**
+ * Verify JWT token
+ * POST /api/auth/verify-token
+ * Headers: Authorization: Bearer <token>
+ */
+router.post('/verify-token', authController.verifyToken);
 
 /**
  * Get current user profile

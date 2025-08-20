@@ -98,7 +98,7 @@ async function testCompletePurchaseFlow() {
           };
 
           console.log(`   📤 Sending webhook with user ID: ${userId}`);
-          const webhookResponse = await fetch('http://localhost:5000/webhook', {
+          const webhookResponse = await fetch('http://localhost:5000/api/payment/webhook', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',

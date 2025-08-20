@@ -491,49 +491,52 @@ const AdminCourseEditPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 pt-16">
       {/* Header */}
       <div className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 xl:px-8 py-4 sm:py-6">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0">
+            <div className="flex items-center space-x-2 sm:space-x-4 flex-1 min-w-0">
               <Link
                 to={`/admin/courses/${courseId}`}
-                className="inline-flex items-center text-gray-600 hover:text-gray-900"
+                className="inline-flex items-center text-gray-600 hover:text-gray-900 text-sm sm:text-base"
               >
-                <ArrowLeft className="h-5 w-5 mr-2" />
-                Back to Course
+                <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5 mr-1 sm:mr-2" />
+                <span className="hidden sm:inline">Back to Course</span>
+                <span className="sm:hidden">Back</span>
               </Link>
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900">Edit Course</h1>
-                <p className="text-gray-600">{course?.title}</p>
+              <div className="flex-1 min-w-0">
+                <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">Edit Course</h1>
+                <p className="text-sm sm:text-base text-gray-600 truncate max-w-full">{course?.title}</p>
               </div>
             </div>
-            <div className="flex space-x-3">
+            <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3 flex-shrink-0">
               <button
                 onClick={() => navigate(`/admin/courses/${courseId}`)}
-                className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50"
+                className="inline-flex items-center justify-center px-3 sm:px-4 py-2 border border-gray-300 text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50"
               >
-                <X className="h-4 w-4 mr-2" />
-                Cancel
+                <X className="h-4 w-4 mr-1 sm:mr-2" />
+                <span className="hidden sm:inline">Cancel</span>
+                <span className="sm:hidden">Cancel</span>
               </button>
               <button
                 onClick={updateCourse}
                 disabled={saving}
-                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
+                className="inline-flex items-center justify-center px-3 sm:px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
               >
-                <Save className="h-4 w-4 mr-2" />
-                {saving ? 'Saving...' : 'Save Changes'}
+                <Save className="h-4 w-4 mr-1 sm:mr-2" />
+                <span className="hidden sm:inline">{saving ? 'Saving...' : 'Save Changes'}</span>
+                <span className="sm:hidden">{saving ? 'Saving...' : 'Save'}</span>
               </button>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className={`grid grid-cols-1 lg:grid-cols-3 gap-8 ${progressOverlay.isVisible ? 'pointer-events-none' : ''}`}>
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 xl:px-8 py-4 sm:py-6 lg:py-8">
+        <div className={`grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 ${progressOverlay.isVisible ? 'pointer-events-none' : ''}`}>
           {/* Main Form */}
-          <div className="lg:col-span-2 space-y-8">
+          <div className="lg:col-span-2 space-y-4 sm:space-y-6 lg:space-y-8">
             {/* Success/Error Messages */}
             {success && (
               <div className="bg-green-50 border border-green-200 rounded-lg p-4">
@@ -573,10 +576,10 @@ const AdminCourseEditPage: React.FC = () => {
 
             {/* Course Information Form */}
             <div className="bg-white rounded-lg shadow-sm border">
-              <div className="p-6">
-                <h2 className="text-lg font-semibold text-gray-900 mb-6">Course Information</h2>
+              <div className="p-4 sm:p-6">
+                <h2 className="text-base sm:text-lg font-semibold text-gray-900 mb-4 sm:mb-6">Course Information</h2>
                 
-                <form className="space-y-6">
+                <form className="space-y-4 sm:space-y-6">
                   {/* Title */}
                   <div>
                     <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-2">
@@ -612,7 +615,7 @@ const AdminCourseEditPage: React.FC = () => {
                   </div>
 
                   {/* Price and Status */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                     <div>
                       <label htmlFor="price" className="block text-sm font-medium text-gray-700 mb-2">
                         Price (USD) *
@@ -727,8 +730,8 @@ const AdminCourseEditPage: React.FC = () => {
 
             {/* Thumbnail Upload */}
             <div className="bg-white rounded-lg shadow-sm border">
-              <div className="p-6">
-                <h2 className="text-lg font-semibold text-gray-900 mb-6">Course Thumbnail</h2>
+              <div className="p-4 sm:p-6">
+                <h2 className="text-base sm:text-lg font-semibold text-gray-900 mb-4 sm:mb-6">Course Thumbnail</h2>
                 
                 <div className="space-y-4">
                   {/* Current Thumbnail */}
@@ -752,7 +755,7 @@ const AdminCourseEditPage: React.FC = () => {
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Upload New Thumbnail
                     </label>
-                    <div className="flex items-center space-x-4">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
                       <input
                         type="file"
                         accept="image/*"
@@ -762,19 +765,21 @@ const AdminCourseEditPage: React.FC = () => {
                       />
                       <label
                         htmlFor="thumbnail-upload"
-                        className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 cursor-pointer"
+                        className="inline-flex items-center px-3 sm:px-4 py-2 border border-gray-300 text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 cursor-pointer w-full sm:w-auto justify-center"
                       >
-                        <Upload className="h-4 w-4 mr-2" />
-                        Choose Image
+                        <Upload className="h-4 w-4 mr-1 sm:mr-2" />
+                        <span className="hidden sm:inline">Choose Image</span>
+                        <span className="sm:hidden">Choose Image</span>
                       </label>
                       {thumbnailFile && (
                         <button
                           onClick={uploadThumbnail}
                           disabled={uploadingThumbnail}
-                          className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-green-600 hover:bg-green-700 disabled:opacity-50"
+                          className="inline-flex items-center px-3 sm:px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-green-600 hover:bg-green-700 disabled:opacity-50 w-full sm:w-auto justify-center"
                         >
-                          <Image className="h-4 w-4 mr-2" />
-                          {uploadingThumbnail ? 'Uploading...' : 'Upload Thumbnail'}
+                          <Image className="h-4 w-4 mr-1 sm:mr-2" />
+                          <span className="hidden sm:inline">{uploadingThumbnail ? 'Uploading...' : 'Upload Thumbnail'}</span>
+                          <span className="sm:hidden">{uploadingThumbnail ? 'Uploading...' : 'Upload'}</span>
                         </button>
                       )}
                     </div>
@@ -840,35 +845,36 @@ const AdminCourseEditPage: React.FC = () => {
 
             {/* Video Management */}
             <div className="bg-white rounded-lg shadow-sm border">
-              <div className="p-6">
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-lg font-semibold text-gray-900">Course Videos</h2>
+              <div className="p-4 sm:p-6">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6 space-y-3 sm:space-y-0">
+                  <h2 className="text-base sm:text-lg font-semibold text-gray-900">Course Videos</h2>
                   <Link
                     to={`/admin/courses/${courseId}/videos`}
-                    className="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700"
+                    className="inline-flex items-center justify-center px-3 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 w-full sm:w-auto"
                   >
-                    <Plus className="h-4 w-4 mr-2" />
-                    Manage Videos
+                    <Plus className="h-4 w-4 mr-1 sm:mr-2" />
+                    <span className="hidden sm:inline">Manage Videos</span>
+                    <span className="sm:hidden">Manage Videos</span>
                   </Link>
                 </div>
                 
                 {course?.videos && course.videos.length > 0 ? (
                   <div className="space-y-3">
                     {course.videos.map((video, index) => (
-                      <div key={video._id || `video-${index}`} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
-                        <div className="flex items-center space-x-4">
+                      <div key={video._id || `video-${index}`} className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 sm:p-4 border border-gray-200 rounded-lg space-y-2 sm:space-y-0">
+                        <div className="flex items-center space-x-3 sm:space-x-4">
                           <div className="flex-shrink-0">
-                            <div className="w-12 h-8 bg-gray-100 rounded flex items-center justify-center">
-                              <Video className="h-4 w-4 text-gray-500" />
+                            <div className="w-10 h-6 sm:w-12 sm:h-8 bg-gray-100 rounded flex items-center justify-center">
+                              <Video className="h-3 w-3 sm:h-4 sm:w-4 text-gray-500" />
                             </div>
                           </div>
-                          <div>
-                            <h3 className="text-sm font-medium text-gray-900">{video.title}</h3>
+                          <div className="flex-1 min-w-0">
+                            <h3 className="text-sm font-medium text-gray-900 truncate">{video.title}</h3>
                             <p className="text-xs text-gray-500">
                               Duration: {video.duration} • Order: {video.order || index + 1}
                             </p>
                             {video.description && (
-                              <p className="text-xs text-gray-600 mt-1 bg-gray-50 p-1 rounded">
+                              <p className="text-xs text-gray-600 mt-1 bg-gray-50 p-1 rounded truncate">
                                 <strong>Description:</strong> {video.description}
                               </p>
                             )}
@@ -887,16 +893,17 @@ const AdminCourseEditPage: React.FC = () => {
                     ))}
                   </div>
                 ) : (
-                  <div className="text-center py-8">
-                    <Video className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">No videos yet</h3>
-                    <p className="text-gray-500 mb-4">Add videos to your course to get started.</p>
+                  <div className="text-center py-6 sm:py-8">
+                    <Video className="h-10 w-10 sm:h-12 sm:w-12 text-gray-400 mx-auto mb-3 sm:mb-4" />
+                    <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-2">No videos yet</h3>
+                    <p className="text-sm sm:text-base text-gray-500 mb-3 sm:mb-4">Add videos to your course to get started.</p>
                     <Link
                       to={`/admin/courses/${courseId}/videos`}
-                      className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700"
+                      className="inline-flex items-center justify-center px-3 sm:px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 w-full sm:w-auto"
                     >
-                      <Plus className="h-4 w-4 mr-2" />
-                      Add First Video
+                      <Plus className="h-4 w-4 mr-1 sm:mr-2" />
+                      <span className="hidden sm:inline">Add First Video</span>
+                      <span className="sm:hidden">Add First Video</span>
                     </Link>
                   </div>
                 )}
@@ -905,11 +912,11 @@ const AdminCourseEditPage: React.FC = () => {
           </div>
 
           {/* Sidebar */}
-          <div className="space-y-6">
+          <div className="space-y-4 sm:space-y-6">
             {/* Course Stats */}
             <div className="bg-white rounded-lg shadow-sm border">
-              <div className="p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Course Statistics</h3>
+              <div className="p-4 sm:p-6">
+                <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">Course Statistics</h3>
                 <div className="space-y-3">
                   <div className="flex justify-between">
                     <span className="text-sm text-gray-600">Version:</span>
@@ -935,8 +942,8 @@ const AdminCourseEditPage: React.FC = () => {
 
             {/* Course Details */}
             <div className="bg-white rounded-lg shadow-sm border">
-              <div className="p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Course Details</h3>
+              <div className="p-4 sm:p-6">
+                <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">Course Details</h3>
                 <div className="space-y-3">
                   <div>
                     <span className="text-sm text-gray-600">Created by:</span>
@@ -960,8 +967,8 @@ const AdminCourseEditPage: React.FC = () => {
 
             {/* Quick Actions */}
             <div className="bg-white rounded-lg shadow-sm border">
-              <div className="p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
+              <div className="p-4 sm:p-6">
+                <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">Quick Actions</h3>
                 <div className="space-y-3">
                   <Link
                     to={`/admin/courses/${courseId}/videos`}

@@ -76,6 +76,9 @@ const uploadCourseFile = async (file, fileType, courseName, version = 1) => {
   try {
     const s3Key = generateCourseFileKey(fileType, file.originalname, courseName, version);
     
+    // Sanitize course name for metadata (remove invalid characters for HTTP headers)
+    const sanitizedCourseName = courseName.replace(/[^a-zA-Z0-9\s-]/g, '_').replace(/\s+/g, '_');
+    
     const uploadParams = {
       Bucket: process.env.AWS_S3_BUCKET,
       Key: s3Key,
@@ -83,7 +86,7 @@ const uploadCourseFile = async (file, fileType, courseName, version = 1) => {
       ContentType: file.mimetype,
       Metadata: {
         originalName: file.originalname,
-        courseName,
+        courseName: sanitizedCourseName,
         version: version.toString(),
         fileType,
         uploadedAt: new Date().toISOString()

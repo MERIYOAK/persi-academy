@@ -153,13 +153,21 @@ exports.updateProgress = async (req, res) => {
     pendingProgressUpdates.set(progressKey, abortController);
 
     try {
-      // Check if user has purchased the course
+      // Check if user has purchased the course or if video is free preview
       const user = await User.findById(userId);
-      if (!user || !user.purchasedCourses || !user.purchasedCourses.includes(courseId)) {
-        return res.status(403).json({
-          success: false,
-          message: 'You must purchase this course to track progress'
-        });
+      const hasPurchased = user && user.purchasedCourses && user.purchasedCourses.includes(courseId);
+      
+      if (!hasPurchased) {
+        // Check if this is a free preview video
+        const Video = require('../models/Video');
+        const video = await Video.findById(videoId);
+        
+        if (!video || !video.isFreePreview) {
+          return res.status(403).json({
+            success: false,
+            message: 'You must purchase this course to track progress'
+          });
+        }
       }
 
       // Fix 8: Use atomic operation for all updates to prevent race conditions

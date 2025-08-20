@@ -10,7 +10,7 @@ const CheckoutCancelPage = () => {
   console.log(`   - Course ID: ${courseId}`);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-red-50 to-orange-50 py-12">
+    <div className="min-h-screen bg-gradient-to-br from-red-50 to-orange-50 pt-24 pb-12">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="bg-white rounded-2xl shadow-2xl overflow-hidden">
           {/* Cancel Header */}

@@ -73,6 +73,13 @@ router.delete('/:videoId', auth, adminAuthMiddleware, videoController.deleteVide
 router.post('/:videoId/restore', auth, adminAuthMiddleware, videoController.restoreVideo);
 
 /**
+ * Toggle free preview status for a video (admin only)
+ * PUT /api/videos/:videoId/free-preview
+ * Body: { isFreePreview: boolean }
+ */
+router.put('/:videoId/free-preview', auth, adminAuthMiddleware, videoController.toggleFreePreview);
+
+/**
  * Get video by ID with signed URL
  * GET /api/videos/:videoId
  */
@@ -81,8 +88,9 @@ router.get('/:videoId', auth, videoController.getVideoById);
 /**
  * Get videos for a specific course version
  * GET /api/videos/course/:courseId/version/:version
+ * Public access allowed for course preview
  */
-router.get('/course/:courseId/version/:version', auth, videoController.getVideosByCourseVersion);
+router.get('/course/:courseId/version/:version', videoController.getVideosByCourseVersion);
 
 /**
  * Get video statistics for a course

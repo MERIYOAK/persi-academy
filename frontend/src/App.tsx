@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import UserLayout from './layouts/UserLayout';
 import AdminLayout from './layouts/AdminLayout';
 import { AdminAuthProvider } from './contexts/AdminAuthContext';
+import ScrollManager from './components/ScrollManager';
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
@@ -32,11 +33,17 @@ import CheckoutCancelPage from './pages/CheckoutCancelPage';
 import AboutPage from './pages/AboutPage';
 import ContactPage from './pages/ContactPage';
 import CoursesPage from './pages/CoursesPage';
+import HelpCenterPage from './pages/HelpCenterPage';
+import TermsOfServicePage from './pages/TermsOfServicePage';
+import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
+import RefundPolicyPage from './pages/RefundPolicyPage';
+import GoogleCallbackPage from './pages/GoogleCallbackPage';
 
 function App() {
   return (
     <Router>
-      <Routes>
+      <ScrollManager>
+        <Routes>
         <Route element={<UserLayout />}>
           <Route path="/" element={<HomePage />} />
           <Route path="/login" element={<LoginPage />} />
@@ -46,6 +53,7 @@ function App() {
           <Route path="/resend-verification" element={<ResendVerificationPage />} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/certificates" element={<CertificatesPage />} />
+          <Route path="/verify" element={<CertificateVerificationPage />} />
           <Route path="/verify/:certificateId" element={<CertificateVerificationPage />} />
           <Route path="/course/:id" element={<CourseDetailPage />} />
           <Route path="/courses" element={<CoursesPage />} />
@@ -55,7 +63,14 @@ function App() {
           <Route path="/checkout/cancel" element={<CheckoutCancelPage />} />
           <Route path="/about" element={<AboutPage />} />
           <Route path="/contact" element={<ContactPage />} />
+          <Route path="/help-center" element={<HelpCenterPage />} />
+          <Route path="/terms-of-service" element={<TermsOfServicePage />} />
+          <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
+          <Route path="/refund-policy" element={<RefundPolicyPage />} />
         </Route>
+
+        {/* Google OAuth Callback Route - Outside UserLayout to avoid navbar */}
+        <Route path="/auth/google-callback" element={<GoogleCallbackPage />} />
 
         <Route path="/admin" element={
           <AdminAuthProvider>
@@ -76,6 +91,7 @@ function App() {
           <Route path="settings" element={<AdminSettingsPage />} />
         </Route>
       </Routes>
+      </ScrollManager>
     </Router>
   );
 }
