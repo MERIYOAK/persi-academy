@@ -5,7 +5,8 @@ const certificateSchema = new mongoose.Schema({
   certificateId: { 
     type: String, 
     required: true, 
-    unique: true 
+    unique: true,
+    index: true
   },
   
   // User and course information
@@ -83,7 +84,6 @@ const certificateSchema = new mongoose.Schema({
 });
 
 // Indexes for efficient queries
-certificateSchema.index({ certificateId: 1 });
 certificateSchema.index({ studentId: 1, courseId: 1 });
 certificateSchema.index({ dateIssued: -1 });
 

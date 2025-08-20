@@ -3,8 +3,8 @@ require('dotenv').config();
 
 // Connect to MongoDB
 mongoose.connect(process.env.MONGODB_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
+  // Removed deprecated options: useNewUrlParser and useUnifiedTopology
+  // These are no longer needed in MongoDB Driver 4.0+
 });
 
 // User Schema (import the same schema used in your app)

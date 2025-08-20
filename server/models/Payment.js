@@ -14,7 +14,8 @@ const paymentSchema = new mongoose.Schema({
   stripeSessionId: {
     type: String,
     required: true,
-    unique: true
+    unique: true,
+    index: true
   },
   amount: {
     type: Number,
@@ -59,7 +60,6 @@ paymentSchema.pre('save', function(next) {
 
 // Create indexes for better query performance
 paymentSchema.index({ userId: 1, courseId: 1 });
-paymentSchema.index({ stripeSessionId: 1 });
 paymentSchema.index({ status: 1 });
 paymentSchema.index({ createdAt: -1 });
 

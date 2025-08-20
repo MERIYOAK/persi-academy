@@ -4,8 +4,8 @@ const CourseVersion = require('./models/CourseVersion');
 
 // Connect to MongoDB
 mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/persi-academy', {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
+  // Removed deprecated options: useNewUrlParser and useUnifiedTopology
+  // These are no longer needed in MongoDB Driver 4.0+
 });
 
 async function checkThumbnailURLs() {
