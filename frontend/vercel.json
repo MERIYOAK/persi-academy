@@ -4,10 +4,6 @@
   "framework": "vite",
   "rewrites": [
     {
-      "source": "/manifest.json",
-      "destination": "/manifest.json"
-    },
-    {
       "source": "/(.*)",
       "destination": "/index.html"
     }
@@ -19,10 +15,6 @@
         {
           "key": "Content-Type",
           "value": "application/manifest+json"
-        },
-        {
-          "key": "Access-Control-Allow-Origin",
-          "value": "*"
         }
       ]
     }
