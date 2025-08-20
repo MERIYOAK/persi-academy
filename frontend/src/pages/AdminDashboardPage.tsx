@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { buildApiUrl } from '../config/environment';
+
 import { useNavigate } from 'react-router-dom';
 import { useAdminAuth } from '../contexts/AdminAuthContext';
 import { BookOpen, Users, Play, TrendingUp, Plus, ArrowRight } from 'lucide-react';
@@ -34,7 +36,7 @@ const AdminDashboardPage = () => {
     const loadStats = async () => {
       try {
         const adminToken = localStorage.getItem('adminToken');
-        const response = await fetch('http://localhost:5000/api/admin/stats', {
+        const response = await fetch(buildApiUrl('/api/admin/stats', {
           headers: {
             'Authorization': `Bearer ${adminToken}`
           }

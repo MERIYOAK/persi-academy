@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { buildApiUrl } from '../config/environment';
+
 import { useNavigate } from 'react-router-dom';
 import { 
   User, Mail, Calendar, Shield, Camera, Save, ArrowLeft, Edit3, X, 
@@ -101,7 +103,7 @@ const ProfilePage = () => {
           return;
         }
 
-        const response = await fetch('http://localhost:5000/api/auth/me', {
+        const response = await fetch(buildApiUrl('/api/auth/me', {
           headers: {
             'Authorization': `Bearer ${token}`
           }
@@ -134,7 +136,7 @@ const ProfilePage = () => {
         // Fetch profile image if available
         if (result.data.profilePhotoKey) {
           try {
-            const photoResponse = await fetch('http://localhost:5000/api/auth/users/me/photo', {
+            const photoResponse = await fetch(buildApiUrl('/api/auth/users/me/photo', {
               headers: {
                 'Authorization': `Bearer ${token}`
               }
@@ -294,7 +296,7 @@ const ProfilePage = () => {
       }
 
       console.log('🔧 [ProfilePage] Sending API request to update profile');
-      const response = await fetch('http://localhost:5000/api/auth/profile', {
+      const response = await fetch(buildApiUrl('/api/auth/profile', {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -317,7 +319,7 @@ const ProfilePage = () => {
         if (profileImageFile && result.data.profilePhotoKey) {
           console.log('🔧 [ProfilePage] Fetching new profile photo URL');
           try {
-            const photoResponse = await fetch('http://localhost:5000/api/auth/users/me/photo', {
+            const photoResponse = await fetch(buildApiUrl('/api/auth/users/me/photo', {
               headers: {
                 'Authorization': `Bearer ${token}`
               }
@@ -366,7 +368,7 @@ const ProfilePage = () => {
       const token = localStorage.getItem('token');
       if (!token) return;
 
-      const response = await fetch('http://localhost:5000/api/auth/change-password', {
+      const response = await fetch(buildApiUrl('/api/auth/change-password', {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -538,7 +540,7 @@ const ProfilePage = () => {
                           const token = localStorage.getItem('token');
                           if (!token) return;
 
-                          const response = await fetch('http://localhost:5000/api/auth/users/me/photo', {
+                          const response = await fetch(buildApiUrl('/api/auth/users/me/photo', {
                             method: 'DELETE',
                             headers: {
                               'Authorization': `Bearer ${token}`

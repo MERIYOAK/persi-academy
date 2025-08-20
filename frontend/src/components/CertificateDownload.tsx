@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { buildApiUrl } from '../config/environment';
+
 import { Download, CheckCircle, Calendar, Award, Eye, Share2, FileText, Sparkles } from 'lucide-react';
 
 interface CertificateDownloadProps {
@@ -45,7 +47,7 @@ const CertificateDownload: React.FC<CertificateDownloadProps> = ({
         return;
       }
 
-      const response = await fetch(`http://localhost:5000/api/certificates/course/${courseId}`, {
+      const response = await fetch(buildApiUrl(`/api/certificates/course/${courseId}`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -81,7 +83,7 @@ const CertificateDownload: React.FC<CertificateDownloadProps> = ({
         return;
       }
 
-      const response = await fetch(`http://localhost:5000/api/certificates/download/${certificate.certificateId}`, {
+      const response = await fetch(buildApiUrl(`/api/certificates/download/${certificate.certificateId}`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -95,7 +97,7 @@ const CertificateDownload: React.FC<CertificateDownloadProps> = ({
       
       // Create a temporary link to download the PDF
       const link = document.createElement('a');
-      link.href = `http://localhost:5000${result.data.downloadUrl}`;
+      link.href = buildApiUrl(result.data.downloadUrl);
       link.download = `certificate-${courseTitle.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.pdf`;
       link.target = '_blank';
       document.body.appendChild(link);
@@ -125,7 +127,7 @@ const CertificateDownload: React.FC<CertificateDownloadProps> = ({
         return;
       }
 
-      const response = await fetch('http://localhost:5000/api/certificates/generate', {
+      const response = await fetch(buildApiUrl('/api/certificates/generate', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -161,7 +163,7 @@ const CertificateDownload: React.FC<CertificateDownloadProps> = ({
     
     // Extract filename from pdfUrl and create preview URL
     const filename = certificate.pdfUrl.split('/').pop();
-    const previewUrl = `http://localhost:5000/certificates/${filename}`;
+    const previewUrl = buildApiUrl(`/certificates/${filename}`;
     
     const link = document.createElement('a');
     link.href = previewUrl;

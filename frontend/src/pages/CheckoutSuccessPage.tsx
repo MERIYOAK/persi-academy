@@ -1,4 +1,6 @@
 import React, { useEffect, useState } from 'react';
+import { buildApiUrl } from '../config/environment';
+
 import { Link, useSearchParams } from 'react-router-dom';
 import { CheckCircle, Play, Download, BookOpen, ArrowRight, Loader, AlertCircle } from 'lucide-react';
 
@@ -56,7 +58,7 @@ const CheckoutSuccessPage = () => {
       if (!token) return;
 
       // Get user's purchased courses to find the actual payment
-      const userResponse = await fetch('http://localhost:5000/api/auth/me', {
+      const userResponse = await fetch(buildApiUrl('/api/auth/me', {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -76,7 +78,7 @@ const CheckoutSuccessPage = () => {
         
         if (purchasedCourseId) {
           // Fetch the course details to get the price
-          const courseResponse = await fetch(`http://localhost:5000/api/courses/${purchasedCourseId}`);
+          const courseResponse = await fetch(buildApiUrl(`/api/courses/${purchasedCourseId}`);
           if (courseResponse.ok) {
             const courseData = await courseResponse.json();
             const course = courseData.data?.course || courseData;
@@ -93,7 +95,7 @@ const CheckoutSuccessPage = () => {
           // Show the amount for their most recent purchase
           if (purchasedCourses.length > 0) {
             const mostRecentCourseId = purchasedCourses[purchasedCourses.length - 1];
-            const courseResponse = await fetch(`http://localhost:5000/api/courses/${mostRecentCourseId}`);
+            const courseResponse = await fetch(buildApiUrl(`/api/courses/${mostRecentCourseId}`);
             if (courseResponse.ok) {
               const courseData = await courseResponse.json();
               const course = courseData.data?.course || courseData;
@@ -130,7 +132,7 @@ const CheckoutSuccessPage = () => {
         console.log(`   - Course ID: ${effectiveCourseId}`);
 
         // Fetch course information
-        const courseResponse = await fetch(`http://localhost:5000/api/courses/${effectiveCourseId}`);
+        const courseResponse = await fetch(buildApiUrl(`/api/courses/${effectiveCourseId}`);
         
         if (!courseResponse.ok) {
           throw new Error('Failed to fetch course information');
@@ -156,7 +158,7 @@ const CheckoutSuccessPage = () => {
         if (token && effectiveCourseId) {
           try {
             console.log(`🔧 Fetching receipt for courseId: ${effectiveCourseId}`);
-            const receiptUrl = `http://localhost:5000/api/payment/receipt/${effectiveCourseId}`;
+            const receiptUrl = buildApiUrl(`/api/payment/receipt/${effectiveCourseId}`;
             console.log(`🔧 Receipt URL: ${receiptUrl}`);
             
             const receiptResponse = await fetch(receiptUrl, {
@@ -251,7 +253,7 @@ const CheckoutSuccessPage = () => {
         if (!token) return;
 
         // Check if user has purchased the course
-        const purchaseResponse = await fetch(`http://localhost:5000/api/payment/check-purchase/${effectiveCourseId}`, {
+        const purchaseResponse = await fetch(buildApiUrl(`/api/payment/check-purchase/${effectiveCourseId}`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
@@ -265,7 +267,7 @@ const CheckoutSuccessPage = () => {
             
             // Try to fetch receipt again
             try {
-              const receiptResponse = await fetch(`http://localhost:5000/api/payment/receipt/${effectiveCourseId}`, {
+              const receiptResponse = await fetch(buildApiUrl(`/api/payment/receipt/${effectiveCourseId}`, {
                 headers: {
                   'Authorization': `Bearer ${token}`,
                   'Content-Type': 'application/json'
@@ -320,7 +322,7 @@ const CheckoutSuccessPage = () => {
         throw new Error('Authentication required');
       }
 
-      const response = await fetch(`http://localhost:5000/api/payment/download-receipt/${effectiveCourseId}`, {
+      const response = await fetch(buildApiUrl(`/api/payment/download-receipt/${effectiveCourseId}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         }
@@ -365,7 +367,7 @@ const CheckoutSuccessPage = () => {
         throw new Error('Authentication required');
       }
 
-      const response = await fetch(`http://localhost:5000/api/payment/download-resources/${effectiveCourseId}`, {
+      const response = await fetch(buildApiUrl(`/api/payment/download-resources/${effectiveCourseId}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         }

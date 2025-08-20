@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { buildApiUrl } from '../config/environment';
+
 import { Link } from 'react-router-dom';
 import { Plus, Eye, Edit, Trash2, Upload, Search, Filter, BookOpen, X } from 'lucide-react';
 import DeleteConfirmationModal from '../components/DeleteConfirmationModal';
@@ -62,7 +64,7 @@ const AdminCoursesPage: React.FC = () => {
         throw new Error('Admin token not found');
       }
 
-      const response = await fetch('http://localhost:5000/api/courses?status=all', {
+      const response = await fetch(buildApiUrl('/api/courses?status=all', {
         headers: {
           'Authorization': `Bearer ${adminToken}`,
           'Content-Type': 'application/json',

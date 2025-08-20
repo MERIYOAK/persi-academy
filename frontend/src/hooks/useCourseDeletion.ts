@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import axios from 'axios';
+import { buildApiUrl } from '../config/environment';
 
 interface UseCourseDeletionReturn {
   deleteCourse: (courseId: string) => Promise<boolean>;
@@ -24,7 +25,7 @@ const useCourseDeletion = (): UseCourseDeletionReturn => {
       }
 
       const response = await axios.delete(
-        `http://localhost:5000/api/courses/${courseId}`,
+        buildApiUrl(`/api/courses/${courseId}`),
         {
           headers: {
             'Authorization': `Bearer ${adminToken}`,

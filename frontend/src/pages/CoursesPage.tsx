@@ -43,7 +43,7 @@ const CoursesPage: React.FC = () => {
         headers['Authorization'] = `Bearer ${userToken}`;
       }
       
-      const res = await fetch('http://localhost:5000/api/courses', {
+      const res = await fetch(buildApiUrl('/api/courses'), {
         headers
       });
       

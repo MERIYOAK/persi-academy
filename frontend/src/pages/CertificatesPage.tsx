@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Download, ExternalLink, CheckCircle, Calendar, BookOpen, Award, Share2, Sparkles } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { buildApiUrl } from '../config/environment';
 
 interface Certificate {
   certificateId: string;
@@ -49,7 +50,7 @@ const CertificatesPage = () => {
         return;
       }
 
-      const response = await fetch('http://localhost:5000/api/certificates/user', {
+              const response = await fetch(buildApiUrl('/api/certificates/user'), {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -80,7 +81,7 @@ const CertificatesPage = () => {
         return;
       }
 
-      const response = await fetch(`http://localhost:5000/api/certificates/download/${certificateId}`, {
+      const response = await fetch(buildApiUrl(`/api/certificates/download/${certificateId}`), {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -134,7 +135,7 @@ const CertificatesPage = () => {
     }
 
     // Use the S3 URL directly for sharing
-    const shareUrl = certificate.pdfUrl || `http://localhost:5000/certificate-preview/${certificate.certificateId}`;
+    const shareUrl = certificate.pdfUrl || buildApiUrl(`/certificate-preview/${certificate.certificateId}`);
     console.log('✅ Generated share URL:', shareUrl);
     
     // Check if we have a valid URL
@@ -445,7 +446,7 @@ const CertificatesPage = () => {
                     {/* Verify Link */}
                     <div className="mt-3 xxs:mt-4 pt-3 xxs:pt-4 border-t border-gray-100">
                       <a
-                        href={`http://localhost:5000/api/certificates/verify/${certificate.certificateId}`}
+                        href={buildApiUrl(`/api/certificates/verify/${certificate.certificateId}`)}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="flex items-center justify-center space-x-1 text-xs text-gray-500 hover:text-gray-700 transition-colors duration-200"

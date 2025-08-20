@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { buildApiUrl } from '../config/environment';
+
 import { Link } from 'react-router-dom';
 import { 
   ArrowLeft, 
@@ -79,7 +81,7 @@ const AdminUsersPage: React.FC = () => {
         sortOrder
       });
 
-      const response = await fetch(`http://localhost:5000/api/user/admin/all?${params}`, {
+      const response = await fetch(buildApiUrl(`/api/user/admin/all?${params}`, {
         headers: {
           'Authorization': `Bearer ${adminToken}`,
           'Content-Type': 'application/json',
@@ -110,7 +112,7 @@ const AdminUsersPage: React.FC = () => {
         throw new Error('Admin token not found');
       }
 
-      const response = await fetch(`http://localhost:5000/api/user/admin/${userId}`, {
+      const response = await fetch(buildApiUrl(`/api/user/admin/${userId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${adminToken}`,

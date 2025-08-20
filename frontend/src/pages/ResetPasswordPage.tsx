@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { buildApiUrl } from '../config/environment';
+
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import AuthForm from '../components/AuthForm';
 
@@ -64,7 +66,7 @@ const ResetPasswordPage = () => {
       setError('');
       setMessage('');
 
-      const response = await fetch('http://localhost:5000/api/auth/forgot-password', {
+      const response = await fetch(buildApiUrl('/api/auth/forgot-password', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -114,7 +116,7 @@ const ResetPasswordPage = () => {
         return;
       }
 
-      const response = await fetch('http://localhost:5000/api/auth/reset-password', {
+      const response = await fetch(buildApiUrl('/api/auth/reset-password', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

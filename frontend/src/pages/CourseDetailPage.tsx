@@ -4,6 +4,7 @@ import { Clock, Users, Star, Play, CheckCircle, Award, Download, BookOpen, Shopp
 import VideoPlaylist from '../components/VideoPlaylist';
 import VideoProgressBar from '../components/VideoProgressBar';
 import EnhancedVideoPlayer from '../components/EnhancedVideoPlayer';
+import { buildApiUrl } from '../config/environment';
 
 interface Video {
   id: string;
@@ -114,7 +115,7 @@ const CourseDetailPage = () => {
         console.log('🔧 Fetching course details...');
         console.log(`   - Course ID: ${id}`);
 
-        const response = await fetch(`http://localhost:5000/api/courses/${id}`);
+        const response = await fetch(buildApiUrl(`/api/courses/${id}`));
         
         if (!response.ok) {
           throw new Error('Course not found');
@@ -163,12 +164,12 @@ const CourseDetailPage = () => {
         
         if (userToken) {
           // Authenticated user - fetch with access control
-          videosResponse = await fetch(`http://localhost:5000/api/videos/course/${id}/version/1`, {
+          videosResponse = await fetch(buildApiUrl(`/api/videos/course/${id}/version/1`), {
             headers: { 'Authorization': `Bearer ${userToken}` }
           });
         } else {
           // Public user - fetch without authentication to check for free previews
-          videosResponse = await fetch(`http://localhost:5000/api/videos/course/${id}/version/1`);
+          videosResponse = await fetch(buildApiUrl(`/api/videos/course/${id}/version/1`));
         }
 
         if (!videosResponse.ok) {
@@ -283,7 +284,7 @@ const CourseDetailPage = () => {
       try {
         console.log('🔧 Checking purchase status...');
         
-        const response = await fetch(`http://localhost:5000/api/payment/check-purchase/${id}`, {
+        const response = await fetch(`${buildApiUrl}/api/payment/check-purchase/${id}`, {
           headers: {
             'Authorization': `Bearer ${userToken}`
           }
@@ -354,7 +355,7 @@ const CourseDetailPage = () => {
       setIsPurchasing(true);
       console.log('🔧 Initiating purchase...');
 
-      const response = await fetch('http://localhost:5000/api/payment/create-checkout-session', {
+      const response = await fetch(`${buildApiUrl}/api/payment/create-checkout-session`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

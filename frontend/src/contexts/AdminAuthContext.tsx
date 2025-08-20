@@ -1,4 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { buildApiUrl } from '../config/environment';
+
 
 interface AdminUser {
   email: string;
@@ -40,7 +42,7 @@ export const AdminAuthProvider: React.FC<AdminAuthProviderProps> = ({ children }
     }
 
     try {
-      const response = await fetch('http://localhost:5000/api/admin/validate', {
+      const response = await fetch(buildApiUrl('/api/admin/validate', {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
