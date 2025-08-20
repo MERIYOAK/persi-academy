@@ -311,8 +311,8 @@ app.get('/favicon.svg', (req, res) => {
 const MONGODB_URI = process.env.MONGODB_URI;
 
 mongoose.connect(MONGODB_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
+  // Removed deprecated options: useNewUrlParser and useUnifiedTopology
+  // These are no longer needed in MongoDB Driver 4.0+
 })
   .then(() => {
     console.log('✅ Connected to MongoDB');

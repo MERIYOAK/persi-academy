@@ -48,7 +48,7 @@ const courseSchema = new mongoose.Schema({
   archiveGracePeriod: { type: Date }, // When archived content becomes inaccessible
   
   // SEO and display
-  slug: { type: String, unique: true, sparse: true },
+  slug: { type: String, unique: true, sparse: true, index: true },
   tags: [{ type: String }],
   category: { 
     type: String, 
@@ -80,7 +80,6 @@ const courseSchema = new mongoose.Schema({
 courseSchema.index({ status: 1, currentVersion: 1 });
 courseSchema.index({ 'enrolledStudents.userId': 1 });
 courseSchema.index({ archivedAt: 1 });
-courseSchema.index({ slug: 1 });
 courseSchema.index({ category: 1 });
 courseSchema.index({ tags: 1 });
 courseSchema.index({ createdBy: 1 });
