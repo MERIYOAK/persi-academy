@@ -47,7 +47,7 @@ const CertificateDownload: React.FC<CertificateDownloadProps> = ({
         return;
       }
 
-      const response = await fetch(buildApiUrl(`/api/certificates/course/${courseId}`, {
+      const response = await fetch(buildApiUrl(`/api/certificates/course/${courseId}`), {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -83,7 +83,7 @@ const CertificateDownload: React.FC<CertificateDownloadProps> = ({
         return;
       }
 
-      const response = await fetch(buildApiUrl(`/api/certificates/download/${certificate.certificateId}`, {
+      const response = await fetch(buildApiUrl(`/api/certificates/download/${certificate.certificateId}`), {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -127,7 +127,7 @@ const CertificateDownload: React.FC<CertificateDownloadProps> = ({
         return;
       }
 
-      const response = await fetch(buildApiUrl('/api/certificates/generate', {
+      const response = await fetch(buildApiUrl('/api/certificates/generate'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

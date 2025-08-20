@@ -21,7 +21,7 @@ const VerifyEmailPage = () => {
       }
 
       try {
-        const response = await fetch(buildApiUrl('/api/auth/verify-email', {
+        const response = await fetch(buildApiUrl('/api/auth/verify-email'), {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

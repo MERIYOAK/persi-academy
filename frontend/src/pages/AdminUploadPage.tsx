@@ -265,7 +265,7 @@ const AdminUploadPage = () => {
       }));
 
       // Step 1: Create the course
-      const courseResponse = await fetchWithTimeout(buildApiUrl('/api/courses', {
+      const courseResponse = await fetchWithTimeout(buildApiUrl('/api/courses'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

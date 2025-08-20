@@ -58,7 +58,7 @@ const CheckoutSuccessPage = () => {
       if (!token) return;
 
       // Get user's purchased courses to find the actual payment
-      const userResponse = await fetch(buildApiUrl('/api/auth/me', {
+      const userResponse = await fetch(buildApiUrl('/api/auth/me'), {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -253,7 +253,7 @@ const CheckoutSuccessPage = () => {
         if (!token) return;
 
         // Check if user has purchased the course
-        const purchaseResponse = await fetch(buildApiUrl(`/api/payment/check-purchase/${effectiveCourseId}`, {
+        const purchaseResponse = await fetch(buildApiUrl(`/api/payment/check-purchase/${effectiveCourseId}`), {
           headers: {
             'Authorization': `Bearer ${token}`
           }
@@ -267,7 +267,7 @@ const CheckoutSuccessPage = () => {
             
             // Try to fetch receipt again
             try {
-              const receiptResponse = await fetch(buildApiUrl(`/api/payment/receipt/${effectiveCourseId}`, {
+              const receiptResponse = await fetch(buildApiUrl(`/api/payment/receipt/${effectiveCourseId}`), {
                 headers: {
                   'Authorization': `Bearer ${token}`,
                   'Content-Type': 'application/json'
@@ -322,7 +322,7 @@ const CheckoutSuccessPage = () => {
         throw new Error('Authentication required');
       }
 
-      const response = await fetch(buildApiUrl(`/api/payment/download-receipt/${effectiveCourseId}`, {
+      const response = await fetch(buildApiUrl(`/api/payment/download-receipt/${effectiveCourseId}`), {
         headers: {
           'Authorization': `Bearer ${token}`,
         }
@@ -367,7 +367,7 @@ const CheckoutSuccessPage = () => {
         throw new Error('Authentication required');
       }
 
-      const response = await fetch(buildApiUrl(`/api/payment/download-resources/${effectiveCourseId}`, {
+      const response = await fetch(buildApiUrl(`/api/payment/download-resources/${effectiveCourseId}`), {
         headers: {
           'Authorization': `Bearer ${token}`,
         }
