@@ -7,7 +7,9 @@ import {
   ApiResponse 
 } from '../types/progress';
 
-const API_BASE_URL = 'http://localhost:5000/api/progress';
+import { buildApiUrl } from '../config/environment';
+
+const API_BASE_URL = buildApiUrl('/api/progress');
 
 class ProgressService {
   private getAuthHeaders(): HeadersInit {

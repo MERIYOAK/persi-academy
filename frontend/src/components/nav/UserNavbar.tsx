@@ -57,10 +57,10 @@ const UserNavbar: React.FC = () => {
           // Only fetch profile photo if user has a profilePhotoKey
           if (userResult.data.profilePhotoKey) {
             const photoResponse = await fetch('http://localhost:5000/api/auth/users/me/photo', {
-              headers: {
-                'Authorization': `Bearer ${token}`
-              }
-            });
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
 
             if (photoResponse.ok) {
               const photoResult = await photoResponse.json();
@@ -193,7 +193,7 @@ const UserNavbar: React.FC = () => {
             <div className="border-t border-gray-200 my-3"></div>
             
                          {/* Auth Section */}
-             {isAuthenticated ? (
+              {isAuthenticated ? (
                <div className="px-4 py-2">
                  <div className="text-xs text-gray-500 mb-3 font-medium">ACCOUNT</div>
                  <div className="space-y-2">
@@ -242,26 +242,26 @@ const UserNavbar: React.FC = () => {
                      Logout
                    </button>
                  </div>
-               </div>
-             ) : (
+                </div>
+              ) : (
               <div className="space-y-3">
                 <div className="text-xs text-gray-500 px-4 font-medium">AUTHENTICATION</div>
-                <Link
-                  to="/login"
+                  <Link
+                    to="/login"
                   className="block px-4 py-3 text-sm sm:text-base font-medium text-gray-700 hover:text-red-600 transition-all duration-300 ease-in-out rounded-lg hover:bg-gray-50"
-                  onClick={() => setIsOpen(false)}
-                >
-                  Login
-                </Link>
-                <Link
-                  to="/register"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    Login
+                  </Link>
+                  <Link
+                    to="/register"
                   className="block mx-4 py-3 px-4 bg-red-600 text-white text-center rounded-lg hover:bg-red-700 transition-all duration-300 ease-in-out transform hover:scale-105 font-medium text-sm sm:text-base shadow-lg"
-                  onClick={() => setIsOpen(false)}
-                >
-                  Sign Up
-                </Link>
-              </div>
-            )}
+                    onClick={() => setIsOpen(false)}
+                  >
+                    Sign Up
+                  </Link>
+                </div>
+              )}
           </div>
         </div>
       )}

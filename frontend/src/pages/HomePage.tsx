@@ -2,6 +2,7 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Star, Award, Zap, Target, TrendingUp } from 'lucide-react';
 import CourseCard from '../components/CourseCard';
+import { buildApiUrl } from '../config/environment';
 
 interface ApiCourse {
   _id: string;
@@ -144,8 +145,8 @@ const HomePage = () => {
           console.log('🔓 HomePage no authentication token found');
         }
         
-        console.log('📡 Making API request to: http://localhost:5000/api/courses');
-        const res = await fetch('http://localhost:5000/api/courses', {
+    console.log('📡 Making API request to:', buildApiUrl('/api/courses'));
+    const res = await fetch(buildApiUrl('/api/courses'), {
           headers
         });
         

@@ -529,26 +529,26 @@ const AdminCourseVideosPage: React.FC = () => {
                     {selectedVideos.length} of {videos.length} selected
                   </span>
                 </div>
-              </div>
-              {selectedVideos.length > 0 && (
-                <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-2">
-                  <select
-                    value={bulkAction}
-                    onChange={(e) => setBulkAction(e.target.value)}
-                    className="text-sm border border-gray-300 rounded px-2 py-1 w-full sm:w-auto"
-                  >
-                    <option value="">Bulk Actions</option>
-                    <option value="delete">Delete Selected</option>
-                  </select>
-                  <button
-                    onClick={handleBulkAction}
-                    disabled={!bulkAction}
-                    className="px-3 py-1 text-sm bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50 w-full sm:w-auto"
-                  >
-                    Apply
-                  </button>
                 </div>
-              )}
+                {selectedVideos.length > 0 && (
+                <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-2">
+                    <select
+                      value={bulkAction}
+                      onChange={(e) => setBulkAction(e.target.value)}
+                    className="text-sm border border-gray-300 rounded px-2 py-1 w-full sm:w-auto"
+                    >
+                      <option value="">Bulk Actions</option>
+                      <option value="delete">Delete Selected</option>
+                    </select>
+                    <button
+                      onClick={handleBulkAction}
+                      disabled={!bulkAction}
+                    className="px-3 py-1 text-sm bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50 w-full sm:w-auto"
+                    >
+                      Apply
+                    </button>
+                  </div>
+                )}
             </div>
           </div>
         )}
