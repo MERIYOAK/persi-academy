@@ -1,4 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
+import { buildApiUrl } from '../config/environment';
+
 import { Link, useNavigate } from 'react-router-dom';
 import { Clock, Users, Star, Play, ShoppingCart, CheckCircle, Loader } from 'lucide-react';
 
@@ -94,7 +96,7 @@ const CourseCard: React.FC<CourseCardProps> = ({
       }
 
       // Create checkout session
-      const response = await fetch('http://localhost:5000/api/payment/create-checkout-session', {
+      const response = await fetch(buildApiUrl('/api/payment/create-checkout-session', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

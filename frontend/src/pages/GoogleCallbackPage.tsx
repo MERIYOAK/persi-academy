@@ -1,4 +1,6 @@
 import React, { useEffect, useState } from 'react';
+import { buildApiUrl } from '../config/environment';
+
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Loader, CheckCircle, XCircle } from 'lucide-react';
 import ScrollToTop from '../components/ScrollToTop';
@@ -38,7 +40,7 @@ const GoogleCallbackPage: React.FC = () => {
         localStorage.setItem('token', token);
 
         // Verify the token by making a request to the backend
-        const response = await fetch('http://localhost:5000/api/auth/verify-token', {
+        const response = await fetch(buildApiUrl('/api/auth/verify-token', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

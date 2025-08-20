@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { buildApiUrl } from '../config/environment';
+
 import { Link } from 'react-router-dom';
 import { Play, Clock, CheckCircle, BookOpen, Trophy, Award, Sparkles, Eye } from 'lucide-react';
 import CourseProgressBar from './CourseProgressBar';
@@ -62,7 +64,7 @@ const DashboardCard: React.FC<DashboardCardProps> = ({
       const token = localStorage.getItem('token');
       if (!token) return;
 
-      const response = await fetch(`http://localhost:5000/api/certificates/course/${_id}`, {
+      const response = await fetch(buildApiUrl(`/api/certificates/course/${_id}`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -99,7 +101,7 @@ const DashboardCard: React.FC<DashboardCardProps> = ({
         return;
       }
 
-      const response = await fetch('http://localhost:5000/api/certificates/generate', {
+      const response = await fetch(buildApiUrl('/api/certificates/generate', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

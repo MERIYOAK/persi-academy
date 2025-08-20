@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { buildApiUrl } from '../config/environment';
+
 import { Link } from 'react-router-dom';
 import { 
   ArrowLeft, 
@@ -111,9 +113,9 @@ const AdminAnalyticsPage: React.FC = () => {
 
       // Fetch all analytics data in parallel
       const [generalResponse, courseResponse, videoResponse] = await Promise.all([
-        fetch('http://localhost:5000/api/admin/stats', { headers }),
-        fetch('http://localhost:5000/api/courses/admin/statistics', { headers }),
-        fetch('http://localhost:5000/api/videos/admin/statistics', { headers })
+        fetch(buildApiUrl('/api/admin/stats', { headers }),
+        fetch(buildApiUrl('/api/courses/admin/statistics', { headers }),
+        fetch(buildApiUrl('/api/videos/admin/statistics', { headers })
       ]);
 
       if (!generalResponse.ok || !courseResponse.ok || !videoResponse.ok) {

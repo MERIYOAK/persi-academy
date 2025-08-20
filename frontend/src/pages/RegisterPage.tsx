@@ -1,6 +1,8 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Eye, EyeOff, AlertCircle, CheckCircle } from 'lucide-react';
 import AuthForm from '../components/AuthForm';
+import { buildApiUrl } from '../config/environment';
 
 const RegisterPage = () => {
   const navigate = useNavigate();
@@ -79,7 +81,7 @@ const RegisterPage = () => {
       }
 
       // Make API call to register user
-      const response = await fetch('http://localhost:5000/api/auth/register', {
+      const response = await fetch(buildApiUrl('/api/auth/register'), {
         method: 'POST',
         body: formData
       });

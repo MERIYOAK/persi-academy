@@ -49,7 +49,7 @@ const CertificateVerificationPage = () => {
       setVerification(null);
       setShowSuccess(false);
 
-      const response = await fetch(`http://localhost:5000/api/certificates/verify/${id.trim()}`);
+              const response = await fetch(buildApiUrl(`/api/certificates/verify/${id.trim()}`));
 
       if (!response.ok) {
         // Try to parse error response as JSON first

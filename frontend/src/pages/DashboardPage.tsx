@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { BookOpen, Search, Filter, Trophy, TrendingUp, Clock, Users } from 'lucide-react';
 import DashboardCard from '../components/DashboardCard';
 import CertificateDownload from '../components/CertificateDownload';
+import { buildApiUrl } from '../config/environment';
 
 interface UserData {
   name: string;
@@ -56,7 +57,7 @@ const DashboardPage = () => {
         }
 
         // Fetch user data
-        const userResponse = await fetch('http://localhost:5000/api/auth/me', {
+        const userResponse = await fetch(buildApiUrl('/api/auth/me'), {
           headers: {
             'Authorization': `Bearer ${token}`
           }
@@ -70,7 +71,7 @@ const DashboardPage = () => {
         setUserData(userResult.data.user);
 
         // Fetch dashboard progress data
-        const progressResponse = await fetch('http://localhost:5000/api/progress/dashboard', {
+        const progressResponse = await fetch(buildApiUrl('/api/progress/dashboard'), {
               headers: {
                 'Authorization': `Bearer ${token}`
               }

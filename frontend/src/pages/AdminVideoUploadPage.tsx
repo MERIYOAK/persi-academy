@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { buildApiUrl } from '../config/environment';
+
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Upload, Video, Clock, User, Save, X } from 'lucide-react';
 import ProgressOverlay from '../components/ProgressOverlay';
@@ -48,7 +50,7 @@ const AdminVideoUploadPage: React.FC = () => {
         throw new Error('Admin token not found');
       }
 
-      const response = await fetch(`http://localhost:5000/api/courses/${courseId}`, {
+      const response = await fetch(buildApiUrl(`/api/courses/${courseId}`, {
         headers: {
           'Authorization': `Bearer ${adminToken}`,
           'Content-Type': 'application/json',
@@ -254,7 +256,7 @@ const AdminVideoUploadPage: React.FC = () => {
         setUploading(false);
       };
 
-      xhr.open('POST', 'http://localhost:5000/api/videos/upload');
+      xhr.open('POST', buildApiUrl('/api/videos/upload');
       xhr.setRequestHeader('Authorization', `Bearer ${adminToken}`);
       xhr.send(videoFormData);
 

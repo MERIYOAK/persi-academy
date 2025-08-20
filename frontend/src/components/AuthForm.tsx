@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Eye, EyeOff, Upload, X } from 'lucide-react';
+import { buildApiUrl } from '../config/environment';
 
 interface Field {
   name: string;
@@ -84,9 +85,8 @@ const AuthForm: React.FC<AuthFormProps> = ({
     setImagePreview(null);
   };
 
-  const handleGoogleSignIn = () => {
-    // Redirect to Google OAuth
-    window.location.href = 'http://localhost:5000/api/auth/google';
+  const handleGoogleLogin = () => {
+    window.location.href = buildApiUrl('/api/auth/google');
   };
 
   return (
@@ -231,7 +231,7 @@ const AuthForm: React.FC<AuthFormProps> = ({
 
               <div className="mt-6">
                 <button 
-                  onClick={handleGoogleSignIn}
+                  onClick={handleGoogleLogin}
                   className="w-full inline-flex justify-center items-center py-3 px-4 border border-gray-300 rounded-lg shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 hover:shadow-md transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                 >
                   {/* Google Logo with proper colors */}

@@ -1,4 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
+import { buildApiUrl } from '../../config/environment';
+
 import { Link, useLocation } from 'react-router-dom';
 import { Menu, X, BookOpen } from 'lucide-react';
 import AvatarMenu from './AvatarMenu';
@@ -45,7 +47,7 @@ const UserNavbar: React.FC = () => {
         if (!token) return;
 
         // First, get user data to check if they have a profile photo
-        const userResponse = await fetch('http://localhost:5000/api/auth/me', {
+        const userResponse = await fetch(buildApiUrl('/api/auth/me', {
           headers: {
             'Authorization': `Bearer ${token}`
           }
@@ -56,7 +58,7 @@ const UserNavbar: React.FC = () => {
           
           // Only fetch profile photo if user has a profilePhotoKey
           if (userResult.data.profilePhotoKey) {
-            const photoResponse = await fetch('http://localhost:5000/api/auth/users/me/photo', {
+            const photoResponse = await fetch(buildApiUrl('/api/auth/users/me/photo', {
           headers: {
             'Authorization': `Bearer ${token}`
           }

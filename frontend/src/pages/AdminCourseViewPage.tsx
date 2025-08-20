@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { buildApiUrl } from '../config/environment';
+
 import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft, Users, Star, Calendar, DollarSign, Eye, Play, Plus, Upload, Settings, BookOpen } from 'lucide-react';
 
@@ -40,7 +42,7 @@ const AdminCourseViewPage: React.FC = () => {
         throw new Error('Admin token not found');
       }
 
-      const response = await fetch(`http://localhost:5000/api/courses/${courseId}`, {
+      const response = await fetch(buildApiUrl(`/api/courses/${courseId}`, {
         headers: {
           'Authorization': `Bearer ${adminToken}`,
           'Content-Type': 'application/json',

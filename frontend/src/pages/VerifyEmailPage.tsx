@@ -1,4 +1,6 @@
 import React, { useEffect, useState } from 'react';
+import { buildApiUrl } from '../config/environment';
+
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { CheckCircle, XCircle, Loader2 } from 'lucide-react';
 
@@ -19,7 +21,7 @@ const VerifyEmailPage = () => {
       }
 
       try {
-        const response = await fetch('http://localhost:5000/api/auth/verify-email', {
+        const response = await fetch(buildApiUrl('/api/auth/verify-email', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

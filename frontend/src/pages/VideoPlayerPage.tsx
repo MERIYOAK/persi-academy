@@ -4,6 +4,7 @@ import { ChevronLeft, BookOpen, CheckCircle } from 'lucide-react';
 import VideoPlaylist from '../components/VideoPlaylist';
 import VideoProgressBar from '../components/VideoProgressBar';
 import EnhancedVideoPlayer from '../components/EnhancedVideoPlayer';
+import { buildApiUrl } from '../config/environment';
 
 interface Video {
   id: string;
@@ -186,7 +187,7 @@ const VideoPlayerPage = () => {
 
       console.log(`🔄 [VideoPlayer] Refreshing presigned URL for video: ${videoId}`);
       
-      const response = await fetch(`http://localhost:5000/api/progress/course/${id}`, {
+      const response = await fetch(buildApiUrl(`/api/progress/course/${id}`), {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -322,7 +323,7 @@ const VideoPlayerPage = () => {
 
       console.log(`🔧 [Udemy-Style] Sending progress update: ${watchedDuration}s / ${totalDuration}s`);
 
-      const response = await fetch('http://localhost:5000/api/progress/update', {
+      const response = await fetch(buildApiUrl('/api/progress/update'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -425,7 +426,7 @@ const VideoPlayerPage = () => {
       const abortController = new AbortController();
       pendingProgressRequest.current = abortController;
 
-      const response = await fetch('http://localhost:5000/api/progress/update', {
+      const response = await fetch(buildApiUrl('/api/progress/update'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -517,7 +518,7 @@ const VideoPlayerPage = () => {
         
         // Fetch videos with access control (includes free preview logic)
         console.log('🔧 [VideoPlayer] Fetching videos with access control...');
-        const videosResponse = await fetch(`http://localhost:5000/api/videos/course/${id}/version/1`, {
+        const videosResponse = await fetch(buildApiUrl(`/api/videos/course/${id}/version/1`), {
           headers: {
             'Authorization': `Bearer ${token}`
           }
@@ -536,7 +537,7 @@ const VideoPlayerPage = () => {
         
         // Fetch course progress data
         console.log('🔧 [VideoPlayer] Fetching course progress...');
-        const progressResponse = await fetch(`http://localhost:5000/api/progress/course/${id}`, {
+        const progressResponse = await fetch(buildApiUrl(`/api/progress/course/${id}`), {
           headers: {
             'Authorization': `Bearer ${token}`
           }
@@ -644,7 +645,7 @@ const VideoPlayerPage = () => {
         if (!token) return;
 
         // Fetch resume position
-        const resumeResponse = await fetch(`http://localhost:5000/api/progress/resume/${id}/${currentVideoId}`, {
+        const resumeResponse = await fetch(buildApiUrl(`/api/progress/resume/${id}/${currentVideoId}`), {
           headers: {
             'Authorization': `Bearer ${token}`
           }
@@ -822,7 +823,7 @@ const VideoPlayerPage = () => {
       if (!token) return;
 
       // Mark video as completed
-      await fetch('http://localhost:5000/api/progress/complete-video', {
+      await fetch(buildApiUrl('/api/progress/complete-video'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -835,7 +836,7 @@ const VideoPlayerPage = () => {
       });
 
       // Get next video
-      const nextVideoResponse = await fetch(`http://localhost:5000/api/progress/next-video/${id}/${currentVideoId}`, {
+      const nextVideoResponse = await fetch(buildApiUrl(`/api/progress/next-video/${id}/${currentVideoId}`), {
         headers: {
           'Authorization': `Bearer ${token}`
         }
