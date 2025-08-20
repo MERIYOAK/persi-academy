@@ -61,6 +61,9 @@ app.use(cors({
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
+// Serve static files from public directory
+app.use(express.static(path.join(__dirname, 'public')));
+
 // Session configuration for Passport
 app.use(session({
   secret: process.env.SESSION_SECRET || 'your-secret-key',
@@ -94,6 +97,11 @@ app.get('/api/test', (req, res) => {
     message: 'API is working!',
     timestamp: new Date().toISOString()
   });
+});
+
+// Handle favicon.ico requests (browsers often request this)
+app.get('/favicon.ico', (req, res) => {
+  res.status(204).end(); // No content
 });
 
 // Note: Certificate PDFs are now served directly from S3 with public-read ACL
