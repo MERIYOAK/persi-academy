@@ -36,6 +36,19 @@ class AuthService {
   }
 
   /**
+   * Generate password reset token (1 hour expiry)
+   * @param {string} userId - User ID
+   * @returns {string} - JWT password reset token
+   */
+  generatePasswordResetToken(userId) {
+    return jwt.sign(
+      { userId, type: 'password-reset' },
+      process.env.JWT_SECRET,
+      { expiresIn: '1h' }
+    );
+  }
+
+  /**
    * Verify JWT token
    * @param {string} token - JWT token
    * @returns {Object} - Decoded token payload
@@ -484,29 +497,52 @@ class AuthService {
         user.email = updateData.email;
       }
 
+      // Update extended profile fields
+      if (updateData.firstName !== undefined) user.firstName = updateData.firstName;
+      if (updateData.lastName !== undefined) user.lastName = updateData.lastName;
+      if (updateData.age !== undefined) user.age = updateData.age;
+      if (updateData.sex !== undefined) user.sex = updateData.sex;
+      if (updateData.address !== undefined) user.address = updateData.address;
+      if (updateData.telephone !== undefined) user.telephone = updateData.telephone;
+      if (updateData.country !== undefined) user.country = updateData.country;
+      if (updateData.city !== undefined) user.city = updateData.city;
+
       // Handle profile photo update
       if (profilePhoto) {
+        console.log('🔧 [AuthService] Processing profile photo update:', {
+          fileName: profilePhoto.originalname,
+          fileSize: profilePhoto.size,
+          mimeType: profilePhoto.mimetype
+        });
+
         try {
           s3Service.validateProfilePhoto(profilePhoto);
+          console.log('✅ [AuthService] Profile photo validation passed');
           
           if (s3Service.isConfigured()) {
+            console.log('✅ [AuthService] S3 is configured, proceeding with upload');
+            
             // Delete old profile photo if exists
             if (user.profilePhotoKey) {
+              console.log('🗑️ [AuthService] Deleting old profile photo:', user.profilePhotoKey);
               await s3Service.deleteProfilePhoto(user.profilePhotoKey);
             }
 
             // Upload new profile photo
+            console.log('📤 [AuthService] Uploading new profile photo...');
             const profilePhotoKey = await s3Service.uploadProfilePhoto(
               profilePhoto.buffer,
               profilePhoto.originalname,
               user._id.toString()
             );
             user.profilePhotoKey = profilePhotoKey;
+            console.log('✅ [AuthService] Profile photo uploaded successfully:', profilePhotoKey);
           } else {
             console.log('⚠️  S3 not configured - skipping profile photo update');
           }
         } catch (error) {
           console.warn('⚠️  Profile photo update failed:', error.message);
+          console.error('❌ [AuthService] Profile photo error details:', error);
           // Continue update without profile photo
         }
       }
@@ -524,6 +560,15 @@ class AuthService {
         profilePhotoKey: user.profilePhotoKey,
         isVerified: user.isVerified,
         createdAt: user.createdAt,
+        // Extended profile fields
+        firstName: user.firstName,
+        lastName: user.lastName,
+        age: user.age,
+        sex: user.sex,
+        address: user.address,
+        telephone: user.telephone,
+        country: user.country,
+        city: user.city
       };
     } catch (error) {
       console.error('❌ Update profile error:', error);
@@ -564,6 +609,98 @@ class AuthService {
       return true;
     } catch (error) {
       console.error('❌ Change password error:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Send password reset email
+   * @param {string} email - User email
+   * @returns {Object} - Success status and message
+   */
+  async sendPasswordResetEmail(email) {
+    try {
+      const user = await User.findOne({ email });
+      if (!user) {
+        // Don't reveal if user exists or not for security
+        console.log(`⚠️  Password reset requested for non-existent email: ${email}`);
+        return {
+          success: true,
+          message: 'If an account with this email exists, a password reset link has been sent.'
+        };
+      }
+
+      if (user.authProvider !== 'local') {
+        console.log(`⚠️  Password reset requested for Google OAuth user: ${email}`);
+        return {
+          success: true,
+          message: 'If an account with this email exists, a password reset link has been sent.'
+        };
+      }
+
+      // Generate password reset token
+      const resetToken = this.generatePasswordResetToken(user._id);
+
+      // Send password reset email
+      await emailService.sendPasswordResetEmail(user.email, user.name, resetToken);
+
+      console.log(`✅ Password reset email sent to: ${email}`);
+
+      return {
+        success: true,
+        message: 'If an account with this email exists, a password reset link has been sent.'
+      };
+    } catch (error) {
+      console.error('❌ Send password reset email error:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Reset password with token
+   * @param {string} token - Password reset token
+   * @param {string} newPassword - New password
+   * @returns {Object} - Success status and message
+   */
+  async resetPassword(token, newPassword) {
+    try {
+      // Verify token
+      const decoded = this.verifyToken(token);
+      
+      if (decoded.type !== 'password-reset') {
+        throw new Error('Invalid token type');
+      }
+
+      const user = await User.findById(decoded.userId);
+      if (!user) {
+        throw new Error('User not found');
+      }
+
+      if (user.authProvider !== 'local') {
+        throw new Error('Password reset is only available for local accounts');
+      }
+
+      // Update password
+      user.password = newPassword;
+      await user.save();
+
+      console.log(`✅ Password reset successfully for user: ${user.email}`);
+
+      return {
+        success: true,
+        message: 'Password has been reset successfully. You can now log in with your new password.'
+      };
+    } catch (error) {
+      console.error('❌ Reset password error:', error);
+      
+      if (error.message.includes('jwt expired')) {
+        throw new Error('Password reset link has expired. Please request a new one.');
+      }
+      
+      if (error.message.includes('invalid signature')) {
+        throw new Error('Invalid password reset link.');
+      }
+      
       throw error;
     }
   }

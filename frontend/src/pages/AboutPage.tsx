@@ -1,7 +1,13 @@
-import React from 'react';
-import { Award, Users, Target, Heart } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { Award, Users, Target, Heart, Sparkles, TrendingUp, Shield, Zap } from 'lucide-react';
 
 const AboutPage = () => {
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    setIsVisible(true);
+  }, []);
+
   const stats = [
     { icon: Users, value: '10,000+', label: 'Students Enrolled' },
     { icon: Award, value: '50+', label: 'Expert Instructors' },
@@ -9,16 +15,81 @@ const AboutPage = () => {
     { icon: Heart, value: '4.9/5', label: 'Student Rating' }
   ];
 
+  const teamMembers = [
+    {
+      name: 'Sarah Johnson',
+      role: 'Founder & CEO',
+      image: 'https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&dpr=2',
+      description: 'Former YouTube Partner with 2M+ subscribers, helping creators build sustainable businesses.',
+      social: { linkedin: '#', twitter: '#', youtube: '#' }
+    },
+    {
+      name: 'Mike Chen',
+      role: 'Head of Education',
+      image: 'https://images.pexels.com/photos/614810/pexels-photo-614810.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&dpr=2',
+      description: 'Digital marketing expert with 10+ years experience in content strategy and audience growth.',
+      social: { linkedin: '#', twitter: '#', youtube: '#' }
+    },
+    {
+      name: 'Emily Rodriguez',
+      role: 'Community Manager',
+      image: 'https://images.pexels.com/photos/415829/pexels-photo-415829.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&dpr=2',
+      description: 'Building and nurturing our community of creators, ensuring everyone gets the support they need.',
+      social: { linkedin: '#', twitter: '#', youtube: '#' }
+    }
+  ];
+
+  const values = [
+    {
+      icon: Sparkles,
+      title: 'Innovation',
+      description: 'Constantly evolving with the latest YouTube trends and algorithm changes.'
+    },
+    {
+      icon: Shield,
+      title: 'Trust',
+      description: 'Building lasting relationships through transparency and proven results.'
+    },
+    {
+      icon: TrendingUp,
+      title: 'Growth',
+      description: 'Committed to helping creators achieve sustainable, long-term success.'
+    },
+    {
+      icon: Zap,
+      title: 'Excellence',
+      description: 'Delivering the highest quality education and support to our community.'
+    }
+  ];
+
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-red-50 relative overflow-hidden">
+      {/* Animated Background Elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-20 left-10 w-72 h-72 bg-red-500/10 rounded-full mix-blend-multiply filter blur-xl animate-pulse"></div>
+        <div className="absolute top-40 right-20 w-96 h-96 bg-pink-500/10 rounded-full mix-blend-multiply filter blur-xl animate-pulse animation-delay-2000"></div>
+        <div className="absolute -bottom-8 left-20 w-72 h-72 bg-red-400/10 rounded-full mix-blend-multiply filter blur-xl animate-pulse animation-delay-4000"></div>
+      </div>
+
+      {/* Fixed Hero Background */}
+      <div className="fixed inset-0 z-0">
+        <div 
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+          style={{
+            backgroundImage: `url('https://images.pexels.com/photos/3183150/pexels-photo-3183150.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080&dpr=2')`
+          }}
+        />
+        <div className="absolute inset-0 bg-black/40"></div>
+      </div>
+
       {/* Hero Section */}
-      <section className="bg-gradient-to-r from-red-600 to-red-700 text-white py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <h1 className="text-4xl md:text-5xl font-bold mb-6">
+      <section className="relative text-white pt-32 pb-20 overflow-hidden z-10">
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className={`text-center transition-all duration-1000 ease-out ${isVisible ? 'opacity-100 transform translate-y-0' : 'opacity-0 transform translate-y-8'}`}>
+            <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold mb-6 bg-gradient-to-r from-white via-red-100 to-white bg-clip-text text-transparent animate-pulse">
               About YT Academy
             </h1>
-            <p className="text-xl text-red-100 max-w-3xl mx-auto">
+            <p className="text-xl md:text-2xl text-red-100 max-w-4xl mx-auto leading-relaxed">
               We're on a mission to help creators turn their passion into profit through 
               comprehensive YouTube education and proven monetization strategies.
             </p>
@@ -27,17 +98,22 @@ const AboutPage = () => {
       </section>
 
       {/* Stats Section */}
-      <section className="py-16">
+      <section className="py-20 relative bg-white/95 backdrop-blur-sm z-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             {stats.map((stat, index) => (
-              <div key={index} className="text-center">
-                <div className="bg-white rounded-lg p-6 shadow-lg">
-                  <stat.icon className="h-12 w-12 text-red-600 mx-auto mb-4" />
-                  <div className="text-3xl font-bold text-gray-800 mb-2">
+              <div 
+                key={index} 
+                className={`text-center transition-all duration-700 ease-out delay-${index * 100} ${isVisible ? 'opacity-100 transform translate-y-0' : 'opacity-0 transform translate-y-8'}`}
+              >
+                <div className="group bg-white/80 backdrop-blur-sm rounded-2xl p-8 shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 hover:scale-105 border border-white/20">
+                  <div className="bg-gradient-to-br from-red-500 to-red-600 p-4 rounded-full w-16 h-16 mx-auto mb-6 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                    <stat.icon className="h-8 w-8 text-white" />
+                  </div>
+                  <div className="text-4xl font-bold text-gray-800 mb-2 bg-gradient-to-r from-red-600 to-red-800 bg-clip-text text-transparent">
                     {stat.value}
                   </div>
-                  <div className="text-gray-600">{stat.label}</div>
+                  <div className="text-gray-600 font-medium">{stat.label}</div>
                 </div>
               </div>
             ))}
@@ -46,43 +122,43 @@ const AboutPage = () => {
       </section>
 
       {/* Mission Section */}
-      <section className="py-16 bg-white">
+      <section className="py-20 bg-white/95 backdrop-blur-sm relative z-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            <div>
-              <h2 className="text-3xl font-bold text-gray-800 mb-6">
+            <div className={`transition-all duration-700 ease-out delay-200 ${isVisible ? 'opacity-100 transform translate-x-0' : 'opacity-0 transform -translate-x-8'}`}>
+              <h2 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-red-600 to-red-800 bg-clip-text text-transparent hover:scale-105 transition-transform duration-300">
                 Our Mission
               </h2>
-              <p className="text-lg text-gray-600 mb-6">
+              <p className="text-lg text-gray-600 mb-6 leading-relaxed">
                 At YT Academy, we believe that everyone has the potential to create 
                 meaningful content and build a sustainable income from their passion. 
                 Our comprehensive courses are designed to take you from beginner to 
                 successful content creator.
               </p>
-              <p className="text-lg text-gray-600">
+              <p className="text-lg text-gray-600 leading-relaxed">
                 We combine cutting-edge strategies with real-world experience to 
                 provide you with the tools, knowledge, and support you need to 
                 thrive in the competitive world of YouTube content creation.
               </p>
             </div>
-            <div className="bg-gradient-to-br from-red-500 to-red-600 rounded-2xl p-8 text-white">
-              <h3 className="text-2xl font-bold mb-4">Why Choose Us?</h3>
-              <ul className="space-y-3">
-                <li className="flex items-center">
-                  <span className="w-2 h-2 bg-white rounded-full mr-3"></span>
-                  Expert-led courses from successful YouTubers
+            <div className={`bg-gradient-to-br from-red-500 via-red-600 to-red-700 rounded-3xl p-8 text-white shadow-2xl hover:shadow-red-500/25 transition-all duration-300 transform hover:-translate-y-2 ${isVisible ? 'opacity-100 transform translate-x-0' : 'opacity-0 transform translate-x-8'}`}>
+              <h3 className="text-3xl font-bold mb-6">Why Choose Us?</h3>
+              <ul className="space-y-4">
+                <li className="flex items-center group">
+                  <span className="w-3 h-3 bg-white rounded-full mr-4 group-hover:scale-125 transition-transform duration-300"></span>
+                  <span className="group-hover:translate-x-1 transition-transform duration-300">Expert-led courses from successful YouTubers</span>
                 </li>
-                <li className="flex items-center">
-                  <span className="w-2 h-2 bg-white rounded-full mr-3"></span>
-                  Up-to-date strategies for the latest algorithm changes
+                <li className="flex items-center group">
+                  <span className="w-3 h-3 bg-white rounded-full mr-4 group-hover:scale-125 transition-transform duration-300"></span>
+                  <span className="group-hover:translate-x-1 transition-transform duration-300">Up-to-date strategies for the latest algorithm changes</span>
                 </li>
-                <li className="flex items-center">
-                  <span className="w-2 h-2 bg-white rounded-full mr-3"></span>
-                  Practical, actionable content you can implement immediately
+                <li className="flex items-center group">
+                  <span className="w-3 h-3 bg-white rounded-full mr-4 group-hover:scale-125 transition-transform duration-300"></span>
+                  <span className="group-hover:translate-x-1 transition-transform duration-300">Practical, actionable content you can implement immediately</span>
                 </li>
-                <li className="flex items-center">
-                  <span className="w-2 h-2 bg-white rounded-full mr-3"></span>
-                  Ongoing support and community access
+                <li className="flex items-center group">
+                  <span className="w-3 h-3 bg-white rounded-full mr-4 group-hover:scale-125 transition-transform duration-300"></span>
+                  <span className="group-hover:translate-x-1 transition-transform duration-300">Ongoing support and community access</span>
                 </li>
               </ul>
             </div>
@@ -90,67 +166,93 @@ const AboutPage = () => {
         </div>
       </section>
 
-      {/* Team Section */}
-      <section className="py-16 bg-gray-50">
+      {/* Values Section */}
+      <section className="py-20 bg-white/95 backdrop-blur-sm relative z-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-800 mb-4">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-bold text-gray-800 mb-6 bg-gradient-to-r from-red-600 to-red-800 bg-clip-text text-transparent">
+              Our Values
+            </h2>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              The principles that guide everything we do at YT Academy
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {values.map((value, index) => (
+              <div 
+                key={index}
+                className={`group bg-white/80 backdrop-blur-sm rounded-2xl p-8 shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-3 hover:scale-105 border border-white/20 ${isVisible ? 'opacity-100 transform translate-y-0' : 'opacity-0 transform translate-y-8'}`}
+                style={{ transitionDelay: `${index * 100}ms` }}
+              >
+                <div className="bg-gradient-to-br from-red-500 to-red-600 p-4 rounded-full w-16 h-16 mx-auto mb-6 flex items-center justify-center group-hover:scale-110 group-hover:rotate-12 transition-all duration-300">
+                  <value.icon className="h-8 w-8 text-white" />
+                </div>
+                <h3 className="text-xl font-bold text-gray-800 mb-4 text-center group-hover:text-red-600 transition-colors duration-300">
+                  {value.title}
+                </h3>
+                <p className="text-gray-600 text-center leading-relaxed">
+                  {value.description}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Team Section */}
+      <section className="py-20 bg-white/95 backdrop-blur-sm relative z-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-bold text-gray-800 mb-6 bg-gradient-to-r from-red-600 to-red-800 bg-clip-text text-transparent">
               Meet Our Team
             </h2>
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
               Our team consists of successful content creators, marketing experts, 
               and industry professionals who are passionate about helping others succeed.
             </p>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="bg-white rounded-lg p-6 shadow-lg text-center">
-              <img
-                src="https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&dpr=2"
-                alt="Sarah Johnson"
-                className="w-24 h-24 rounded-full mx-auto mb-4 object-cover"
-              />
-              <h3 className="text-xl font-semibold text-gray-800 mb-2">
-                Sarah Johnson
-              </h3>
-              <p className="text-red-600 font-medium mb-2">Founder & CEO</p>
-              <p className="text-gray-600">
-                Former YouTube Partner with 2M+ subscribers, helping creators 
-                build sustainable businesses.
-              </p>
-            </div>
-            
-            <div className="bg-white rounded-lg p-6 shadow-lg text-center">
-              <img
-                src="https://images.pexels.com/photos/614810/pexels-photo-614810.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&dpr=2"
-                alt="Mike Chen"
-                className="w-24 h-24 rounded-full mx-auto mb-4 object-cover"
-              />
-              <h3 className="text-xl font-semibold text-gray-800 mb-2">
-                Mike Chen
-              </h3>
-              <p className="text-red-600 font-medium mb-2">Head of Education</p>
-              <p className="text-gray-600">
-                Digital marketing expert with 10+ years experience in 
-                content strategy and audience growth.
-              </p>
-            </div>
-            
-            <div className="bg-white rounded-lg p-6 shadow-lg text-center">
-              <img
-                src="https://images.pexels.com/photos/415829/pexels-photo-415829.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&dpr=2"
-                alt="Emily Rodriguez"
-                className="w-24 h-24 rounded-full mx-auto mb-4 object-cover"
-              />
-              <h3 className="text-xl font-semibold text-gray-800 mb-2">
-                Emily Rodriguez
-              </h3>
-              <p className="text-red-600 font-medium mb-2">Community Manager</p>
-              <p className="text-gray-600">
-                Building and nurturing our community of creators, ensuring 
-                everyone gets the support they need.
-              </p>
-            </div>
+            {teamMembers.map((member, index) => (
+              <div 
+                key={index}
+                className={`group bg-white/80 backdrop-blur-sm rounded-3xl p-8 shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-4 hover:scale-105 border border-white/20 perspective-1000 ${isVisible ? 'opacity-100 transform translate-y-0' : 'opacity-0 transform translate-y-8'}`}
+                style={{ transitionDelay: `${index * 200}ms` }}
+              >
+                <div className="relative mb-6">
+                  <div className="w-32 h-32 mx-auto relative group-hover:rotate-6 transition-transform duration-500">
+                    <img
+                      src={member.image}
+                      alt={member.name}
+                      className="w-full h-full rounded-full object-cover shadow-lg group-hover:shadow-2xl transition-all duration-300"
+                    />
+                    <div className="absolute inset-0 rounded-full bg-gradient-to-br from-red-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                  </div>
+                </div>
+                
+                <h3 className="text-2xl font-bold text-gray-800 mb-2 text-center group-hover:text-red-600 transition-colors duration-300">
+                  {member.name}
+                </h3>
+                <p className="text-red-600 font-semibold mb-4 text-center">{member.role}</p>
+                <p className="text-gray-600 text-center leading-relaxed group-hover:text-gray-700 transition-colors duration-300">
+                  {member.description}
+                </p>
+                
+                {/* Social Links */}
+                <div className="flex justify-center space-x-4 mt-6 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0">
+                  <a href={member.social.linkedin} className="w-10 h-10 bg-red-600 rounded-full flex items-center justify-center hover:bg-red-700 transition-colors duration-300">
+                    <span className="text-white font-bold text-sm">in</span>
+                  </a>
+                  <a href={member.social.twitter} className="w-10 h-10 bg-red-600 rounded-full flex items-center justify-center hover:bg-red-700 transition-colors duration-300">
+                    <span className="text-white font-bold text-sm">X</span>
+                  </a>
+                  <a href={member.social.youtube} className="w-10 h-10 bg-red-600 rounded-full flex items-center justify-center hover:bg-red-700 transition-colors duration-300">
+                    <span className="text-white font-bold text-sm">▶</span>
+                  </a>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </section>

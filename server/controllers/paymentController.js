@@ -147,7 +147,7 @@ exports.createCheckoutSession = async (req, res) => {
 
 /**
  * Handle Stripe webhook events
- * POST /api/payments/webhook
+ * POST /api/payment/webhook
  */
 exports.webhook = async (req, res) => {
   console.log('🔧 Webhook received...');

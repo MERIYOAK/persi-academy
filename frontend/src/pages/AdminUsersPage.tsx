@@ -196,8 +196,8 @@ const AdminUsersPage: React.FC = () => {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading users...</p>
+          <div className="animate-spin rounded-full h-10 w-10 xxs:h-12 xxs:w-12 border-b-2 border-red-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600 text-sm xxs:text-base">Loading users...</p>
         </div>
       </div>
     );
@@ -206,11 +206,11 @@ const AdminUsersPage: React.FC = () => {
   if (error && users.length === 0) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-red-600 mb-4">{error}</p>
+        <div className="text-center px-4">
+          <p className="text-red-600 mb-4 text-sm xxs:text-base">{error}</p>
           <button 
             onClick={() => fetchUsers(1)}
-            className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700"
+            className="bg-red-600 text-white px-3 xxs:px-4 py-2 rounded-lg hover:bg-red-700 text-sm xxs:text-base"
           >
             Retry
           </button>
@@ -220,21 +220,21 @@ const AdminUsersPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 pt-16">
       {/* Header */}
       <div className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+        <div className="max-w-7xl mx-auto px-3 xxs:px-4 sm:px-6 lg:px-8 py-4 xxs:py-6">
+          <div className="flex flex-col xxs:flex-row xxs:items-center xxs:justify-between space-y-4 xxs:space-y-0">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">User Management</h1>
-              <p className="mt-2 text-gray-600">Manage all registered users, view profiles, and control access</p>
+              <h1 className="text-2xl xxs:text-3xl font-bold text-gray-900">User Management</h1>
+              <p className="mt-2 text-gray-600 text-sm xxs:text-base">Manage all registered users, view profiles, and control access</p>
             </div>
-            <div className="mt-4 sm:mt-0 flex space-x-3">
+            <div className="flex space-x-2 xxs:space-x-3">
               <Link
                 to="/admin/dashboard"
-                className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                className="inline-flex items-center px-3 xxs:px-4 py-2 border border-gray-300 text-xs xxs:text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
               >
-                <ArrowLeft className="h-4 w-4 mr-2" />
+                <ArrowLeft className="h-3 w-3 xxs:h-4 xxs:w-4 mr-1 xxs:mr-2" />
                 Back to Dashboard
               </Link>
             </div>
@@ -243,27 +243,27 @@ const AdminUsersPage: React.FC = () => {
       </div>
 
       {/* Enhanced Filters and Search */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <div className="max-w-7xl mx-auto px-3 xxs:px-4 sm:px-6 lg:px-8 py-4 xxs:py-6">
         <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
           {/* Filter Header */}
-          <div className="bg-gradient-to-r from-red-50 to-orange-50 px-6 py-4 border-b border-gray-100">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <Filter className="h-5 w-5 text-red-600" />
-                <h3 className="text-lg font-semibold text-gray-900">User Management</h3>
+          <div className="bg-gradient-to-r from-red-50 to-orange-50 px-3 xxs:px-4 sm:px-6 py-3 xxs:py-4 border-b border-gray-100">
+            <div className="flex flex-col xxs:flex-row xxs:items-center xxs:justify-between space-y-3 xxs:space-y-0">
+              <div className="flex items-center space-x-2 xxs:space-x-3">
+                <Filter className="h-4 w-4 xxs:h-5 xxs:w-5 text-red-600" />
+                <h3 className="text-base xxs:text-lg font-semibold text-gray-900">User Management</h3>
                 {(searchTerm || roleFilter !== 'all' || statusFilter !== 'all') && (
-                  <span className="bg-red-100 text-red-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
+                  <span className="bg-red-100 text-red-800 text-xs font-medium px-2 py-0.5 rounded-full">
                     Filtered
                   </span>
                 )}
               </div>
-              <div className="flex items-center space-x-3">
+              <div className="flex items-center space-x-2 xxs:space-x-3">
                 {(searchTerm || roleFilter !== 'all' || statusFilter !== 'all') && (
                   <button
                     onClick={handleClearFilters}
-                    className="flex items-center space-x-2 px-3 py-1.5 text-sm text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200"
+                    className="flex items-center space-x-1 xxs:space-x-2 px-2 xxs:px-3 py-1 xxs:py-1.5 text-xs xxs:text-sm text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200"
                   >
-                    <X className="h-4 w-4" />
+                    <X className="h-3 w-3 xxs:h-4 xxs:w-4" />
                     <span>Clear filters</span>
                   </button>
                 )}
@@ -272,31 +272,31 @@ const AdminUsersPage: React.FC = () => {
           </div>
 
           {/* Filter Options */}
-          <div className="p-6">
-            <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
+          <div className="p-3 xxs:p-4 sm:p-6">
+            <div className="grid grid-cols-1 xxs:grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3 xxs:gap-4 sm:gap-6">
               {/* Search */}
-              <div className="md:col-span-2 space-y-2">
-                <label className="block text-sm font-semibold text-gray-700">
+              <div className="xxs:col-span-1 sm:col-span-2 space-y-2">
+                <label className="block text-xs xxs:text-sm font-semibold text-gray-700">
                   Search Users
                 </label>
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                    <Search className="h-4 w-4 text-gray-400" />
+                  <div className="absolute inset-y-0 left-0 pl-3 xxs:pl-4 flex items-center pointer-events-none">
+                    <Search className="h-3 w-3 xxs:h-4 xxs:w-4 text-gray-400" />
                   </div>
                   <input
                     type="text"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-                    className="block w-full pl-10 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-red-100 focus:border-red-500 transition-all duration-200"
+                    className="block w-full pl-8 xxs:pl-10 pr-4 py-2 xxs:py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-red-100 focus:border-red-500 transition-all duration-200 text-sm xxs:text-base"
                     placeholder="Search by name or email..."
                   />
                   {searchTerm && (
                     <button
                       onClick={() => setSearchTerm('')}
-                      className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-gray-600 transition-colors"
+                      className="absolute inset-y-0 right-0 pr-3 xxs:pr-4 flex items-center text-gray-400 hover:text-gray-600 transition-colors"
                     >
-                      <X className="h-4 w-4" />
+                      <X className="h-3 w-3 xxs:h-4 xxs:w-4" />
                     </button>
                   )}
                 </div>
@@ -430,86 +430,136 @@ const AdminUsersPage: React.FC = () => {
         </div>
 
         {/* Users Grid */}
-        <div className="mt-8">
+        <div className="mt-4 xxs:mt-6 sm:mt-8">
           {users.length > 0 ? (
-            <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        User
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Role
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Status
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Courses
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Joined
-                      </th>
-                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Actions
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {users.map((user) => (
-                      <tr key={user._id} className="hover:bg-gray-50 transition-colors duration-200">
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="flex items-center">
-                            <div className="flex-shrink-0 h-10 w-10">
-                              {user.profilePicture ? (
-                                <img
-                                  className="h-10 w-10 rounded-full object-cover"
-                                  src={user.profilePicture}
-                                  alt={user.name}
-                                />
-                              ) : (
-                                <div className="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
-                                  <Users className="h-5 w-5 text-gray-600" />
+            <>
+              {/* Desktop Table */}
+              <div className="hidden md:block bg-white rounded-xl shadow-sm border overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          User
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Role
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Status
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Courses
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Joined
+                        </th>
+                        <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Actions
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {users.map((user) => (
+                        <tr key={user._id} className="hover:bg-gray-50 transition-colors duration-200">
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="flex items-center">
+                              <div className="flex-shrink-0 h-10 w-10">
+                                {user.profilePicture ? (
+                                  <img
+                                    className="h-10 w-10 rounded-full object-cover"
+                                    src={user.profilePicture}
+                                    alt={user.name}
+                                  />
+                                ) : (
+                                  <div className="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
+                                    <Users className="h-5 w-5 text-gray-600" />
+                                  </div>
+                                )}
+                              </div>
+                              <div className="ml-4">
+                                <div className="text-sm font-medium text-gray-900">{user.name}</div>
+                                <div className="text-sm text-gray-500 flex items-center">
+                                  <Mail className="h-3 w-3 mr-1" />
+                                  {user.email}
                                 </div>
-                              )}
-                            </div>
-                            <div className="ml-4">
-                              <div className="text-sm font-medium text-gray-900">{user.name}</div>
-                              <div className="text-sm text-gray-500 flex items-center">
-                                <Mail className="h-3 w-3 mr-1" />
-                                {user.email}
                               </div>
                             </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getRoleColor(user.role)}`}>
+                              {user.role}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(user.status)}`}>
+                              {user.status}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {user.purchasedCourses?.length || 0} courses
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            <div className="flex items-center">
+                              <Calendar className="h-3 w-3 mr-1" />
+                              {formatDate(user.createdAt)}
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <div className="flex items-center justify-end space-x-2">
+                              <button className="text-blue-600 hover:text-blue-900 transition-colors duration-200">
+                                <Eye className="h-4 w-4" />
+                              </button>
+                              <button className="text-green-600 hover:text-green-900 transition-colors duration-200">
+                                <Edit className="h-4 w-4" />
+                              </button>
+                              {user.role !== 'admin' && (
+                                <button
+                                  onClick={() => {
+                                    setUserToDelete(user);
+                                    setShowDeleteModal(true);
+                                  }}
+                                  className="text-red-600 hover:text-red-900 transition-colors duration-200"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </button>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* Mobile Cards */}
+              <div className="md:hidden space-y-3 xxs:space-y-4">
+                {users.map((user) => (
+                  <div key={user._id} className="bg-white rounded-lg shadow-sm border p-3 xxs:p-4">
+                    <div className="flex items-start space-x-3 xxs:space-x-4">
+                      <div className="flex-shrink-0 h-10 w-10 xxs:h-12 xxs:w-12">
+                        {user.profilePicture ? (
+                          <img
+                            className="h-10 w-10 xxs:h-12 xxs:w-12 rounded-full object-cover"
+                            src={user.profilePicture}
+                            alt={user.name}
+                          />
+                        ) : (
+                          <div className="h-10 w-10 xxs:h-12 xxs:w-12 rounded-full bg-gray-300 flex items-center justify-center">
+                            <Users className="h-5 w-5 xxs:h-6 xxs:w-6 text-gray-600" />
                           </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getRoleColor(user.role)}`}>
-                            {user.role}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(user.status)}`}>
-                            {user.status}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {user.purchasedCourses?.length || 0} courses
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          <div className="flex items-center">
-                            <Calendar className="h-3 w-3 mr-1" />
-                            {formatDate(user.createdAt)}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                          <div className="flex items-center justify-end space-x-2">
-                            <button className="text-blue-600 hover:text-blue-900 transition-colors duration-200">
-                              <Eye className="h-4 w-4" />
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between mb-2">
+                          <h3 className="text-sm xxs:text-base font-medium text-gray-900 truncate">{user.name}</h3>
+                          <div className="flex items-center space-x-1 xxs:space-x-2">
+                            <button className="text-blue-600 hover:text-blue-900 transition-colors duration-200 p-1">
+                              <Eye className="h-3 w-3 xxs:h-4 xxs:w-4" />
                             </button>
-                            <button className="text-green-600 hover:text-green-900 transition-colors duration-200">
-                              <Edit className="h-4 w-4" />
+                            <button className="text-green-600 hover:text-green-900 transition-colors duration-200 p-1">
+                              <Edit className="h-3 w-3 xxs:h-4 xxs:w-4" />
                             </button>
                             {user.role !== 'admin' && (
                               <button
@@ -517,26 +567,45 @@ const AdminUsersPage: React.FC = () => {
                                   setUserToDelete(user);
                                   setShowDeleteModal(true);
                                 }}
-                                className="text-red-600 hover:text-red-900 transition-colors duration-200"
+                                className="text-red-600 hover:text-red-900 transition-colors duration-200 p-1"
                               >
-                                <Trash2 className="h-4 w-4" />
+                                <Trash2 className="h-3 w-3 xxs:h-4 xxs:w-4" />
                               </button>
                             )}
                           </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                        </div>
+                        <div className="text-xs xxs:text-sm text-gray-500 flex items-center mb-2">
+                          <Mail className="h-3 w-3 mr-1" />
+                          <span className="truncate">{user.email}</span>
+                        </div>
+                        <div className="flex flex-wrap items-center gap-2 xxs:gap-3">
+                          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getRoleColor(user.role)}`}>
+                            {user.role}
+                          </span>
+                          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColor(user.status)}`}>
+                            {user.status}
+                          </span>
+                          <span className="text-xs xxs:text-sm text-gray-500">
+                            {user.purchasedCourses?.length || 0} courses
+                          </span>
+                        </div>
+                        <div className="mt-2 xxs:mt-3 text-xs xxs:text-sm text-gray-500 flex items-center">
+                          <Calendar className="h-3 w-3 mr-1" />
+                          Joined {formatDate(user.createdAt)}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
-            </div>
+            </>
           ) : (
-            <div className="text-center py-12">
-              <div className="mx-auto h-12 w-12 text-gray-400">
-                <Users className="h-12 w-12" />
+            <div className="text-center py-8 xxs:py-12">
+              <div className="mx-auto h-10 w-10 xxs:h-12 xxs:w-12 text-gray-400">
+                <Users className="h-10 w-10 xxs:h-12 xxs:w-12" />
               </div>
               <h3 className="mt-2 text-sm font-medium text-gray-900">No users found</h3>
-              <p className="mt-1 text-sm text-gray-500">
+              <p className="mt-1 text-xs xxs:text-sm text-gray-500">
                 {searchTerm || roleFilter !== 'all' || statusFilter !== 'all' 
                   ? 'Try adjusting your search or filter criteria.'
                   : 'No users have registered yet.'
@@ -548,24 +617,24 @@ const AdminUsersPage: React.FC = () => {
 
         {/* Pagination */}
         {pagination && pagination.totalPages > 1 && (
-          <div className="mt-6 flex items-center justify-between">
-            <div className="flex-1 flex justify-between sm:hidden">
+          <div className="mt-4 xxs:mt-6 flex items-center justify-between">
+            <div className="flex-1 flex justify-between md:hidden">
               <button
                 onClick={() => handlePageChange(currentPage - 1)}
                 disabled={!pagination.hasPrevPage}
-                className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="relative inline-flex items-center px-3 xxs:px-4 py-2 border border-gray-300 text-xs xxs:text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Previous
               </button>
               <button
                 onClick={() => handlePageChange(currentPage + 1)}
                 disabled={!pagination.hasNextPage}
-                className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="ml-2 xxs:ml-3 relative inline-flex items-center px-3 xxs:px-4 py-2 border border-gray-300 text-xs xxs:text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Next
               </button>
             </div>
-            <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+            <div className="hidden md:flex-1 md:flex md:items-center md:justify-between">
               <div>
                 <p className="text-sm text-gray-700">
                   Showing{' '}

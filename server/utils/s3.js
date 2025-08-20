@@ -81,8 +81,8 @@ const generateS3Key = (fileType, fileName, context = {}) => {
 const uploadFileWithOrganization = async (file, fileType, context = {}) => {
   const s3Key = generateS3Key(fileType, file.originalname, context);
   
-  // Determine desired ACL - thumbnails should be public-read
-  const desiredAcl = fileType === 'thumbnail' ? 'public-read' : 'private';
+  // Determine desired ACL - thumbnails and certificates should be public-read
+  const desiredAcl = (fileType === 'thumbnail' || fileType === 'certificate') ? 'public-read' : 'private';
 
   let usedAcl = desiredAcl;
   try {
@@ -94,9 +94,9 @@ const uploadFileWithOrganization = async (file, fileType, context = {}) => {
     };
   } catch (error) {
     // If bucket has Object Ownership (ACLs disabled) or blocks public ACLs,
-    // retry without ACL for thumbnails.
+    // retry without ACL for thumbnails and certificates.
     const looksLikeAclIssue = /ACL|AccessControlList|InvalidArgument|AccessDenied/i.test(error?.message || '');
-    if (fileType === 'thumbnail' && looksLikeAclIssue) {
+    if ((fileType === 'thumbnail' || fileType === 'certificate') && looksLikeAclIssue) {
       try {
         usedAcl = undefined; // omit ACL
         const result = await uploadToS3(file, s3Key, undefined);

@@ -22,6 +22,9 @@ interface AuthFormProps {
     href: string;
   }>;
   socialAuth?: boolean;
+  message?: string;
+  error?: string;
+  loading?: boolean;
 }
 
 const AuthForm: React.FC<AuthFormProps> = ({
@@ -31,12 +34,18 @@ const AuthForm: React.FC<AuthFormProps> = ({
   submitText,
   onSubmit,
   links = [],
-  socialAuth = false
+  socialAuth = false,
+  message,
+  error,
+  loading = false
 }) => {
   const [formData, setFormData] = React.useState<Record<string, string | File>>({});
   const [showPassword, setShowPassword] = React.useState(false);
   const [isLoading, setIsLoading] = React.useState(false);
   const [imagePreview, setImagePreview] = React.useState<string | null>(null);
+
+  // Use external loading state if provided, otherwise use internal state
+  const isLoadingState = loading !== undefined ? loading : isLoading;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -81,7 +90,7 @@ const AuthForm: React.FC<AuthFormProps> = ({
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-50 to-pink-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-50 to-pink-50 pt-24 pb-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <div className="bg-white rounded-2xl shadow-2xl p-8">
           <div className="text-center mb-8">
@@ -178,13 +187,26 @@ const AuthForm: React.FC<AuthFormProps> = ({
               </div>
             ))}
 
+            {/* Message and Error Display */}
+            {message && (
+              <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                <p className="text-sm text-green-800">{message}</p>
+              </div>
+            )}
+            
+            {error && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                <p className="text-sm text-red-800">{error}</p>
+              </div>
+            )}
+
             <div>
               <button
                 type="submit"
-                disabled={isLoading}
+                disabled={isLoadingState}
                 className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-all duration-200 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isLoading ? (
+                {isLoadingState ? (
                   <div className="flex items-center">
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
                     Loading...

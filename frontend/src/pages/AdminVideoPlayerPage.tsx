@@ -561,17 +561,18 @@ const AdminVideoPlayerPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 flex flex-col">
+    <div className="min-h-screen bg-gray-900 flex flex-col pt-16">
       {/* Header */}
-      <div className="bg-gray-800 border-b border-gray-700 px-4 py-3">
+      <div className="bg-gray-800 border-b border-gray-700 px-3 sm:px-4 py-3">
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-2 sm:space-x-4">
             <Link
               to={`/admin/courses/${courseId}`}
-              className="flex items-center space-x-2 text-gray-300 hover:text-white transition-colors duration-200"
+              className="flex items-center space-x-1 sm:space-x-2 text-gray-300 hover:text-white transition-colors duration-200 text-sm sm:text-base"
             >
-              <ChevronLeft className="h-5 w-5" />
-              <span>Back to Course</span>
+              <ChevronLeft className="h-4 w-4 sm:h-5 sm:w-5" />
+              <span className="hidden sm:inline">Back to Course</span>
+              <span className="sm:hidden">Back</span>
             </Link>
             <div className="hidden md:block h-6 w-px bg-gray-600" />
             <h1 className="hidden md:block text-white font-semibold truncate">
@@ -579,24 +580,25 @@ const AdminVideoPlayerPage = () => {
             </h1>
           </div>
           
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-2 sm:space-x-4">
             <button
               onClick={() => setShowPlaylist(!showPlaylist)}
-              className="md:hidden flex items-center space-x-2 text-gray-300 hover:text-white transition-colors duration-200"
+              className="md:hidden flex items-center space-x-1 sm:space-x-2 text-gray-300 hover:text-white transition-colors duration-200 text-sm"
             >
-              <BookOpen className="h-5 w-5" />
-              <span>Playlist</span>
+              <BookOpen className="h-4 w-4 sm:h-5 sm:w-5" />
+              <span className="hidden sm:inline">Playlist</span>
+              <span className="sm:hidden">List</span>
             </button>
           </div>
         </div>
       </div>
 
-      <div className="flex-1 flex">
+      <div className="flex-1 flex flex-col lg:flex-row">
         {/* Video Player Section */}
         <div className="flex-1 flex flex-col">
           {/* Player */}
           <div 
-            className="relative bg-black video-container" 
+            className="relative bg-black video-container w-full" 
             style={{ aspectRatio: '16/9' }}
             onMouseMove={showControlsOverlay}
             onMouseLeave={hideControls}
@@ -606,7 +608,7 @@ const AdminVideoPlayerPage = () => {
               <>
                 {/* Watermark Overlay */}
                 <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
-                  <div className="text-white/10 text-6xl font-bold transform -rotate-45 select-none">
+                  <div className="text-white/10 text-2xl sm:text-4xl lg:text-6xl font-bold transform -rotate-45 select-none">
                     {courseData?.title || 'PROTECTED'}
                   </div>
                 </div>
@@ -727,30 +729,30 @@ const AdminVideoPlayerPage = () => {
                 
                 {/* Custom Controls Overlay */}
                 {controlsVisible && (
-                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4 transition-opacity duration-300">
-                    <div className="flex items-center space-x-4 text-white">
+                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-2 sm:p-4 transition-opacity duration-300">
+                    <div className="flex items-center space-x-2 sm:space-x-4 text-white">
                       {/* Play/Pause button */}
                       <button
                         onClick={handlePlayPause}
                         className="text-white hover:text-gray-300 transition-colors duration-200"
                         title="Play/Pause (Space)"
                       >
-                        {isPlaying ? <Pause className="w-6 h-6" /> : <Play className="w-6 h-6" />}
+                        {isPlaying ? <Pause className="w-5 h-5 sm:w-6 sm:h-6" /> : <Play className="w-5 h-5 sm:w-6 sm:h-6" />}
                       </button>
 
                       {/* Time display */}
-                      <div className="text-sm">
+                      <div className="text-xs sm:text-sm">
                         {formatTime(currentTime)} / {formatTime(duration)}
                       </div>
 
                       {/* Progress bar */}
                       <div 
-                        className="flex-1 bg-gray-600 rounded-full h-2 cursor-pointer relative"
+                        className="flex-1 bg-gray-600 rounded-full h-1.5 sm:h-2 cursor-pointer relative"
                         onClick={handleProgressClick}
                         title="Click to seek"
                       >
                         <div 
-                          className="bg-red-600 h-2 rounded-full transition-all duration-200 relative"
+                          className="bg-red-600 h-1.5 sm:h-2 rounded-full transition-all duration-200 relative"
                           style={{ width: `${duration > 0 ? (currentTime / duration) * 100 : 0}%` }}
                         />
                         <div className="absolute inset-0 rounded-full hover:bg-gray-500 transition-colors duration-200"></div>
@@ -762,7 +764,7 @@ const AdminVideoPlayerPage = () => {
                         className="text-white hover:text-gray-300 transition-colors duration-200"
                         title="Mute/Unmute (M)"
                       >
-                        {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
+                        {isMuted ? <VolumeX className="w-4 h-4 sm:w-5 sm:h-5" /> : <Volume2 className="w-4 h-4 sm:w-5 sm:h-5" />}
                       </button>
 
                       {/* Subtitle button - Show for testing or when subtitleUrl exists */}
@@ -774,7 +776,7 @@ const AdminVideoPlayerPage = () => {
                           }`}
                           title="Toggle Subtitles (S)"
                         >
-                          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                          <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="currentColor" viewBox="0 0 20 20">
                             <path d="M2 4a2 2 0 012-2h12a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V4zm2 0v8h12V4H4zm2 2h8v1H6V6zm0 2h6v1H6V8zm0 2h4v1H6v-1z"/>
                           </svg>
                         </button>
@@ -786,7 +788,7 @@ const AdminVideoPlayerPage = () => {
                         className="text-white hover:text-gray-300 transition-colors duration-200"
                         title="Fullscreen (F)"
                       >
-                        <Maximize className="w-5 h-5" />
+                        <Maximize className="w-4 h-4 sm:w-5 sm:h-5" />
                       </button>
                     </div>
                   </div>
@@ -797,10 +799,10 @@ const AdminVideoPlayerPage = () => {
                   <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                     <button
                       onClick={handleManualPlayClick}
-                      className="bg-red-600 hover:bg-red-700 text-white p-4 rounded-full shadow-lg transition-all duration-200 pointer-events-auto transform hover:scale-110"
+                      className="bg-red-600 hover:bg-red-700 text-white p-3 sm:p-4 rounded-full shadow-lg transition-all duration-200 pointer-events-auto transform hover:scale-110"
                       title="Click to play"
                     >
-                      <Play className="w-8 h-8" />
+                      <Play className="w-6 h-6 sm:w-8 sm:h-8" />
                     </button>
                   </div>
                 )}
@@ -808,64 +810,30 @@ const AdminVideoPlayerPage = () => {
                 {/* Loading overlay */}
                 {!playerReady && (
                   <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50">
-                    <div className="text-center text-white">
-                      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-500 mx-auto mb-4"></div>
-                      <p>Loading HLS Video Player...</p>
-                      {/* Debug info */}
-                      <div className="mt-4 text-xs text-gray-400">
-                        <p>URL: {currentVideo.videoUrl.substring(0, 50)}...</p>
-                        <p>Player Ready: {playerReady ? 'Yes' : 'No'}</p>
-                        <p>Playing: {isPlaying ? 'Yes' : 'No'}</p>
-                        <p>Current Time: {currentTime.toFixed(2)}s</p>
-                        <p>Duration: {duration.toFixed(2)}s</p>
-                      </div>
+                    <div className="text-center text-white px-4">
+                      <div className="animate-spin rounded-full h-8 w-8 sm:h-12 sm:w-12 border-b-2 border-red-500 mx-auto mb-2 sm:mb-4"></div>
+                      <p className="text-sm sm:text-base">Loading Video Player...</p>
                     </div>
                   </div>
                 )}
 
-                {/* Debug overlay - always visible */}
-                <div className="absolute top-4 left-4 bg-black bg-opacity-75 text-white text-xs p-2 rounded">
-                  <div>🎬 Player Ready: {playerReady ? '✅' : '❌'}</div>
-                  <div>▶️ Playing: {isPlaying ? '✅' : '❌'}</div>
-                  <div>⏱️ Time: {currentTime.toFixed(1)}s / {duration.toFixed(1)}s</div>
-                  <div>🔊 Muted: {isMuted ? '✅' : '❌'}</div>
-                  <div>📝 Subtitles: {subtitlesEnabled ? '✅' : '❌'}</div>
-                  <div>🎯 Controls: {controlsVisible ? '✅' : '❌'}</div>
-                  <button 
-                    onClick={() => {
-                      console.log('🔧 Debug button clicked');
-                      console.log('🔧 Current state:', {
-                        playerReady,
-                        isPlaying,
-                        currentTime,
-                        duration,
-                        videoUrl: currentVideo.videoUrl,
-                        subtitleUrl: currentVideo.subtitleUrl,
-                        subtitlesEnabled
-                      });
-                    }}
-                    className="mt-2 px-2 py-1 bg-blue-600 hover:bg-blue-700 rounded text-xs"
-                  >
-                    Debug State
-                  </button>
-                </div>
-
                 {/* Keyboard shortcuts hint */}
                 {controlsVisible && (
-                  <div className="absolute top-4 right-4 bg-black bg-opacity-75 text-white text-xs p-2 rounded opacity-75 hover:opacity-100 transition-opacity duration-200">
-                    <div>Space: Play/Pause</div>
-                    <div>M: Mute</div>
-                    {currentVideo?.subtitleUrl && <div>S: Subtitles</div>}
-                    <div>F: Fullscreen</div>
+                  <div className="absolute top-2 sm:top-4 right-2 sm:right-4 bg-black bg-opacity-75 text-white text-xs p-2 rounded opacity-75 hover:opacity-100 transition-opacity duration-200">
+                    <div className="hidden sm:block">Space: Play/Pause</div>
+                    <div className="hidden sm:block">M: Mute</div>
+                    {currentVideo?.subtitleUrl && <div className="hidden sm:block">S: Subtitles</div>}
+                    <div className="hidden sm:block">F: Fullscreen</div>
+                    <div className="sm:hidden text-xs">Tap to play</div>
                   </div>
                 )}
               </>
             ) : (
               <div className="w-full h-full flex items-center justify-center text-white">
-                <div className="text-center">
-                  <p className="text-lg mb-2">No video URL available</p>
-                  <p className="text-sm text-gray-400">Video ID: {currentVideo.id}</p>
-                  <p className="text-sm text-gray-400">S3 Key: {currentVideo.s3Key || 'Not available'}</p>
+                <div className="text-center px-4">
+                  <p className="text-base sm:text-lg mb-2">No video URL available</p>
+                  <p className="text-xs sm:text-sm text-gray-400">Video ID: {currentVideo.id}</p>
+                  <p className="text-xs sm:text-sm text-gray-400">S3 Key: {currentVideo.s3Key || 'Not available'}</p>
                   
                   {/* Direct test button */}
                   <button
@@ -886,7 +854,7 @@ const AdminVideoPlayerPage = () => {
                         container.appendChild(video);
                       }
                     }}
-                    className="mt-4 bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg transition-colors duration-200"
+                    className="mt-4 bg-green-600 hover:bg-green-700 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg transition-colors duration-200 text-sm"
                   >
                     🧪 Test Video Player Now
                   </button>
@@ -897,34 +865,21 @@ const AdminVideoPlayerPage = () => {
             {/* Error overlay */}
             {error && (
               <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-75">
-                <div className="bg-red-900 border border-red-600 rounded-lg p-6 max-w-lg mx-4 text-center">
-                  <div className="text-red-400 text-4xl mb-4">⚠️</div>
-                  <h3 className="text-white text-lg font-semibold mb-2">Video Playback Error</h3>
-                  <p className="text-red-200 text-sm mb-4">{error}</p>
-                  
-                  {/* Technical details */}
-                  <div className="bg-gray-800 rounded p-3 mb-4 text-left">
-                    <p className="text-gray-300 text-xs mb-2"><strong>Technical Details:</strong></p>
-                    <p className="text-gray-400 text-xs mb-1">File: {currentVideo.s3Key}</p>
-                    <p className="text-gray-400 text-xs mb-2">The video file has encoding issues that prevent web playback.</p>
-                    
-                    <p className="text-yellow-300 text-xs mb-2"><strong>Solution:</strong></p>
-                    <p className="text-gray-300 text-xs">Re-encode the video using FFmpeg:</p>
-                    <code className="bg-gray-900 text-green-400 text-xs p-2 rounded block mt-1 overflow-x-auto">
-                      ffmpeg -i input.mp4 -c:v libx264 -c:a aac -preset medium -crf 23 -movflags +faststart output.mp4
-                    </code>
-                  </div>
+                <div className="bg-red-900 border border-red-600 rounded-lg p-4 sm:p-6 max-w-lg mx-4 text-center">
+                  <div className="text-red-400 text-3xl sm:text-4xl mb-2 sm:mb-4">⚠️</div>
+                  <h3 className="text-white text-base sm:text-lg font-semibold mb-2">Video Playback Error</h3>
+                  <p className="text-red-200 text-xs sm:text-sm mb-4">{error}</p>
                   
                   <div className="flex flex-col space-y-2">
                     <button
                       onClick={() => setError(null)}
-                      className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded transition-colors duration-200"
+                      className="bg-red-600 hover:bg-red-700 text-white px-3 sm:px-4 py-2 rounded transition-colors duration-200 text-sm"
                     >
                       Dismiss
                     </button>
                     <Link
                       to={`/admin/courses/${courseId}/videos/${currentVideoId}/edit`}
-                      className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded transition-colors duration-200 inline-block"
+                      className="bg-blue-600 hover:bg-blue-700 text-white px-3 sm:px-4 py-2 rounded transition-colors duration-200 inline-block text-sm"
                     >
                       Re-upload Video
                     </Link>
@@ -939,7 +894,7 @@ const AdminVideoPlayerPage = () => {
                           console.log('🧪 Testing with sample video:', testVideoUrl);
                         }
                       }}
-                      className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded transition-colors duration-200"
+                      className="bg-green-600 hover:bg-green-700 text-white px-3 sm:px-4 py-2 rounded transition-colors duration-200 text-sm"
                     >
                       Test with Sample Video
                     </button>
@@ -950,14 +905,14 @@ const AdminVideoPlayerPage = () => {
           </div>
 
           {/* Video Info */}
-          <div className="bg-gray-800 text-white p-6 flex-1">
+          <div className="bg-gray-800 text-white p-3 sm:p-6 flex-1">
             <div className="max-w-4xl mx-auto">
               <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4">
                 <div className="mb-4 md:mb-0">
-                  <h2 className="text-2xl font-bold mb-2">{currentVideo.title}</h2>
-                  <div className="flex items-center space-x-4 text-gray-300">
+                  <h2 className="text-lg sm:text-2xl font-bold mb-2">{currentVideo.title}</h2>
+                  <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-gray-300 text-sm">
                     <div className="flex items-center space-x-1">
-                      <Clock className="h-4 w-4" />
+                      <Clock className="h-3 w-3 sm:h-4 sm:w-4" />
                       <span>{duration > 0 ? formatTime(duration) : currentVideo.duration || '00:00'}</span>
                     </div>
                     {currentVideo.order && (
@@ -974,13 +929,13 @@ const AdminVideoPlayerPage = () => {
                 </div>
 
                 {/* Playback Controls */}
-                <div className="flex items-center space-x-4">
-                  <div className="flex items-center space-x-2">
-                    <span className="text-sm text-gray-400">Speed:</span>
+                <div className="flex items-center space-x-2 sm:space-x-4">
+                  <div className="flex items-center space-x-1 sm:space-x-2">
+                    <span className="text-xs sm:text-sm text-gray-400">Speed:</span>
                     <select
                       value={playbackRate}
                       onChange={(e) => handlePlaybackRateChange(Number(e.target.value))}
-                      className="bg-gray-700 text-white rounded px-3 py-1 border border-gray-600 focus:outline-none focus:border-red-500"
+                      className="bg-gray-700 text-white rounded px-2 sm:px-3 py-1 border border-gray-600 focus:outline-none focus:border-red-500 text-xs sm:text-sm"
                     >
                       <option value={0.5}>0.5x</option>
                       <option value={0.75}>0.75x</option>
@@ -989,18 +944,18 @@ const AdminVideoPlayerPage = () => {
                       <option value={1.5}>1.5x</option>
                       <option value={2}>2x</option>
                     </select>
-                    <span className="text-sm text-gray-300 font-medium">{playbackRate}x</span>
+                    <span className="text-xs sm:text-sm text-gray-300 font-medium">{playbackRate}x</span>
                   </div>
                 </div>
               </div>
 
               {/* Video Details */}
-              <div className="bg-gray-700 rounded-lg p-4 mb-4">
-                <h3 className="text-lg font-semibold mb-2">Video Details</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+              <div className="bg-gray-700 rounded-lg p-3 sm:p-4 mb-4">
+                <h3 className="text-base sm:text-lg font-semibold mb-2">Video Details</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 text-xs sm:text-sm">
                   <div>
                     <span className="text-gray-400">Video ID:</span>
-                    <p className="font-mono text-gray-200">{currentVideo.id}</p>
+                    <p className="font-mono text-gray-200 text-xs">{currentVideo.id}</p>
                   </div>
                   {currentVideo.s3Key && (
                     <div>
@@ -1011,14 +966,14 @@ const AdminVideoPlayerPage = () => {
                   {currentVideo.createdAt && (
                     <div>
                       <span className="text-gray-400">Created:</span>
-                      <p className="text-gray-200">{new Date(currentVideo.createdAt).toLocaleDateString()}</p>
+                      <p className="text-gray-200 text-xs sm:text-sm">{new Date(currentVideo.createdAt).toLocaleDateString()}</p>
                     </div>
                   )}
                 </div>
               </div>
 
               {/* Navigation */}
-              <div className="flex flex-col sm:flex-row gap-4 pt-4 border-t border-gray-700">
+              <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 pt-4 border-t border-gray-700">
                 <button
                   onClick={() => {
                     const currentIndex = courseData.videos.findIndex(v => v.id === currentVideoId);
@@ -1026,7 +981,7 @@ const AdminVideoPlayerPage = () => {
                     if (prevVideo) handleVideoSelect(prevVideo.id);
                   }}
                   disabled={courseData.videos.findIndex(v => v.id === currentVideoId) === 0}
-                  className="flex-1 bg-gray-700 hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed text-white px-6 py-3 rounded-lg font-semibold transition-colors duration-200"
+                  className="flex-1 bg-gray-700 hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-semibold transition-colors duration-200 text-sm"
                 >
                   Previous Video
                 </button>
@@ -1043,7 +998,7 @@ const AdminVideoPlayerPage = () => {
                       return !nextVideo;
                     })()
                   }
-                  className="flex-1 bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed text-white px-6 py-3 rounded-lg font-semibold transition-colors duration-200"
+                  className="flex-1 bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-semibold transition-colors duration-200 text-sm"
                 >
                   Next Video
                 </button>
@@ -1054,15 +1009,15 @@ const AdminVideoPlayerPage = () => {
 
         {/* Playlist Sidebar */}
         <div className={`bg-white border-l border-gray-200 transition-all duration-300 ${
-          showPlaylist ? 'w-80' : 'w-0'
-        } ${showPlaylist ? 'block' : 'hidden md:block'} md:w-80`}>
+          showPlaylist ? 'w-full lg:w-80' : 'w-0'
+        } ${showPlaylist ? 'block' : 'hidden lg:block'} lg:w-80`}>
           {showPlaylist && (
-            <div className="p-4">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-gray-900">Course Videos</h3>
+            <div className="p-3 sm:p-4">
+              <div className="flex items-center justify-between mb-3 sm:mb-4">
+                <h3 className="text-base sm:text-lg font-semibold text-gray-900">Course Videos</h3>
                 <button
                   onClick={() => setShowPlaylist(false)}
-                  className="md:hidden text-gray-500 hover:text-gray-700"
+                  className="lg:hidden text-gray-500 hover:text-gray-700 text-lg"
                 >
                   ×
                 </button>
@@ -1071,7 +1026,7 @@ const AdminVideoPlayerPage = () => {
                 {courseData.videos.map((video, index) => (
                   <div
                     key={video.id}
-                    className={`p-3 rounded-lg cursor-pointer transition-colors duration-200 ${
+                    className={`p-2 sm:p-3 rounded-lg cursor-pointer transition-colors duration-200 ${
                       video.id === currentVideoId
                         ? 'bg-red-100 border border-red-300'
                         : 'bg-gray-50 hover:bg-gray-100'
@@ -1080,7 +1035,7 @@ const AdminVideoPlayerPage = () => {
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex-1">
-                        <h4 className="font-medium text-gray-900 text-sm">
+                        <h4 className="font-medium text-gray-900 text-xs sm:text-sm">
                           {video.title}
                         </h4>
                         <p className="text-xs text-gray-500 mt-1">
@@ -1103,23 +1058,23 @@ const AdminVideoPlayerPage = () => {
 
       {/* Mobile Playlist Overlay */}
       {showPlaylist && (
-        <div className="md:hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex">
-          <div className="bg-white w-80 ml-auto h-full overflow-y-auto">
-            <div className="p-4 border-b border-gray-200">
+        <div className="lg:hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex">
+          <div className="bg-white w-full sm:w-80 ml-auto h-full overflow-y-auto">
+            <div className="p-3 sm:p-4 border-b border-gray-200">
               <button
                 onClick={() => setShowPlaylist(false)}
-                className="text-gray-600 hover:text-gray-800"
+                className="text-gray-600 hover:text-gray-800 text-sm sm:text-base"
               >
                 Close Playlist
               </button>
             </div>
-            <div className="p-4">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Course Videos</h3>
+            <div className="p-3 sm:p-4">
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">Course Videos</h3>
               <div className="space-y-2">
                 {courseData.videos.map((video, index) => (
                   <div
                     key={video.id}
-                    className={`p-3 rounded-lg cursor-pointer transition-colors duration-200 ${
+                    className={`p-2 sm:p-3 rounded-lg cursor-pointer transition-colors duration-200 ${
                       video.id === currentVideoId
                         ? 'bg-red-100 border border-red-300'
                         : 'bg-gray-50 hover:bg-gray-100'
@@ -1131,7 +1086,7 @@ const AdminVideoPlayerPage = () => {
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex-1">
-                        <h4 className="font-medium text-gray-900 text-sm">
+                        <h4 className="font-medium text-gray-900 text-xs sm:text-sm">
                           {video.title}
                         </h4>
                         <p className="text-xs text-gray-500 mt-1">

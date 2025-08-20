@@ -34,7 +34,8 @@ const AdminVideoUploadPage: React.FC = () => {
     title: '',
     description: '',
     order: 1,
-    file: null as File | null
+    file: null as File | null,
+    isFreePreview: false
   });
 
   // Fetch course details
@@ -172,6 +173,7 @@ const AdminVideoUploadPage: React.FC = () => {
       videoFormData.append('description', formData.description);
       videoFormData.append('order', formData.order.toString());
       videoFormData.append('courseId', courseId!);
+      videoFormData.append('isFreePreview', formData.isFreePreview ? 'true' : 'false');
       videoFormData.append('file', formData.file);
 
       // Update progress - starting upload
@@ -222,7 +224,8 @@ const AdminVideoUploadPage: React.FC = () => {
               title: '',
               description: '',
               order: (course?.videos?.length || 0) + 2,
-              file: null
+              file: null,
+              isFreePreview: false
             });
           } else {
             const errorData = JSON.parse(xhr.responseText);
@@ -317,7 +320,7 @@ const AdminVideoUploadPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 pt-16">
       {/* Header */}
       <div className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
@@ -499,6 +502,32 @@ const AdminVideoUploadPage: React.FC = () => {
                 <p className="mt-1 text-sm text-gray-500">
                   Supported formats: MP4, AVI, MOV, WMV, WebM, OGG, FLV, MKV. Max size: 500MB. Duration will be automatically detected.
                 </p>
+              </div>
+
+              {/* Free Preview Toggle */}
+              <div className="flex items-center justify-between p-4 bg-green-50 rounded-lg border border-green-200">
+                <div className="flex items-center space-x-3">
+                  <input
+                    type="checkbox"
+                    id="isFreePreview"
+                    checked={formData.isFreePreview}
+                    onChange={(e) => setFormData(prev => ({ ...prev, isFreePreview: e.target.checked }))}
+                    className="h-5 w-5 text-green-600 focus:ring-green-500 border-gray-300 rounded"
+                  />
+                  <div>
+                    <label htmlFor="isFreePreview" className="text-sm font-medium text-gray-700 cursor-pointer">
+                      Free Preview Lesson
+                    </label>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Allow users to watch this lesson without purchasing the course
+                    </p>
+                  </div>
+                </div>
+                {formData.isFreePreview && (
+                  <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                    🔓 Free Preview
+                  </span>
+                )}
               </div>
 
               {/* Submit Button */}

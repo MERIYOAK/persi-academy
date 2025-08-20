@@ -32,7 +32,7 @@ async function testWebhookRaw() {
     const rawData = JSON.stringify(webhookBody);
     console.log(`   - Raw data length: ${rawData.length}`);
 
-    const response = await fetch('http://localhost:5000/webhook', {
+    const response = await fetch('http://localhost:5000/api/payment/webhook', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

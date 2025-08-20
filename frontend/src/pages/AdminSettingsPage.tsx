@@ -309,39 +309,39 @@ const AdminSettingsPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center pt-16">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading settings...</p>
+          <div className="animate-spin rounded-full h-10 w-10 xxs:h-12 xxs:w-12 border-b-2 border-red-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600 text-sm xxs:text-base">Loading settings...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 pt-16">
       {/* Header */}
       <div className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+        <div className="max-w-7xl mx-auto px-3 xxs:px-4 sm:px-6 lg:px-8 py-4 xxs:py-6">
+          <div className="flex flex-col xxs:flex-row xxs:items-center xxs:justify-between space-y-4 xxs:space-y-0">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Admin Settings</h1>
-              <p className="mt-2 text-gray-600">Manage platform configuration and preferences</p>
+              <h1 className="text-2xl xxs:text-3xl font-bold text-gray-900">Admin Settings</h1>
+              <p className="mt-2 text-gray-600 text-sm xxs:text-base">Manage platform configuration and preferences</p>
             </div>
-            <div className="mt-4 sm:mt-0 flex space-x-3">
+            <div className="flex flex-col xxs:flex-row space-y-2 xxs:space-y-0 xxs:space-x-2 sm:space-x-3">
               <button
                 onClick={clearCache}
                 disabled={loading}
-                className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50"
+                className="inline-flex items-center justify-center px-3 xxs:px-4 py-2 border border-gray-300 text-xs xxs:text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50"
               >
-                <RefreshCw className="h-4 w-4 mr-2" />
+                <RefreshCw className="h-3 w-3 xxs:h-4 xxs:w-4 mr-1 xxs:mr-2" />
                 Clear Cache
               </button>
               <Link
                 to="/admin/dashboard"
-                className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                className="inline-flex items-center justify-center px-3 xxs:px-4 py-2 border border-gray-300 text-xs xxs:text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
               >
-                <ArrowLeft className="h-4 w-4 mr-2" />
+                <ArrowLeft className="h-3 w-3 xxs:h-4 xxs:w-4 mr-1 xxs:mr-2" />
                 Back to Dashboard
               </Link>
             </div>
@@ -351,21 +351,21 @@ const AdminSettingsPage: React.FC = () => {
 
       {/* Message */}
       {message && (
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className={`rounded-lg p-4 flex items-center justify-between ${
+        <div className="max-w-7xl mx-auto px-3 xxs:px-4 sm:px-6 lg:px-8 py-3 xxs:py-4">
+          <div className={`rounded-lg p-3 xxs:p-4 flex items-center justify-between ${
             message.type === 'success' ? 'bg-green-50 border border-green-200' :
             message.type === 'error' ? 'bg-red-50 border border-red-200' :
             'bg-blue-50 border border-blue-200'
           }`}>
             <div className="flex items-center">
               {message.type === 'success' ? (
-                <CheckCircle className="h-5 w-5 text-green-600 mr-2" />
+                <CheckCircle className="h-4 w-4 xxs:h-5 xxs:w-5 text-green-600 mr-2" />
               ) : message.type === 'error' ? (
-                <AlertTriangle className="h-5 w-5 text-red-600 mr-2" />
+                <AlertTriangle className="h-4 w-4 xxs:h-5 xxs:w-5 text-red-600 mr-2" />
               ) : (
-                <SettingsIcon className="h-5 w-5 text-blue-600 mr-2" />
+                <SettingsIcon className="h-4 w-4 xxs:h-5 xxs:w-5 text-blue-600 mr-2" />
               )}
-              <span className={`font-medium ${
+              <span className={`font-medium text-xs xxs:text-sm ${
                 message.type === 'success' ? 'text-green-800' :
                 message.type === 'error' ? 'text-red-800' :
                 'text-blue-800'
@@ -377,23 +377,23 @@ const AdminSettingsPage: React.FC = () => {
               onClick={() => setMessage(null)}
               className="text-gray-400 hover:text-gray-600"
             >
-              <X className="h-4 w-4" />
+              <X className="h-3 w-3 xxs:h-4 xxs:w-4" />
             </button>
           </div>
         </div>
       )}
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-3 xxs:px-4 sm:px-6 lg:px-8 py-4 xxs:py-6 sm:py-8">
         {/* Tabs */}
-        <div className="border-b border-gray-200 mb-8">
-          <nav className="-mb-px flex space-x-8">
+        <div className="border-b border-gray-200 mb-4 xxs:mb-6 sm:mb-8">
+          <nav className="-mb-px flex flex-wrap space-x-2 xxs:space-x-4 sm:space-x-8">
             {tabs.map((tab) => {
               const Icon = tab.icon;
               return (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id as any)}
-                  className={`py-2 px-1 border-b-2 font-medium text-sm flex items-center ${
+                  className={`py-2 px-1 border-b-2 font-medium text-xs xxs:text-sm flex items-center ${
                     activeTab === tab.id
                       ? 'border-red-500 text-red-600'
                       : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
@@ -411,75 +411,75 @@ const AdminSettingsPage: React.FC = () => {
         <div className="bg-white rounded-xl shadow-sm border">
           {/* Platform Settings */}
           {activeTab === 'platform' && (
-            <div className="p-6">
-              <div className="mb-6">
-                <h2 className="text-xl font-semibold text-gray-900 mb-2">Platform Settings</h2>
-                <p className="text-gray-600">Configure basic platform information and behavior</p>
+            <div className="p-3 xxs:p-4 sm:p-6">
+              <div className="mb-4 xxs:mb-6">
+                <h2 className="text-lg xxs:text-xl font-semibold text-gray-900 mb-2">Platform Settings</h2>
+                <p className="text-gray-600 text-sm xxs:text-base">Configure basic platform information and behavior</p>
               </div>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 xxs:grid-cols-1 sm:grid-cols-2 gap-3 xxs:gap-4 sm:gap-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-xs xxs:text-sm font-medium text-gray-700 mb-2">
                     Site Name
                   </label>
                   <input
                     type="text"
                     value={platformSettings.siteName}
                     onChange={(e) => setPlatformSettings(prev => ({ ...prev, siteName: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 text-sm xxs:text-base"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-xs xxs:text-sm font-medium text-gray-700 mb-2">
                     Site Description
                   </label>
                   <input
                     type="text"
                     value={platformSettings.siteDescription}
                     onChange={(e) => setPlatformSettings(prev => ({ ...prev, siteDescription: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 text-sm xxs:text-base"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-xs xxs:text-sm font-medium text-gray-700 mb-2">
                     Contact Email
                   </label>
                   <input
                     type="email"
                     value={platformSettings.contactEmail}
                     onChange={(e) => setPlatformSettings(prev => ({ ...prev, contactEmail: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 text-sm xxs:text-base"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-xs xxs:text-sm font-medium text-gray-700 mb-2">
                     Support Email
                   </label>
                   <input
                     type="email"
                     value={platformSettings.supportEmail}
                     onChange={(e) => setPlatformSettings(prev => ({ ...prev, supportEmail: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 text-sm xxs:text-base"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-xs xxs:text-sm font-medium text-gray-700 mb-2">
                     Max File Size (MB)
                   </label>
                   <input
                     type="number"
                     value={platformSettings.maxFileSize}
                     onChange={(e) => setPlatformSettings(prev => ({ ...prev, maxFileSize: parseInt(e.target.value) }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 text-sm xxs:text-base"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-xs xxs:text-sm font-medium text-gray-700 mb-2">
                     Allowed File Types
                   </label>
                   <input
@@ -490,16 +490,16 @@ const AdminSettingsPage: React.FC = () => {
                       allowedFileTypes: e.target.value.split(',').map(type => type.trim()) 
                     }))}
                     placeholder="mp4, avi, mov, mkv"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 text-sm xxs:text-base"
                   />
                 </div>
               </div>
 
-              <div className="mt-6 space-y-4">
+              <div className="mt-4 xxs:mt-6 space-y-3 xxs:space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h3 className="text-sm font-medium text-gray-900">Maintenance Mode</h3>
-                    <p className="text-sm text-gray-500">Temporarily disable the platform for maintenance</p>
+                    <h3 className="text-xs xxs:text-sm font-medium text-gray-900">Maintenance Mode</h3>
+                    <p className="text-xs xxs:text-sm text-gray-500">Temporarily disable the platform for maintenance</p>
                   </div>
                   <button
                     onClick={() => setPlatformSettings(prev => ({ ...prev, maintenanceMode: !prev.maintenanceMode }))}
@@ -515,8 +515,8 @@ const AdminSettingsPage: React.FC = () => {
 
                 <div className="flex items-center justify-between">
                   <div>
-                    <h3 className="text-sm font-medium text-gray-900">Enable Registration</h3>
-                    <p className="text-sm text-gray-500">Allow new users to register</p>
+                    <h3 className="text-xs xxs:text-sm font-medium text-gray-900">Enable Registration</h3>
+                    <p className="text-xs xxs:text-sm text-gray-500">Allow new users to register</p>
                   </div>
                   <button
                     onClick={() => setPlatformSettings(prev => ({ ...prev, registrationEnabled: !prev.registrationEnabled }))}
@@ -532,8 +532,8 @@ const AdminSettingsPage: React.FC = () => {
 
                 <div className="flex items-center justify-between">
                   <div>
-                    <h3 className="text-sm font-medium text-gray-900">Email Verification Required</h3>
-                    <p className="text-sm text-gray-500">Require email verification for new accounts</p>
+                    <h3 className="text-xs xxs:text-sm font-medium text-gray-900">Email Verification Required</h3>
+                    <p className="text-xs xxs:text-sm text-gray-500">Require email verification for new accounts</p>
                   </div>
                   <button
                     onClick={() => setPlatformSettings(prev => ({ ...prev, emailVerificationRequired: !prev.emailVerificationRequired }))}
@@ -552,79 +552,79 @@ const AdminSettingsPage: React.FC = () => {
 
           {/* Security Settings */}
           {activeTab === 'security' && (
-            <div className="p-6">
-              <div className="mb-6">
-                <h2 className="text-xl font-semibold text-gray-900 mb-2">Security Settings</h2>
-                <p className="text-gray-600">Configure security policies and authentication</p>
+            <div className="p-3 xxs:p-4 sm:p-6">
+              <div className="mb-4 xxs:mb-6">
+                <h2 className="text-lg xxs:text-xl font-semibold text-gray-900 mb-2">Security Settings</h2>
+                <p className="text-gray-600 text-sm xxs:text-base">Configure security policies and authentication</p>
               </div>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 xxs:grid-cols-1 sm:grid-cols-2 gap-3 xxs:gap-4 sm:gap-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-xs xxs:text-sm font-medium text-gray-700 mb-2">
                     Session Timeout (hours)
                   </label>
                   <input
                     type="number"
                     value={securitySettings.sessionTimeout}
                     onChange={(e) => setSecuritySettings(prev => ({ ...prev, sessionTimeout: parseInt(e.target.value) }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 text-sm xxs:text-base"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-xs xxs:text-sm font-medium text-gray-700 mb-2">
                     Max Login Attempts
                   </label>
                   <input
                     type="number"
                     value={securitySettings.maxLoginAttempts}
                     onChange={(e) => setSecuritySettings(prev => ({ ...prev, maxLoginAttempts: parseInt(e.target.value) }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 text-sm xxs:text-base"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-xs xxs:text-sm font-medium text-gray-700 mb-2">
                     Password Min Length
                   </label>
                   <input
                     type="number"
                     value={securitySettings.passwordMinLength}
                     onChange={(e) => setSecuritySettings(prev => ({ ...prev, passwordMinLength: parseInt(e.target.value) }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 text-sm xxs:text-base"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-xs xxs:text-sm font-medium text-gray-700 mb-2">
                     Rate Limit Requests
                   </label>
                   <input
                     type="number"
                     value={securitySettings.rateLimitRequests}
                     onChange={(e) => setSecuritySettings(prev => ({ ...prev, rateLimitRequests: parseInt(e.target.value) }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 text-sm xxs:text-base"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-xs xxs:text-sm font-medium text-gray-700 mb-2">
                     Rate Limit Window (minutes)
                   </label>
                   <input
                     type="number"
                     value={securitySettings.rateLimitWindow}
                     onChange={(e) => setSecuritySettings(prev => ({ ...prev, rateLimitWindow: parseInt(e.target.value) }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 text-sm xxs:text-base"
                   />
                 </div>
               </div>
 
-              <div className="mt-6 space-y-4">
+              <div className="mt-4 xxs:mt-6 space-y-3 xxs:space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h3 className="text-sm font-medium text-gray-900">Require Strong Password</h3>
-                    <p className="text-sm text-gray-500">Enforce complex password requirements</p>
+                    <h3 className="text-xs xxs:text-sm font-medium text-gray-900">Require Strong Password</h3>
+                    <p className="text-xs xxs:text-sm text-gray-500">Enforce complex password requirements</p>
                   </div>
                   <button
                     onClick={() => setSecuritySettings(prev => ({ ...prev, requireStrongPassword: !prev.requireStrongPassword }))}
@@ -640,8 +640,8 @@ const AdminSettingsPage: React.FC = () => {
 
                 <div className="flex items-center justify-between">
                   <div>
-                    <h3 className="text-sm font-medium text-gray-900">Two-Factor Authentication</h3>
-                    <p className="text-sm text-gray-500">Enable 2FA for admin accounts</p>
+                    <h3 className="text-xs xxs:text-sm font-medium text-gray-900">Two-Factor Authentication</h3>
+                    <p className="text-xs xxs:text-sm text-gray-500">Enable 2FA for admin accounts</p>
                   </div>
                   <button
                     onClick={() => setSecuritySettings(prev => ({ ...prev, twoFactorEnabled: !prev.twoFactorEnabled }))}
@@ -657,8 +657,8 @@ const AdminSettingsPage: React.FC = () => {
 
                 <div className="flex items-center justify-between">
                   <div>
-                    <h3 className="text-sm font-medium text-gray-900">Rate Limiting</h3>
-                    <p className="text-sm text-gray-500">Enable API rate limiting</p>
+                    <h3 className="text-xs xxs:text-sm font-medium text-gray-900">Rate Limiting</h3>
+                    <p className="text-xs xxs:text-sm text-gray-500">Enable API rate limiting</p>
                   </div>
                   <button
                     onClick={() => setSecuritySettings(prev => ({ ...prev, rateLimitEnabled: !prev.rateLimitEnabled }))}
@@ -677,51 +677,51 @@ const AdminSettingsPage: React.FC = () => {
 
           {/* Email Settings */}
           {activeTab === 'email' && (
-            <div className="p-6">
-              <div className="mb-6">
-                <h2 className="text-xl font-semibold text-gray-900 mb-2">Email Settings</h2>
-                <p className="text-gray-600">Configure SMTP settings for email notifications</p>
+            <div className="p-3 xxs:p-4 sm:p-6">
+              <div className="mb-4 xxs:mb-6">
+                <h2 className="text-lg xxs:text-xl font-semibold text-gray-900 mb-2">Email Settings</h2>
+                <p className="text-gray-600 text-sm xxs:text-base">Configure SMTP settings for email notifications</p>
               </div>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 xxs:grid-cols-1 sm:grid-cols-2 gap-3 xxs:gap-4 sm:gap-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-xs xxs:text-sm font-medium text-gray-700 mb-2">
                     SMTP Host
                   </label>
                   <input
                     type="text"
                     value={emailSettings.smtpHost}
                     onChange={(e) => setEmailSettings(prev => ({ ...prev, smtpHost: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 text-sm xxs:text-base"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-xs xxs:text-sm font-medium text-gray-700 mb-2">
                     SMTP Port
                   </label>
                   <input
                     type="number"
                     value={emailSettings.smtpPort}
                     onChange={(e) => setEmailSettings(prev => ({ ...prev, smtpPort: parseInt(e.target.value) }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 text-sm xxs:text-base"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-xs xxs:text-sm font-medium text-gray-700 mb-2">
                     SMTP Username
                   </label>
                   <input
                     type="text"
                     value={emailSettings.smtpUser}
                     onChange={(e) => setEmailSettings(prev => ({ ...prev, smtpUser: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 text-sm xxs:text-base"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-xs xxs:text-sm font-medium text-gray-700 mb-2">
                     SMTP Password
                   </label>
                   <div className="relative">
@@ -729,7 +729,7 @@ const AdminSettingsPage: React.FC = () => {
                       type={showPassword ? 'text' : 'password'}
                       value={emailSettings.smtpPassword}
                       onChange={(e) => setEmailSettings(prev => ({ ...prev, smtpPassword: e.target.value }))}
-                      className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                      className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 text-sm xxs:text-base"
                     />
                     <button
                       type="button"
@@ -737,44 +737,44 @@ const AdminSettingsPage: React.FC = () => {
                       className="absolute inset-y-0 right-0 pr-3 flex items-center"
                     >
                       {showPassword ? (
-                        <EyeOff className="h-4 w-4 text-gray-400" />
+                        <EyeOff className="h-3 w-3 xxs:h-4 xxs:w-4 text-gray-400" />
                       ) : (
-                        <Eye className="h-4 w-4 text-gray-400" />
+                        <Eye className="h-3 w-3 xxs:h-4 xxs:w-4 text-gray-400" />
                       )}
                     </button>
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-xs xxs:text-sm font-medium text-gray-700 mb-2">
                     From Email
                   </label>
                   <input
                     type="email"
                     value={emailSettings.fromEmail}
                     onChange={(e) => setEmailSettings(prev => ({ ...prev, fromEmail: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 text-sm xxs:text-base"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-xs xxs:text-sm font-medium text-gray-700 mb-2">
                     From Name
                   </label>
                   <input
                     type="text"
                     value={emailSettings.fromName}
                     onChange={(e) => setEmailSettings(prev => ({ ...prev, fromName: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 text-sm xxs:text-base"
                   />
                 </div>
               </div>
 
-              <div className="mt-6 space-y-4">
+              <div className="mt-4 xxs:mt-6 space-y-3 xxs:space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h3 className="text-sm font-medium text-gray-900">Enable Email</h3>
-                    <p className="text-sm text-gray-500">Enable email notifications and features</p>
+                    <h3 className="text-xs xxs:text-sm font-medium text-gray-900">Enable Email</h3>
+                    <p className="text-xs xxs:text-sm text-gray-500">Enable email notifications and features</p>
                   </div>
                   <button
                     onClick={() => setEmailSettings(prev => ({ ...prev, emailEnabled: !prev.emailEnabled }))}
@@ -789,13 +789,13 @@ const AdminSettingsPage: React.FC = () => {
                 </div>
               </div>
 
-              <div className="mt-6">
+              <div className="mt-4 xxs:mt-6">
                 <button
                   onClick={testEmailConnection}
                   disabled={loading}
-                  className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50"
+                  className="inline-flex items-center px-3 xxs:px-4 py-2 border border-gray-300 text-xs xxs:text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50"
                 >
-                  <Mail className="h-4 w-4 mr-2" />
+                  <Mail className="h-3 w-3 xxs:h-4 xxs:w-4 mr-1 xxs:mr-2" />
                   Test Email Connection
                 </button>
               </div>
@@ -804,13 +804,13 @@ const AdminSettingsPage: React.FC = () => {
 
           {/* Backup Settings */}
           {activeTab === 'backup' && (
-            <div className="p-6">
-              <div className="mb-6">
-                <h2 className="text-xl font-semibold text-gray-900 mb-2">Backup Settings</h2>
-                <p className="text-gray-600">Configure automated backups and data management</p>
+            <div className="p-3 xxs:p-4 sm:p-6">
+              <div className="mb-4 xxs:mb-6">
+                <h2 className="text-lg xxs:text-xl font-semibold text-gray-900 mb-2">Backup Settings</h2>
+                <p className="text-gray-600 text-sm xxs:text-base">Configure automated backups and data management</p>
               </div>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 xxs:grid-cols-1 sm:grid-cols-2 gap-3 xxs:gap-4 sm:gap-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Backup Frequency

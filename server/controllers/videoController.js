@@ -1,6 +1,7 @@
 const Video = require('../models/Video');
 const Course = require('../models/Course');
 const CourseVersion = require('../models/CourseVersion');
+const { getVideosWithAccess, checkVideoAccess } = require('../utils/purchaseUtils');
 const { 
   uploadCourseFile, 
   getSignedUrlForFile, 
@@ -20,9 +21,11 @@ const {
  */
 exports.uploadVideo = async (req, res) => {
   try {
-    console.log('[uploadVideo] courseId:', req.body?.courseId, 'title:', req.body?.title, 'size:', req.file?.size, 'file:', req.file?.originalname);
     const { title, courseId, description, order, version = 1 } = req.body;
+    const isFreePreview = req.body.isFreePreview === 'true' || req.body.isFreePreview === true;
     const adminEmail = req.admin?.email || req.user?.email || 'admin';
+    
+    console.log('[uploadVideo] courseId:', req.body?.courseId, 'title:', req.body?.title, 'size:', req.file?.size, 'file:', req.file?.originalname, 'isFreePreview:', isFreePreview);
     
     if (!req.file) {
       return res.status(400).json({ 
@@ -111,6 +114,7 @@ exports.uploadVideo = async (req, res) => {
       mimeType: req.file.mimetype,
       originalName: req.file.originalname,
       uploadedBy: adminEmail,
+      isFreePreview: isFreePreview, // Add isFreePreview field
       // Store additional metadata if available
       ...(videoMetadata && {
         width: videoMetadata.width,
@@ -139,7 +143,7 @@ exports.uploadVideo = async (req, res) => {
     
     res.status(201).json({
       success: true,
-      message: 'Video uploaded successfully',
+      message: `Video uploaded successfully${isFreePreview ? ' as free preview' : ''}`,
       data: {
         video: {
           id: video._id,
@@ -150,6 +154,7 @@ exports.uploadVideo = async (req, res) => {
           courseVersion: video.courseVersion,
           duration: video.duration, // Raw duration in seconds
           formattedDuration: video.formattedDuration, // Formatted duration (MM:SS or HH:MM:SS)
+          isFreePreview: video.isFreePreview,
           metadata: videoMetadata ? {
             resolution: `${videoMetadata.width}x${videoMetadata.height}`,
             fps: videoMetadata.fps,
@@ -300,6 +305,9 @@ exports.deleteVideo = async (req, res) => {
 exports.getVideoById = async (req, res) => {
   try {
     const { videoId } = req.params;
+    const userId = req.user?.id || req.user?._id;
+    const isAdmin = req.user?.role === 'admin';
+    
     console.log('[getVideoById] videoId:', videoId, 'type:', typeof videoId);
     
     // Validate videoId parameter
@@ -324,6 +332,21 @@ exports.getVideoById = async (req, res) => {
       return res.status(404).json({
         success: false,
         message: 'Video not found'
+      });
+    }
+
+    // Check video access
+    const accessInfo = await checkVideoAccess(videoId, userId, isAdmin);
+    
+    if (!accessInfo.hasAccess) {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied to this video',
+        data: {
+          isLocked: true,
+          lockReason: accessInfo.lockReason,
+          requiresPurchase: accessInfo.lockReason === 'purchase_required'
+        }
       });
     }
 
@@ -398,14 +421,98 @@ exports.getVideoById = async (req, res) => {
 exports.getVideosByCourseVersion = async (req, res) => {
   try {
     const { courseId, version } = req.params;
+    const userId = req.user?.id || req.user?._id;
+    const isAdmin = req.user?.role === 'admin';
+    const isPublicUser = !req.user; // No user means public access
     
+    console.log(`🔧 [getVideosByCourseVersion] courseId: ${courseId}, version: ${version}, userId: ${userId || 'public'}, isAdmin: ${isAdmin}`);
+    
+    // Get all videos for the course version using the static method
     const videos = await Video.getByCourseVersion(courseId, parseInt(version));
+
+    console.log(`📊 Found ${videos.length} videos for course ${courseId}, version ${version}`);
+    
+    if (!videos || videos.length === 0) {
+      console.log('⚠️ No videos found for this course version');
+      return res.json({
+        success: true,
+        data: {
+          videos: [],
+          count: 0,
+          userHasPurchased: false,
+          hasFreePreviews: false
+        }
+      });
+    }
+
+    // Check if there are any free preview videos
+    const hasFreePreviews = videos.some(video => video.isFreePreview);
+    console.log(`📊 Free preview videos: ${videos.filter(v => v.isFreePreview).length}/${videos.length}`);
+    
+    // Log video details for debugging
+    videos.forEach((video, index) => {
+      console.log(`   Video ${index + 1}: ${video.title} (Free Preview: ${video.isFreePreview})`);
+    });
+    
+    // For public users, we need to handle access control differently
+    let videosWithAccess;
+    let userHasPurchased = false;
+
+    if (isPublicUser) {
+      // Public user logic
+      if (hasFreePreviews) {
+        // If course has free previews, show all videos but mark non-free ones as locked
+        videosWithAccess = await Promise.all(videos.map(async (video) => {
+          const videoObj = video.toObject();
+          const isFreePreview = video.isFreePreview;
+          
+          // Get presigned URL for free preview videos
+          let presignedUrl = null;
+          if (isFreePreview) {
+            try {
+              presignedUrl = await getSignedUrlForFile(video.s3Key);
+            } catch (error) {
+              console.error(`❌ Error getting presigned URL for video ${video._id}:`, error);
+            }
+          }
+          
+          return {
+            ...videoObj,
+            hasAccess: isFreePreview,
+            isLocked: !isFreePreview,
+            lockReason: isFreePreview ? null : 'purchase_required',
+            presignedUrl: presignedUrl
+          };
+        }));
+      } else {
+        // If no free previews, show all videos as locked
+        videosWithAccess = videos.map(video => ({
+          ...video.toObject(),
+          hasAccess: false,
+          isLocked: true,
+          lockReason: 'purchase_required',
+          presignedUrl: null
+        }));
+      }
+      userHasPurchased = false;
+    } else {
+      // Authenticated user - use existing access control logic
+      videosWithAccess = await getVideosWithAccess(
+        courseId, 
+        userId, 
+        isAdmin, 
+        parseInt(version)
+      );
+      userHasPurchased = isAdmin || await require('../utils/purchaseUtils').userHasPurchased(userId, courseId);
+    }
     
     res.json({
       success: true,
       data: {
-        videos,
-        count: videos.length
+        videos: videosWithAccess,
+        count: videosWithAccess.length,
+        userHasPurchased,
+        hasFreePreviews
       }
     });
   } catch (error) {
@@ -423,18 +530,25 @@ exports.getVideosByCourseVersion = async (req, res) => {
  */
 exports.streamVideo = async (req, res) => {
   try {
-    console.log('[streamVideo] videoId:', req.params.videoId, 'user:', req.user?.id || req.user?.email);
-    const video = await Video.findById(req.params.videoId);
+    const { videoId } = req.params;
+    const userId = req.user?.id || req.user?._id;
+    const isAdmin = req.user?.role === 'admin';
+    
+    console.log('[streamVideo] videoId:', videoId, 'user:', userId);
+    
+    const video = await Video.findById(videoId);
     if (!video) return res.status(404).json({ message: 'Video not found' });
     
-    // Get course to check enrollment
-    const course = await Course.findById(video.courseId);
-    if (!course) return res.status(404).json({ message: 'Course not found' });
+    // Check video access using the new access control system
+    const accessInfo = await checkVideoAccess(videoId, userId, isAdmin);
     
-    // Check if user has access to this video version
-    const hasAccess = course.studentHasAccessToVersion(req.user.id, video.courseVersion);
-    if (!hasAccess && req.user.role !== 'admin') {
-      return res.status(403).json({ message: 'Access denied to this video version' });
+    if (!accessInfo.hasAccess) {
+      return res.status(403).json({ 
+        message: 'Access denied to this video',
+        isLocked: true,
+        lockReason: accessInfo.lockReason,
+        requiresPurchase: accessInfo.lockReason === 'purchase_required'
+      });
     }
     
     const url = await getSignedUrlForFile(video.s3Key);
@@ -442,6 +556,55 @@ exports.streamVideo = async (req, res) => {
   } catch (err) {
     console.error('[streamVideo] error:', err?.message || err);
     res.status(500).json({ message: 'Stream failed', error: err.message });
+  }
+};
+
+/**
+ * Toggle free preview status for a video (admin only)
+ */
+exports.toggleFreePreview = async (req, res) => {
+  try {
+    const { videoId } = req.params;
+    const { isFreePreview } = req.body;
+    
+    // Check if user is admin
+    if (req.user?.role !== 'admin') {
+      return res.status(403).json({
+        success: false,
+        message: 'Admin access required'
+      });
+    }
+    
+    const video = await Video.findById(videoId);
+    if (!video) {
+      return res.status(404).json({
+        success: false,
+        message: 'Video not found'
+      });
+    }
+    
+    // Update free preview status
+    video.isFreePreview = isFreePreview;
+    await video.save();
+    
+    res.json({
+      success: true,
+      message: `Video ${isFreePreview ? 'marked as' : 'removed from'} free preview`,
+      data: {
+        video: {
+          id: video._id,
+          title: video.title,
+          isFreePreview: video.isFreePreview
+        }
+      }
+    });
+  } catch (error) {
+    console.error('❌ Toggle free preview error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to update free preview status',
+      error: error.message
+    });
   }
 };
 

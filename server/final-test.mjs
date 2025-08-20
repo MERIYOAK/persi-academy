@@ -46,7 +46,7 @@ async function finalTest() {
       }
     };
 
-    const webhookResponse = await fetch('http://localhost:5000/webhook', {
+    const webhookResponse = await fetch('http://localhost:5000/api/payment/webhook', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

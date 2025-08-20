@@ -17,6 +17,8 @@ interface Video {
   videoUrl: string;
   completed?: boolean;
   locked?: boolean;
+  isFreePreview?: boolean;
+  requiresPurchase?: boolean;
   progress?: VideoProgress;
 }
 
@@ -52,16 +54,30 @@ const VideoPlaylist: React.FC<VideoPlaylistProps> = ({
 
   return (
     <div className="bg-gray-800 h-full flex flex-col text-white">
-      {/* Header */}
-      <div className="p-6 border-b border-gray-700">
-        <h3 className="font-bold text-lg text-white mb-2">Course Content</h3>
-        <div className="flex items-center justify-between text-sm text-gray-300 mb-3">
+      {/* Header - Hidden on mobile overlay since it's in the overlay header */}
+      <div className="hidden md:block p-4 xxs:p-6 border-b border-gray-700">
+        <h3 className="font-bold text-base xxs:text-lg text-white mb-2">Course Content</h3>
+        <div className="flex items-center justify-between text-xs xxs:text-sm text-gray-300 mb-2 xxs:mb-3">
           <span>{completedCount}/{videos.length} completed</span>
           <span>{Math.round(progressPercentage)}% done</span>
         </div>
         <div className="bg-gray-700 rounded-full h-2">
           <div
             className="bg-gradient-to-r from-red-500 to-pink-500 h-2 rounded-full transition-all duration-500"
+            style={{ width: `${progressPercentage}%` }}
+          />
+        </div>
+      </div>
+
+      {/* Mobile Progress Header - Only shown in mobile overlay */}
+      <div className="md:hidden p-3 xxs:p-4 border-b border-gray-700">
+        <div className="flex items-center justify-between text-xs xxs:text-sm text-gray-300 mb-2">
+          <span>{completedCount}/{videos.length} completed</span>
+          <span>{Math.round(progressPercentage)}% done</span>
+        </div>
+        <div className="bg-gray-700 rounded-full h-1.5 xxs:h-2">
+          <div
+            className="bg-gradient-to-r from-red-500 to-pink-500 h-1.5 xxs:h-2 rounded-full transition-all duration-500"
             style={{ width: `${progressPercentage}%` }}
           />
         </div>
@@ -86,32 +102,37 @@ const VideoPlaylist: React.FC<VideoPlaylistProps> = ({
             }`}
             onClick={() => !video.locked && onVideoSelect(video.id)}
           >
-            <div className="p-4 flex items-start space-x-3">
+            <div className="p-3 xxs:p-4 flex items-start space-x-2 xxs:space-x-3">
               <div className="flex-shrink-0 mt-1">
                 {video.locked ? (
-                    <div className="w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center">
-                      <Lock className="h-4 w-4 text-gray-400" />
+                  <div className="w-6 h-6 xxs:w-8 xxs:h-8 bg-gray-600 rounded-full flex items-center justify-center">
+                    <Lock className="h-3 w-3 xxs:h-4 xxs:w-4 text-gray-400" />
                   </div>
-                  ) : isCompleted ? (
-                  <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
-                    <CheckCircle className="h-4 w-4 text-white" />
+                ) : isCompleted ? (
+                  <div className="w-6 h-6 xxs:w-8 xxs:h-8 bg-green-500 rounded-full flex items-center justify-center">
+                    <CheckCircle className="h-3 w-3 xxs:h-4 xxs:w-4 text-white" />
                   </div>
-                  ) : isCurrent ? (
-                  <div className="w-8 h-8 bg-red-600 rounded-full flex items-center justify-center">
-                    <Play className="h-4 w-4 text-white fill-current" />
+                ) : isCurrent ? (
+                  <div className="w-6 h-6 xxs:w-8 xxs:h-8 bg-red-600 rounded-full flex items-center justify-center">
+                    <Play className="h-3 w-3 xxs:h-4 xxs:w-4 text-white fill-current" />
                   </div>
                 ) : (
-                    <div className="w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center text-gray-300 font-semibold text-sm">
+                  <div className="w-6 h-6 xxs:w-8 xxs:h-8 bg-gray-600 rounded-full flex items-center justify-center text-gray-300 font-semibold text-xs xxs:text-sm">
                     {index + 1}
                   </div>
                 )}
               </div>
               
               <div className="flex-1 min-w-0">
-                <h4 className={`font-medium text-sm mb-1 line-clamp-2 ${
+                <h4 className={`font-medium text-xs xxs:text-sm mb-1 line-clamp-2 ${
                     isCurrent ? 'text-red-400' : 'text-white'
                 }`}>
                   {video.title}
+                  {video.isFreePreview && !video.locked && (
+                    <span className="ml-1 xxs:ml-2 inline-flex items-center px-1 xxs:px-1.5 py-0.5 rounded text-xs font-medium bg-green-600 text-white">
+                      🔓 Free
+                    </span>
+                  )}
                 </h4>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-1 text-gray-400 text-xs">

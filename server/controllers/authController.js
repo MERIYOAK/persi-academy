@@ -190,6 +190,59 @@ const login = async (req, res) => {
 };
 
 /**
+ * Verify JWT token
+ * POST /api/auth/verify-token
+ */
+const verifyToken = async (req, res) => {
+  try {
+    const token = req.header('Authorization')?.replace('Bearer ', '');
+    
+    if (!token) {
+      return res.status(401).json({
+        success: false,
+        message: 'No token provided'
+      });
+    }
+
+    const decoded = authService.verifyToken(token);
+    
+    // Get user data to return
+    const user = await authService.getUserById(decoded.userId);
+    
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'Token is valid',
+      data: {
+        user: {
+          _id: user._id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          authProvider: user.authProvider,
+          profilePhotoKey: user.profilePhotoKey,
+          isVerified: user.isVerified,
+          createdAt: user.createdAt
+        }
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ Token verification error:', error);
+    res.status(401).json({
+      success: false,
+      message: 'Invalid token'
+    });
+  }
+};
+
+/**
  * Get current user profile
  * GET /api/auth/me
  */
@@ -209,7 +262,16 @@ const getCurrentUser = async (req, res) => {
         isVerified: user.isVerified,
         status: user.status,
         createdAt: user.createdAt,
-        purchasedCourses: user.purchasedCourses || []
+        purchasedCourses: user.purchasedCourses || [],
+        // Extended profile fields
+        firstName: user.firstName,
+        lastName: user.lastName,
+        age: user.age,
+        sex: user.sex,
+        address: user.address,
+        telephone: user.telephone,
+        country: user.country,
+        city: user.city
       }
     });
 
@@ -228,11 +290,20 @@ const getCurrentUser = async (req, res) => {
  */
 const updateProfile = async (req, res) => {
   try {
-    const { name, email } = req.body;
+    const { 
+      firstName, lastName, age, sex, address, telephone, country, city 
+    } = req.body;
     const profilePhoto = req.file;
 
+    console.log('🔧 [Profile Update] Request received:', {
+      hasProfilePhoto: !!profilePhoto,
+      profilePhotoName: profilePhoto?.originalname,
+      profilePhotoSize: profilePhoto?.size,
+      fields: { firstName, lastName, age, sex, address, telephone, country, city }
+    });
+
     // Validate at least one field to update
-    if (!name && !email && !profilePhoto) {
+    if (!firstName && !lastName && !age && !sex && !address && !telephone && !country && !city && !profilePhoto) {
       return res.status(400).json({
         success: false,
         message: 'At least one field must be provided for update'
@@ -240,14 +311,31 @@ const updateProfile = async (req, res) => {
     }
 
     const updateData = {};
-    if (name) updateData.name = name;
-    if (email) updateData.email = email;
+    if (firstName !== undefined) updateData.firstName = firstName;
+    if (lastName !== undefined) updateData.lastName = lastName;
+    if (age !== undefined) updateData.age = age ? parseInt(age) : null;
+    if (sex !== undefined) updateData.sex = sex;
+    if (address !== undefined) updateData.address = address;
+    if (telephone !== undefined) updateData.telephone = telephone;
+    if (country !== undefined) updateData.country = country;
+    if (city !== undefined) updateData.city = city;
+
+    console.log('🔧 [Profile Update] Calling authService.updateProfile with:', {
+      userId: req.user.userId,
+      updateData,
+      hasProfilePhoto: !!profilePhoto
+    });
 
     const updatedUser = await authService.updateProfile(
       req.user.userId,
       updateData,
       profilePhoto
     );
+
+    console.log('✅ [Profile Update] Successfully updated user profile:', {
+      userId: updatedUser._id,
+      hasProfilePhotoKey: !!updatedUser.profilePhotoKey
+    });
 
     res.json({
       success: true,
@@ -448,11 +536,102 @@ const checkEmailAvailability = async (req, res) => {
   }
 };
 
+/**
+ * Send password reset email
+ * POST /api/auth/forgot-password
+ */
+const forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email || !emailRegex.test(email)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please provide a valid email address'
+      });
+    }
+
+    const result = await authService.sendPasswordResetEmail(email);
+
+    res.json({
+      success: true,
+      message: result.message
+    });
+
+  } catch (error) {
+    console.error('❌ Forgot password error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to send password reset email'
+    });
+  }
+};
+
+/**
+ * Reset password with token
+ * POST /api/auth/reset-password
+ */
+const resetPassword = async (req, res) => {
+  try {
+    const { token, newPassword } = req.body;
+
+    if (!token || !newPassword) {
+      return res.status(400).json({
+        success: false,
+        message: 'Token and new password are required'
+      });
+    }
+
+    // Validate password strength
+    if (newPassword.length < 6) {
+      return res.status(400).json({
+        success: false,
+        message: 'Password must be at least 6 characters long'
+      });
+    }
+
+    const result = await authService.resetPassword(token, newPassword);
+
+    res.json({
+      success: true,
+      message: result.message
+    });
+
+  } catch (error) {
+    console.error('❌ Reset password error:', error);
+    
+    // Handle specific error cases
+    if (error.message.includes('expired')) {
+      return res.status(400).json({
+        success: false,
+        message: 'Password reset link has expired. Please request a new one.',
+        code: 'TOKEN_EXPIRED'
+      });
+    }
+    
+    if (error.message.includes('Invalid token')) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid password reset link.',
+        code: 'INVALID_TOKEN'
+      });
+    }
+    
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Failed to reset password'
+    });
+  }
+};
+
 module.exports = {
   register,
   verifyEmail,
   resendVerification,
   login,
+  verifyToken,
   getCurrentUser,
   updateProfile,
   changePassword,
@@ -460,5 +639,7 @@ module.exports = {
   deleteProfilePhoto,
   googleCallback,
   logout,
-  checkEmailAvailability
+  checkEmailAvailability,
+  forgotPassword,
+  resetPassword
 }; 

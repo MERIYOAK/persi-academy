@@ -28,7 +28,7 @@ async function testWebhookFlow() {
     console.log(`   - User ID: ${webhookBody.data.object.metadata.userId}`);
     console.log(`   - Course ID: ${webhookBody.data.object.metadata.courseId}`);
 
-    const response = await fetch('http://localhost:5000/webhook', {
+    const response = await fetch('http://localhost:5000/api/payment/webhook', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

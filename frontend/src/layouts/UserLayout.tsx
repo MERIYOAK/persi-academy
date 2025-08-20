@@ -2,6 +2,7 @@ import React from 'react';
 import { Outlet } from 'react-router-dom';
 import UserNavbar from '../components/nav/UserNavbar';
 import Footer from '../components/Footer';
+import ScrollToTop from '../components/ScrollToTop';
 
 const UserLayout: React.FC = () => {
   return (
@@ -10,7 +11,8 @@ const UserLayout: React.FC = () => {
       <main className="flex-grow">
         <Outlet />
       </main>
-      <Footer />
+      <Footer className="relative z-30" />
+      <ScrollToTop />
     </div>
   );
 };

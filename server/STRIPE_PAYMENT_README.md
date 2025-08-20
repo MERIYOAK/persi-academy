@@ -39,7 +39,7 @@ Install Stripe CLI and forward webhooks to your local server:
 stripe login
 
 # Forward webhooks to your local server
-stripe listen --forward-to localhost:5000/api/payments/webhook
+stripe listen --forward-to localhost:5000/api/payment/webhook
 ```
 
 Copy the webhook secret from the CLI output to your `.env` file.
@@ -83,7 +83,7 @@ Authorization: Bearer <jwt_token>
 
 ### Webhook Endpoint
 ```http
-POST /api/payments/webhook
+POST /api/payment/webhook
 Content-Type: application/json
 Stripe-Signature: t=timestamp,v1=signature
 ```
@@ -116,7 +116,7 @@ Use these test card numbers in Stripe Checkout:
    cd frontend && npm run dev
    
    # Terminal 3: Stripe webhooks
-   stripe listen --forward-to localhost:5000/api/payments/webhook
+   stripe listen --forward-to localhost:5000/api/payment/webhook
    ```
 
 2. **Test a purchase:**
@@ -225,7 +225,7 @@ CLIENT_URL=https://yourdomain.com
 
 ### 2. Set Up Production Webhooks
 1. Go to [Stripe Dashboard > Webhooks](https://dashboard.stripe.com/webhooks)
-2. Add endpoint: `https://yourdomain.com/api/payments/webhook`
+2. Add endpoint: `https://yourdomain.com/api/payment/webhook`
 3. Select events: `checkout.session.completed`
 4. Copy webhook secret to environment
 

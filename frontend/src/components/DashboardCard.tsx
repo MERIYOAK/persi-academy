@@ -186,9 +186,9 @@ const DashboardCard: React.FC<DashboardCardProps> = ({
     }`}>
       {/* Completion badge */}
       {courseCompleted && (
-        <div className="absolute top-4 right-4 z-10">
-          <div className="bg-green-500 text-white px-3 py-1 rounded-full text-sm font-semibold flex items-center space-x-1">
-            <Trophy className="h-4 w-4" />
+        <div className="absolute top-3 xxs:top-4 right-3 xxs:right-4 z-10">
+          <div className="bg-green-500 text-white px-2 xxs:px-3 py-1 rounded-full text-xs xxs:text-sm font-semibold flex items-center space-x-1">
+            <Trophy className="h-3 w-3 xxs:h-4 xxs:w-4" />
             <span>Completed</span>
           </div>
         </div>
@@ -199,7 +199,7 @@ const DashboardCard: React.FC<DashboardCardProps> = ({
         <div className="absolute inset-0 bg-gradient-to-r from-green-400 to-green-600 opacity-0 group-hover:opacity-10 transition-opacity duration-300 pointer-events-none"></div>
       )}
 
-      <div className="relative h-40">
+      <div className="relative h-32 xxs:h-36 sm:h-40">
         <img
           src={thumbnail}
           alt={title}
@@ -215,16 +215,16 @@ const DashboardCard: React.FC<DashboardCardProps> = ({
           <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300">
             <Link
               to={watchLink}
-              className={`rounded-full p-3 shadow-lg hover:scale-110 transform transition-transform duration-200 ${
+              className={`rounded-full p-2 xxs:p-3 shadow-lg hover:scale-110 transform transition-transform duration-200 ${
                 courseCompleted 
                   ? 'bg-green-500 hover:bg-green-600' 
                   : 'bg-white hover:bg-gray-50'
               }`}
             >
               {courseCompleted ? (
-                <CheckCircle className="h-8 w-8 text-white" />
+                <CheckCircle className="h-6 w-6 xxs:h-8 xxs:w-8 text-white" />
               ) : (
-                <Play className="h-8 w-8 text-red-600" />
+                <Play className="h-6 w-6 xxs:h-8 xxs:w-8 text-red-600" />
               )}
             </Link>
           </div>
@@ -243,8 +243,8 @@ const DashboardCard: React.FC<DashboardCardProps> = ({
         </div>
       </div>
 
-      <div className="p-6">
-        <h3 className={`course-title text-lg font-bold mb-3 transition-colors duration-200 overflow-hidden ${
+      <div className="p-4 xxs:p-6">
+        <h3 className={`course-title text-base xxs:text-lg font-bold mb-2 xxs:mb-3 transition-colors duration-200 overflow-hidden ${
           courseCompleted 
             ? 'text-green-800 group-hover:text-green-900' 
             : 'text-gray-800 group-hover:text-red-600'
@@ -258,14 +258,14 @@ const DashboardCard: React.FC<DashboardCardProps> = ({
           {title}
         </h3>
 
-        <div className="space-y-3 mb-4">
-          <div className="flex items-center justify-between text-sm">
-            <div className="flex items-center space-x-2 text-gray-600">
-              <BookOpen className="h-4 w-4" />
+        <div className="space-y-2 xxs:space-y-3 mb-3 xxs:mb-4">
+          <div className="flex items-center justify-between text-xs xxs:text-sm">
+            <div className="flex items-center space-x-1 xxs:space-x-2 text-gray-600">
+              <BookOpen className="h-3 w-3 xxs:h-4 xxs:w-4" />
               <span>{completedLessons}/{totalLessons} lessons</span>
             </div>
-            <div className="flex items-center space-x-2 text-gray-600">
-              <Clock className="h-4 w-4" />
+            <div className="flex items-center space-x-1 xxs:space-x-2 text-gray-600">
+              <Clock className="h-3 w-3 xxs:h-4 xxs:w-4" />
               <span>{duration}</span>
             </div>
           </div>
@@ -279,10 +279,10 @@ const DashboardCard: React.FC<DashboardCardProps> = ({
           />
         </div>
 
-        <div className="flex space-x-3 mb-4">
+        <div className="flex flex-col xxs:flex-row space-y-2 xxs:space-y-0 xxs:space-x-3 mb-3 xxs:mb-4">
           <Link
             to={watchLink}
-            className={`flex-1 font-semibold py-2 px-4 rounded-lg transition-all duration-200 text-center text-sm ${
+            className={`flex-1 font-semibold py-2 px-3 xxs:px-4 rounded-lg transition-all duration-200 text-center text-xs xxs:text-sm ${
               courseCompleted
                 ? 'bg-green-600 hover:bg-green-700 text-white'
                 : 'bg-red-600 hover:bg-red-700 text-white'
@@ -292,24 +292,24 @@ const DashboardCard: React.FC<DashboardCardProps> = ({
           </Link>
           <Link
             to={`/course/${_id}`}
-            className="flex-1 border border-gray-300 hover:border-red-300 text-gray-700 hover:text-red-600 font-semibold py-2 px-4 rounded-lg transition-all duration-200 text-center text-sm"
+            className="flex-1 border border-gray-300 hover:border-red-300 text-gray-700 hover:text-red-600 font-semibold py-2 px-3 xxs:px-4 rounded-lg transition-all duration-200 text-center text-xs xxs:text-sm"
           >
             View Details
           </Link>
         </div>
 
         {/* Course Condition Explanation */}
-        <div className={`p-3 rounded-lg border ${condition.bgColor} ${condition.borderColor} mb-3`}>
-          <p className={`text-sm font-medium ${condition.color}`}>
+        <div className={`p-2 xxs:p-3 rounded-lg border ${condition.bgColor} ${condition.borderColor} mb-2 xxs:mb-3`}>
+          <p className={`text-xs xxs:text-sm font-medium ${condition.color}`}>
             {condition.text}
           </p>
         </div>
 
         {/* Certificate Actions */}
         {courseCompleted && (
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2 text-sm text-gray-600">
-              <Award className="h-4 w-4 text-green-500" />
+          <div className="flex flex-col xxs:flex-row xxs:items-center xxs:justify-between space-y-2 xxs:space-y-0">
+            <div className="flex items-center space-x-1 xxs:space-x-2 text-xs xxs:text-sm text-gray-600">
+              <Award className="h-3 w-3 xxs:h-4 xxs:w-4 text-green-500" />
               <span>
                 {certificateExists ? 'Certificate ready' : 'Certificate available'}
               </span>
@@ -318,7 +318,7 @@ const DashboardCard: React.FC<DashboardCardProps> = ({
               {certificateExists ? (
                 <button
                   onClick={viewCertificate}
-                  className="flex items-center space-x-1 bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded-lg transition-all duration-200 text-xs font-medium"
+                  className="flex items-center space-x-1 bg-green-600 hover:bg-green-700 text-white px-2 xxs:px-3 py-1 rounded-lg transition-all duration-200 text-xs font-medium"
                 >
                   <Eye className="w-3 h-3" />
                   <span>View</span>
@@ -327,7 +327,7 @@ const DashboardCard: React.FC<DashboardCardProps> = ({
                 <button
                   onClick={generateCertificate}
                   disabled={generating}
-                  className="flex items-center space-x-1 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white px-3 py-1 rounded-lg transition-all duration-200 text-xs font-medium"
+                  className="flex items-center space-x-1 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white px-2 xxs:px-3 py-1 rounded-lg transition-all duration-200 text-xs font-medium"
                 >
                   {generating ? (
                     <>
@@ -348,10 +348,10 @@ const DashboardCard: React.FC<DashboardCardProps> = ({
 
         {/* Success Message */}
         {showSuccess && (
-          <div className="mt-3 p-2 bg-green-50 border border-green-200 rounded-lg">
+          <div className="mt-2 xxs:mt-3 p-2 bg-green-50 border border-green-200 rounded-lg">
             <div className="flex items-center space-x-2 text-green-800">
-              <CheckCircle className="w-4 h-4" />
-              <span className="text-sm">Certificate generated successfully!</span>
+              <CheckCircle className="w-3 h-3 xxs:w-4 xxs:h-4" />
+              <span className="text-xs xxs:text-sm">Certificate generated successfully!</span>
             </div>
           </div>
         )}

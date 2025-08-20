@@ -11,6 +11,15 @@ const userSchema = new mongoose.Schema({
   role: { type: String, enum: ['user', 'admin'], default: 'user' },
   status: { type: String, enum: ['active', 'inactive', 'suspended'], default: 'active' },
   purchasedCourses: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Course' }],
+  // Extended profile fields
+  firstName: { type: String, default: null },
+  lastName: { type: String, default: null },
+  age: { type: Number, min: 1, max: 120, default: null },
+  sex: { type: String, enum: ['male', 'female', 'other', 'prefer-not-to-say'], default: null },
+  address: { type: String, default: null },
+  telephone: { type: String, default: null },
+  country: { type: String, default: null },
+  city: { type: String, default: null },
   // Google OAuth specific fields
   googleId: { type: String, sparse: true },
   googleProfilePhoto: { type: String, default: null },

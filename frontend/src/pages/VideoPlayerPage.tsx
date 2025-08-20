@@ -12,6 +12,8 @@ interface Video {
   videoUrl: string;
   completed?: boolean;
   locked?: boolean;
+  isFreePreview?: boolean;
+  requiresPurchase?: boolean;
   progress?: {
     watchedDuration: number;
     totalDuration: number;
@@ -32,6 +34,7 @@ interface CourseData {
     lastWatchedVideo: string | null;
     lastWatchedPosition: number;
   };
+  userHasPurchased?: boolean;
 }
 
 const VideoPlayerPage = () => {
@@ -40,7 +43,10 @@ const VideoPlayerPage = () => {
   const [currentVideoId, setCurrentVideoId] = useState(videoId || '');
   const [isPlaying, setIsPlaying] = useState(false);
   const [playbackRate, setPlaybackRate] = useState(1);
-  const [showPlaylist, setShowPlaylist] = useState(true);
+  const [showPlaylist, setShowPlaylist] = useState(() => {
+    // Initialize based on screen size immediately
+    return typeof window !== 'undefined' ? window.innerWidth >= 768 : false;
+  });
   const [courseData, setCourseData] = useState<CourseData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -65,11 +71,28 @@ const VideoPlayerPage = () => {
   
   // Udemy-style progress tracking: Request deduplication and batching
   const pendingProgressRequest = useRef<AbortController | null>(null);
-  const progressUpdateTimeout = useRef<NodeJS.Timeout | null>(null);
+  const progressUpdateTimeout = useRef<number | null>(null);
   const lastProgressUpdate = useRef(0);
   const PROGRESS_UPDATE_INTERVAL = 30000; // 30 seconds minimum between updates
   
   // Note: videoRef is no longer needed as EnhancedVideoPlayer handles video element internally
+
+  // Handle window resize for playlist visibility
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 768) { // md breakpoint
+        setShowPlaylist(true);
+      } else {
+        setShowPlaylist(false);
+      }
+    };
+
+    // Add event listener
+    window.addEventListener('resize', handleResize);
+
+    // Cleanup
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Enhanced error handling functions
   const getVideoErrorDetails = (error: any): { type: string; message: string; userMessage: string } => {
@@ -492,30 +515,24 @@ const VideoPlayerPage = () => {
         
         console.log('✅ [VideoPlayer] Authentication token found');
         
-        // First, check if user has purchased this course
-        console.log('🔧 [VideoPlayer] Checking course purchase...');
-        const purchaseResponse = await fetch(`http://localhost:5000/api/payment/check-purchase/${id}`, {
+        // Fetch videos with access control (includes free preview logic)
+        console.log('🔧 [VideoPlayer] Fetching videos with access control...');
+        const videosResponse = await fetch(`http://localhost:5000/api/videos/course/${id}/version/1`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
         });
         
-        if (!purchaseResponse.ok) {
-          console.log('❌ [VideoPlayer] Purchase verification failed:', purchaseResponse.status);
-          throw new Error('Failed to verify course purchase');
+        if (!videosResponse.ok) {
+          console.log('❌ [VideoPlayer] Videos fetch failed:', videosResponse.status);
+          throw new Error('Failed to fetch course videos');
         }
         
-        const purchaseResult = await purchaseResponse.json();
-        console.log('🔧 [VideoPlayer] Purchase result:', purchaseResult);
+        const videosResult = await videosResponse.json();
+        console.log('🔧 [VideoPlayer] Videos data received:', videosResult);
         
-        if (!purchaseResult.data.hasPurchased) {
-          console.log('❌ [VideoPlayer] User has not purchased this course');
-          setError('You need to purchase this course to watch the videos');
-          setLoading(false);
-          return;
-        }
-        
-        console.log('✅ [VideoPlayer] Course purchase verified');
+        const videosWithAccess = videosResult.data.videos;
+        const userHasPurchased = videosResult.data.userHasPurchased;
         
         // Fetch course progress data
         console.log('🔧 [VideoPlayer] Fetching course progress...');
@@ -525,20 +542,28 @@ const VideoPlayerPage = () => {
           }
         });
         
-        if (!progressResponse.ok) {
-          console.log('❌ [VideoPlayer] Progress fetch failed:', progressResponse.status);
-          throw new Error('Failed to fetch course progress');
+        let progressResult = null;
+        if (progressResponse.ok) {
+          progressResult = await progressResponse.json();
+          console.log('🔧 [VideoPlayer] Progress data received:', progressResult);
+        } else {
+          console.log('⚠️ [VideoPlayer] Progress fetch failed, continuing without progress data');
         }
         
-        const progressResult = await progressResponse.json();
-        console.log('🔧 [VideoPlayer] Progress data received:', progressResult);
+        // Get course title from the first video or use a default
+        const courseTitle = videosWithAccess.length > 0 ? 
+          videosWithAccess[0].courseTitle || 'Course' : 'Course';
         
-        const course = progressResult.data.course;
-        const videosWithProgress = progressResult.data.videos;
-        const overallProgress = progressResult.data.overallProgress;
+        // Create a progress map for quick lookup
+        const progressMap = new Map();
+        if (progressResult?.data?.videos) {
+          progressResult.data.videos.forEach((video: any) => {
+            progressMap.set(video._id, video.progress);
+          });
+        }
         
-        // Transform videos to match expected format
-        const transformedVideos = videosWithProgress.map((video: any) => {
+        // Transform videos to match expected format with access control
+        const transformedVideos = videosWithAccess.map((video: any) => {
           // Try to get cached URL first
           const cachedUrl = getCachedVideoUrl(video._id);
           const videoUrl = cachedUrl || video.videoUrl || '';
@@ -548,21 +573,44 @@ const VideoPlayerPage = () => {
             cacheVideoUrl(video._id, video.videoUrl);
           }
 
-              return {
+          // Get progress data for this video
+          const progress = progressMap.get(video._id) || {
+            watchedDuration: 0,
+            totalDuration: video.duration || 0,
+            watchedPercentage: 0,
+            completionPercentage: 0,
+            isCompleted: false
+          };
+
+          return {
             id: video._id,
             title: video.title,
             duration: video.duration ? `${Math.floor(video.duration / 60)}:${(video.duration % 60).toString().padStart(2, '0')}` : '00:00',
             videoUrl: videoUrl,
-            completed: video.progress.isCompleted,
-            locked: false,
-            progress: video.progress
+            completed: progress.isCompleted,
+            locked: !video.hasAccess, // Use the access control data
+            progress: progress,
+            isFreePreview: video.isFreePreview,
+            requiresPurchase: video.lockReason === 'purchase_required'
           };
         });
         
+        // Calculate overall progress from available videos
+        const availableVideos = transformedVideos.filter((v: any) => v.hasAccess || userHasPurchased);
+        const completedVideos = availableVideos.filter((v: any) => v.completed).length;
+        const overallProgress = {
+          totalVideos: availableVideos.length,
+          completedVideos,
+          totalProgress: availableVideos.length > 0 ? (completedVideos / availableVideos.length) * 100 : 0,
+          lastWatchedVideo: null,
+          lastWatchedPosition: 0
+        };
+
         setCourseData({
-          title: course.title,
+          title: courseTitle,
           videos: transformedVideos,
-          overallProgress
+          overallProgress,
+          userHasPurchased
         });
         
         // Set current video if not already set
@@ -816,8 +864,23 @@ const VideoPlayerPage = () => {
   const handleVideoSelect = async (newVideoId: string) => {
     console.log('🔧 [VideoPlayer] Switching to video:', newVideoId);
     
-    // Check if the new video has a valid presigned URL
+    // Check if the video is locked
     const newVideo = courseData?.videos.find(v => v.id === newVideoId);
+    if (newVideo?.locked) {
+      console.log('🔒 [VideoPlayer] Video is locked, redirecting to checkout');
+      
+      // Show a message to the user
+      setError('This video requires course purchase. Redirecting to checkout...');
+      
+      // Redirect to checkout after a short delay
+      setTimeout(() => {
+        navigate(`/course/${id}/checkout`);
+      }, 2000);
+      
+      return;
+    }
+    
+    // Check if the new video has a valid presigned URL
     if (newVideo && (!newVideo.videoUrl || newVideo.videoUrl === 'undefined' || isPresignedUrlExpired(newVideo.videoUrl))) {
       console.log('🔧 [VideoPlayer] New video has invalid/expired presigned URL, refreshing...');
       const freshUrl = await refreshVideoUrl(newVideoId);
@@ -1087,17 +1150,17 @@ const VideoPlayerPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 flex flex-col">
+    <div className="min-h-screen bg-gray-900 flex flex-col pt-16">
       {/* Header */}
-      <div className="bg-gray-800 border-b border-gray-700 px-4 py-3">
+      <div className="bg-gray-800 border-b border-gray-700 px-3 xxs:px-4 py-3">
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-2 xxs:space-x-4">
             <Link
               to={`/course/${id}`}
-              className="flex items-center space-x-2 text-gray-300 hover:text-white transition-colors duration-200"
+              className="flex items-center space-x-1 xxs:space-x-2 text-gray-300 hover:text-white transition-colors duration-200"
             >
-              <ChevronLeft className="h-5 w-5" />
-              <span>Back to Course</span>
+              <ChevronLeft className="h-4 w-4 xxs:h-5 xxs:w-5" />
+              <span className="text-sm xxs:text-base">Back to Course</span>
             </Link>
             <div className="hidden md:block h-6 w-px bg-gray-600" />
             <h1 className="hidden md:block text-white font-semibold truncate">
@@ -1107,10 +1170,10 @@ const VideoPlayerPage = () => {
           
           <button
             onClick={() => setShowPlaylist(!showPlaylist)}
-            className="md:hidden flex items-center space-x-2 text-gray-300 hover:text-white transition-colors duration-200"
+            className="md:hidden flex items-center space-x-1 xxs:space-x-2 text-gray-300 hover:text-white transition-colors duration-200 px-2 xxs:px-3 py-2 rounded-lg hover:bg-gray-700"
           >
-            <BookOpen className="h-5 w-5" />
-            <span>Playlist</span>
+            <BookOpen className="h-4 w-4 xxs:h-5 xxs:w-5" />
+            <span className="text-sm xxs:text-base">Playlist</span>
           </button>
         </div>
       </div>
@@ -1221,29 +1284,29 @@ const VideoPlayerPage = () => {
           </div>
 
           {/* Video Info */}
-          <div className="bg-gray-800 px-4 py-4">
-            <h2 className="text-white font-semibold text-lg mb-2">{currentVideo.title}</h2>
-            <div className="flex items-center justify-between text-gray-400 text-sm">
-              <div className="flex items-center space-x-4">
+          <div className="bg-gray-800 px-3 xxs:px-4 py-3 xxs:py-4">
+            <h2 className="text-white font-semibold text-base xxs:text-lg mb-2 line-clamp-2">{currentVideo.title}</h2>
+            <div className="flex flex-col xxs:flex-row xxs:items-center xxs:justify-between text-gray-400 text-xs xxs:text-sm space-y-1 xxs:space-y-0">
+              <div className="flex items-center space-x-2 xxs:space-x-4">
                 <span>Duration: {currentVideo.duration}</span>
-                <span>•</span>
-                <span>Current Position: {currentVideoPercentage}%</span>
-                    </div>
-              <div className="flex items-center space-x-2">
-                    {currentVideo.completed && (
-                      <div className="flex items-center space-x-1 text-green-400">
-                        <CheckCircle className="h-4 w-4" />
-                        <span>Completed</span>
-                      </div>
-                    )}
+                <span className="hidden xxs:inline">•</span>
+                <span>Position: {currentVideoPercentage}%</span>
               </div>
+              <div className="flex items-center space-x-2">
+                {currentVideo.completed && (
+                  <div className="flex items-center space-x-1 text-green-400">
+                    <CheckCircle className="h-3 w-3 xxs:h-4 xxs:w-4" />
+                    <span className="text-xs xxs:text-sm">Completed</span>
                   </div>
-                </div>
+                )}
+              </div>
+            </div>
+          </div>
 
           {/* Video Progress Bar Section - Below Video Player */}
-          <div className="bg-gray-900 px-4 py-6">
+          <div className="bg-gray-900 px-3 xxs:px-4 py-4 xxs:py-6">
             <div className="max-w-4xl mx-auto">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 xxs:gap-6">
                 {/* Video Progress Bar */}
                 <VideoProgressBar
                   watchedPercentage={currentVideoPercentage}
@@ -1253,21 +1316,21 @@ const VideoPlayerPage = () => {
                 
                 {/* Course Progress Summary */}
                 {courseData.overallProgress && (
-                  <div className="bg-gray-800 rounded-lg p-4">
-                    <h3 className="text-white font-semibold text-sm mb-3">Course Overview</h3>
-                    <div className="space-y-2 text-sm">
+                  <div className="bg-gray-800 rounded-lg p-3 xxs:p-4">
+                    <h3 className="text-white font-semibold text-xs xxs:text-sm mb-2 xxs:mb-3">Course Overview</h3>
+                    <div className="space-y-1 xxs:space-y-2 text-xs xxs:text-sm">
                       <div className="flex justify-between text-gray-300">
                         <span>Total Videos:</span>
                         <span>{courseData.overallProgress.totalVideos}</span>
-                  </div>
+                      </div>
                       <div className="flex justify-between text-gray-300">
                         <span>Completed:</span>
                         <span className="text-green-400">{courseData.overallProgress.completedVideos}</span>
-                </div>
+                      </div>
                       <div className="flex justify-between text-gray-300">
                         <span>Course Progress:</span>
                         <span className="text-blue-400">{courseData.overallProgress.totalProgress}%</span>
-              </div>
+                      </div>
                     </div>
                   </div>
                 )}
@@ -1292,13 +1355,17 @@ const VideoPlayerPage = () => {
       {/* Mobile Playlist Overlay */}
       {showPlaylist && (
         <div className="md:hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex">
-          <div className="bg-white w-80 ml-auto h-full overflow-y-auto">
-            <div className="p-4 border-b border-gray-200">
+          <div className="bg-gray-800 w-full max-w-sm xxs:max-w-md sm:max-w-lg ml-auto h-full overflow-y-auto">
+            <div className="p-3 xxs:p-4 border-b border-gray-700 flex items-center justify-between">
+              <h3 className="text-white font-semibold text-sm xxs:text-base">Course Content</h3>
               <button
                 onClick={() => setShowPlaylist(false)}
-                className="text-gray-600 hover:text-gray-800"
+                className="text-gray-400 hover:text-white p-1 rounded-lg transition-colors duration-200"
+                aria-label="Close playlist"
               >
-                Close Playlist
+                <svg className="w-5 h-5 xxs:w-6 xxs:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
               </button>
             </div>
             <VideoPlaylist
@@ -1308,6 +1375,7 @@ const VideoPlayerPage = () => {
                 handleVideoSelect(videoId);
                 setShowPlaylist(false);
               }}
+              courseProgress={courseData.overallProgress}
             />
           </div>
           <div

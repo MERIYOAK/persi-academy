@@ -28,12 +28,15 @@ const videoSchema = new mongoose.Schema({
     default: 'active' 
   },
   
-  // Admin tracking
+    // Admin tracking
   uploadedBy: { type: String, default: 'admin' },
-  
+
   // Video metadata
   description: { type: String },
   tags: [{ type: String }],
+  
+  // Free preview system
+  isFreePreview: { type: Boolean, default: false },
   
   // Processing info
   processingStatus: {
