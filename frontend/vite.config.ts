@@ -1,6 +1,8 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { resolve } from 'path'
+import { copyFileSync, existsSync } from 'fs'
+import { join } from 'path'
 
 // Plugin to replace environment variables in HTML
 const htmlEnvPlugin = () => {
@@ -15,11 +17,30 @@ const htmlEnvPlugin = () => {
   }
 }
 
+// Plugin to copy manifest.json to build output
+const copyManifestPlugin = () => {
+  return {
+    name: 'copy-manifest',
+    writeBundle() {
+      const manifestPath = join(__dirname, 'public', 'manifest.json')
+      const outputPath = join(__dirname, 'dist', 'manifest.json')
+      
+      if (existsSync(manifestPath)) {
+        copyFileSync(manifestPath, outputPath)
+        console.log('✅ Copied manifest.json to build output')
+      } else {
+        console.warn('⚠️ manifest.json not found in public directory')
+      }
+    }
+  }
+}
+
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
     react(),
-    htmlEnvPlugin()
+    htmlEnvPlugin(),
+    copyManifestPlugin()
   ],
   resolve: {
     alias: {
