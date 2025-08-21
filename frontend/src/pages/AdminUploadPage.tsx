@@ -306,7 +306,7 @@ const AdminUploadPage = () => {
         thumbnailFormData.append('version', '1');
 
         await xhrUpload({
-          url: buildApiUrl(`/api/courses/thumbnail/${courseId}`,
+          url: buildApiUrl(`/api/courses/thumbnail/${courseId}`),
           method: 'PUT',
           formData: thumbnailFormData,
           headers: { 'Authorization': `Bearer ${adminToken}` },
@@ -350,7 +350,7 @@ const AdminUploadPage = () => {
           videoFormData.append('file', video.file);
 
           await xhrUpload({
-            url: buildApiUrl('/api/videos/upload',
+            url: buildApiUrl('/api/videos/upload'),
             method: 'POST',
             formData: videoFormData,
             headers: { 'Authorization': `Bearer ${adminToken}` },
