@@ -38,21 +38,31 @@ const allowedOrigins = [
   process.env.FRONTEND_URL || 'http://localhost:5173',
   process.env.CLIENT_URL || 'http://localhost:5173',
   'https://youtubeacademy.vercel.app', // Vercel production domain
-  'https://persi-academy.vercel.app', // Alternative Vercel domain
+  'https://persi-academy.vercel.app', // Your current Vercel domain
   'http://localhost:3000',
   'http://localhost:4173',
   'http://localhost:8080'
 ].filter(Boolean); // Remove any undefined values
 
+console.log('🔧 CORS Allowed Origins:', allowedOrigins);
+
 // Middleware
 app.use(cors({
   origin: function (origin, callback) {
+    console.log('🔧 CORS Request from origin:', origin);
+    
     // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) return callback(null, true);
+    if (!origin) {
+      console.log('✅ Allowing request with no origin');
+      return callback(null, true);
+    }
 
     if (allowedOrigins.indexOf(origin) !== -1) {
+      console.log('✅ Origin allowed:', origin);
       callback(null, true);
     } else {
+      console.log('❌ Origin blocked:', origin);
+      console.log('❌ Allowed origins:', allowedOrigins);
       callback(new Error('Not allowed by CORS'));
     }
   },
