@@ -35,6 +35,7 @@ const CheckoutSuccessPage = () => {
   const [isWrongCourse, setIsWrongCourse] = useState(false);
   const [correctCourseTitle, setCorrectCourseTitle] = useState<string | null>(null);
   const [firstVideoId, setFirstVideoId] = useState<string | null>(null);
+  const [paymentProcessing, setPaymentProcessing] = useState(true);
 
   const courseId = searchParams.get('courseId');
   
@@ -263,6 +264,7 @@ const CheckoutSuccessPage = () => {
           const purchaseData = await purchaseResponse.json();
           if (purchaseData.data.hasPurchased) {
             console.log('✅ Payment has been processed - course is now purchased');
+            setPaymentProcessing(false);
             clearInterval(retryInterval);
             
             // Try to fetch receipt again
@@ -329,7 +331,8 @@ const CheckoutSuccessPage = () => {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to download receipt');
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || `Failed to download receipt (${response.status})`);
       }
 
       // Get content type to determine file extension
@@ -351,7 +354,19 @@ const CheckoutSuccessPage = () => {
       console.log(`✅ Receipt downloaded successfully as ${fileExtension.toUpperCase()}`);
     } catch (error) {
       console.error('❌ Error downloading receipt:', error);
-      alert('Failed to download receipt. Please try again.');
+      
+      // Provide more specific error messages
+      let errorMessage = 'Failed to download receipt. Please try again.';
+      
+      if (error.message.includes('404')) {
+        errorMessage = 'Receipt not found. The payment may still be processing. Please wait a moment and try again.';
+      } else if (error.message.includes('401')) {
+        errorMessage = 'Authentication required. Please log in again.';
+      } else if (error.message.includes('Payment not found')) {
+        errorMessage = 'Payment record not found. The payment may still be processing. Please wait a moment and try again.';
+      }
+      
+      alert(errorMessage);
     } finally {
       setDownloadingReceipt(false);
     }
