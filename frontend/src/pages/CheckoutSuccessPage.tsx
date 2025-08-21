@@ -78,7 +78,7 @@ const CheckoutSuccessPage = () => {
         
         if (purchasedCourseId) {
           // Fetch the course details to get the price
-          const courseResponse = await fetch(buildApiUrl(`/api/courses/${purchasedCourseId}`);
+          const courseResponse = await fetch(buildApiUrl(`/api/courses/${purchasedCourseId}`));
           if (courseResponse.ok) {
             const courseData = await courseResponse.json();
             const course = courseData.data?.course || courseData;
@@ -95,7 +95,7 @@ const CheckoutSuccessPage = () => {
           // Show the amount for their most recent purchase
           if (purchasedCourses.length > 0) {
             const mostRecentCourseId = purchasedCourses[purchasedCourses.length - 1];
-            const courseResponse = await fetch(buildApiUrl(`/api/courses/${mostRecentCourseId}`);
+            const courseResponse = await fetch(buildApiUrl(`/api/courses/${mostRecentCourseId}`));
             if (courseResponse.ok) {
               const courseData = await courseResponse.json();
               const course = courseData.data?.course || courseData;
@@ -132,7 +132,7 @@ const CheckoutSuccessPage = () => {
         console.log(`   - Course ID: ${effectiveCourseId}`);
 
         // Fetch course information
-        const courseResponse = await fetch(buildApiUrl(`/api/courses/${effectiveCourseId}`);
+        const courseResponse = await fetch(buildApiUrl(`/api/courses/${effectiveCourseId}`));
         
         if (!courseResponse.ok) {
           throw new Error('Failed to fetch course information');
@@ -158,7 +158,7 @@ const CheckoutSuccessPage = () => {
         if (token && effectiveCourseId) {
           try {
             console.log(`🔧 Fetching receipt for courseId: ${effectiveCourseId}`);
-            const receiptUrl = buildApiUrl(`/api/payment/receipt/${effectiveCourseId}`;
+            const receiptUrl = buildApiUrl(`/api/payment/receipt/${effectiveCourseId}`);
             console.log(`🔧 Receipt URL: ${receiptUrl}`);
             
             const receiptResponse = await fetch(receiptUrl, {

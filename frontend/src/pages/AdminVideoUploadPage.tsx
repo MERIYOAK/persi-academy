@@ -256,7 +256,7 @@ const AdminVideoUploadPage: React.FC = () => {
         setUploading(false);
       };
 
-      xhr.open('POST', buildApiUrl('/api/videos/upload');
+      xhr.open('POST', buildApiUrl('/api/videos/upload'));
       xhr.setRequestHeader('Authorization', `Bearer ${adminToken}`);
       xhr.send(videoFormData);
 
