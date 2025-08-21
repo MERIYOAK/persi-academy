@@ -152,9 +152,9 @@ exports.createCheckoutSession = async (req, res) => {
 exports.webhook = async (req, res) => {
   console.log('🔧 Webhook received...');
   console.log(`   - Headers:`, req.headers);
-  console.log(`   - Body length:`, req.rawBody ? req.rawBody.length : 'No raw body');
-  console.log(`   - Body type:`, typeof req.rawBody);
-  console.log(`   - Raw body preview:`, req.rawBody ? req.rawBody.toString().substring(0, 100) + '...' : 'No raw body');
+  console.log(`   - Body length:`, req.body ? req.body.length : 'No body');
+  console.log(`   - Body type:`, typeof req.body);
+  console.log(`   - Body preview:`, req.body ? req.body.toString().substring(0, 100) + '...' : 'No body');
   console.log(`   - NODE_ENV:`, process.env.NODE_ENV);
   console.log(`   - STRIPE_SECRET_KEY:`, process.env.STRIPE_SECRET_KEY ? 'Set' : 'Not set');
   console.log(`   - STRIPE_WEBHOOK_SECRET:`, process.env.STRIPE_WEBHOOK_SECRET ? 'Set' : 'Not set');
@@ -170,13 +170,13 @@ exports.webhook = async (req, res) => {
   } catch (error) {
     console.error('❌ Webhook signature verification failed:', error);
     console.error('   - Error details:', error.message);
-    console.error('   - Raw body available:', !!req.rawBody);
+    console.error('   - Body available:', !!req.body);
     console.error('   - Stripe signature header:', req.headers['stripe-signature'] ? 'Present' : 'Missing');
     return res.status(400).json({ 
       error: 'Webhook signature verification failed',
       message: error.message,
       details: {
-        hasRawBody: !!req.rawBody,
+        hasBody: !!req.body,
         hasSignature: !!req.headers['stripe-signature'],
         environment: process.env.NODE_ENV
       }

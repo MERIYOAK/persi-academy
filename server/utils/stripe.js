@@ -74,10 +74,10 @@ if (process.env.STRIPE_SECRET_KEY) {
       if (process.env.NODE_ENV === 'development') {
         console.log('🔧 Development mode - bypassing signature verification');
         
-        // Parse the raw body as JSON
+        // Parse the body as JSON
         let eventData;
         try {
-          const body = req.rawBody || req.body;
+          const body = req.body;
           if (Buffer.isBuffer(body)) {
             const bodyString = body.toString();
             console.log('🔍 Parsed body string:', bodyString);
@@ -129,7 +129,7 @@ if (process.env.STRIPE_SECRET_KEY) {
 
       console.log('🔧 Verifying Stripe webhook signature...');
       const event = stripe.webhooks.constructEvent(
-        req.rawBody,
+        req.body,
         sig,
         process.env.STRIPE_WEBHOOK_SECRET
       );
@@ -190,8 +190,8 @@ if (process.env.STRIPE_SECRET_KEY) {
     // Try to parse the webhook body
     let eventData;
     try {
-      // The raw body should be available from express.raw() middleware
-      const body = req.rawBody || req.body;
+      // The body should be available from express.raw() middleware
+      const body = req.body;
       console.log('🔍 Webhook body type:', typeof body);
       console.log('🔍 Webhook body length:', body ? body.length : 'No body');
       
