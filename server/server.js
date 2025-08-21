@@ -101,7 +101,13 @@ app.get('/api/test', (req, res) => {
 
 // Handle favicon.ico requests (browsers often request this)
 app.get('/favicon.ico', (req, res) => {
-  res.status(204).end(); // No content
+  // Try to serve favicon.svg instead, or return 204 if not found
+  const faviconPath = path.join(__dirname, 'public', 'favicon.svg');
+  if (require('fs').existsSync(faviconPath)) {
+    res.sendFile(faviconPath);
+  } else {
+    res.status(204).end(); // No content
+  }
 });
 
 // Note: Certificate PDFs are now served directly from S3 with public-read ACL
@@ -329,10 +335,6 @@ app.get('/certificate-preview/:certificateId', async (req, res) => {
 });
 
 // Serve favicon
-app.get('/favicon.ico', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'favicon.svg'));
-});
-
 app.get('/favicon.svg', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'favicon.svg'));
 });
@@ -594,6 +596,32 @@ if (missingOptionalVars.length > 0 && process.env.NODE_ENV !== 'production') {
     console.log('   - Email verification system');
   }
 }
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error('Server error:', err);
+  
+  // Don't expose internal errors to client
+  if (err.code === 'ENOENT') {
+    return res.status(404).json({ 
+      error: 'Resource not found',
+      message: 'The requested resource could not be found'
+    });
+  }
+  
+  res.status(500).json({ 
+    error: 'Internal server error',
+    message: 'Something went wrong on the server'
+  });
+});
+
+// 404 handler for unmatched routes
+app.use('*', (req, res) => {
+  res.status(404).json({ 
+    error: 'Not found',
+    message: 'The requested endpoint does not exist'
+  });
+});
 
 // Start server
 const PORT = process.env.PORT || 5000;
