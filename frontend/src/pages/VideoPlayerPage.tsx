@@ -1292,17 +1292,17 @@ const VideoPlayerPage = () => {
                 <span>Duration: {currentVideo.duration}</span>
                 <span className="hidden xxs:inline">•</span>
                 <span>Position: {currentVideoPercentage}%</span>
-              </div>
+                    </div>
               <div className="flex items-center space-x-2">
-                {currentVideo.completed && (
-                  <div className="flex items-center space-x-1 text-green-400">
+                    {currentVideo.completed && (
+                      <div className="flex items-center space-x-1 text-green-400">
                     <CheckCircle className="h-3 w-3 xxs:h-4 xxs:w-4" />
                     <span className="text-xs xxs:text-sm">Completed</span>
-                  </div>
-                )}
+                      </div>
+                    )}
               </div>
-            </div>
-          </div>
+                  </div>
+                </div>
 
           {/* Video Progress Bar Section - Below Video Player */}
           <div className="bg-gray-900 px-3 xxs:px-4 py-4 xxs:py-6">
@@ -1323,15 +1323,15 @@ const VideoPlayerPage = () => {
                       <div className="flex justify-between text-gray-300">
                         <span>Total Videos:</span>
                         <span>{courseData.overallProgress.totalVideos}</span>
-                      </div>
+                  </div>
                       <div className="flex justify-between text-gray-300">
                         <span>Completed:</span>
                         <span className="text-green-400">{courseData.overallProgress.completedVideos}</span>
-                      </div>
+                </div>
                       <div className="flex justify-between text-gray-300">
                         <span>Course Progress:</span>
                         <span className="text-blue-400">{courseData.overallProgress.totalProgress}%</span>
-                      </div>
+              </div>
                     </div>
                   </div>
                 )}
