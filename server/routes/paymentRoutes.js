@@ -7,7 +7,19 @@ const auth = require('../middleware/authMiddleware');
 router.post('/create-checkout-session', auth, paymentController.createCheckoutSession);
 
 // Webhook endpoint (no auth required, uses Stripe signature verification)
-router.post('/webhook', express.raw({ type: 'application/json' }), paymentController.webhook);
+router.post('/webhook', (req, res, next) => {
+  let data = '';
+  req.setEncoding('utf8');
+  
+  req.on('data', (chunk) => {
+    data += chunk;
+  });
+  
+  req.on('end', () => {
+    req.rawBody = Buffer.from(data, 'utf8');
+    next();
+  });
+}, paymentController.webhook);
 
 // Success and cancel pages
 router.get('/success', paymentController.success);

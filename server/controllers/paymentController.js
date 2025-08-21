@@ -154,6 +154,7 @@ exports.webhook = async (req, res) => {
   console.log(`   - Headers:`, req.headers);
   console.log(`   - Body length:`, req.rawBody ? req.rawBody.length : 'No raw body');
   console.log(`   - Body type:`, typeof req.rawBody);
+  console.log(`   - Raw body preview:`, req.rawBody ? req.rawBody.toString().substring(0, 100) + '...' : 'No raw body');
   console.log(`   - NODE_ENV:`, process.env.NODE_ENV);
   console.log(`   - STRIPE_SECRET_KEY:`, process.env.STRIPE_SECRET_KEY ? 'Set' : 'Not set');
   console.log(`   - STRIPE_WEBHOOK_SECRET:`, process.env.STRIPE_WEBHOOK_SECRET ? 'Set' : 'Not set');
