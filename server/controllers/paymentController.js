@@ -3,7 +3,6 @@ const Course = require('../models/Course');
 const User = require('../models/User');
 const Payment = require('../models/Payment');
 const mongoose = require('mongoose');
-const puppeteer = require('puppeteer');
 
 /**
  * Create a Stripe checkout session for course purchase
@@ -531,7 +530,7 @@ exports.getReceipt = async (req, res) => {
 };
 
 /**
- * Download receipt as PDF
+ * Download receipt as HTML (production-friendly alternative to PDF)
  * GET /api/payment/download-receipt/:courseId
  */
 exports.downloadReceipt = async (req, res) => {
@@ -610,40 +609,14 @@ exports.downloadReceipt = async (req, res) => {
     // Generate receipt HTML
     const receiptHtml = generateReceiptHTML(payment);
 
-    // Convert HTML to PDF using Puppeteer
-    const browser = await puppeteer.launch({ 
-      headless: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox']
-    });
-    const page = await browser.newPage();
-    
-    // Set content and wait for it to load
-    await page.setContent(receiptHtml, { waitUntil: 'networkidle0' });
-    
-    // Generate PDF
-    const pdfBuffer = await page.pdf({
-      format: 'A4',
-      printBackground: true,
-      margin: {
-        top: '20mm',
-        right: '20mm',
-        bottom: '20mm',
-        left: '20mm'
-      }
-    });
+    // Set response headers for HTML download
+    res.setHeader('Content-Type', 'text/html');
+    res.setHeader('Content-Disposition', `attachment; filename="receipt-${payment._id.toString().slice(-8)}.html"`);
 
-    await browser.close();
+    console.log(`✅ Receipt HTML generated for payment ${payment._id}`);
 
-    // Set response headers for PDF download
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `attachment; filename="receipt-${payment._id.toString().slice(-8)}.pdf"`);
-    res.setHeader('Content-Length', pdfBuffer.length);
-
-    console.log(`✅ Receipt PDF generated for payment ${payment._id}`);
-
-    // Alternative approach: use res.write() and res.end() for binary data
-    res.write(pdfBuffer);
-    res.end();
+    // Send the HTML content
+    res.send(receiptHtml);
 
   } catch (error) {
     console.error('❌ Error downloading receipt:', error);
