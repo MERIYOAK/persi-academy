@@ -10,6 +10,8 @@ interface ApiCourse {
   description: string;
   thumbnailURL?: string;
   price: number;
+  totalEnrollments?: number;
+  tags?: string[];
   videos?: Array<{ _id: string }>
 }
 
@@ -229,9 +231,10 @@ const HomePage = () => {
             thumbnail={c.thumbnailURL || ''}
             price={c.price}
             duration={`${c.videos?.length || 0} lessons`}
-            students={0}
-            rating={4.8}
+            students={c.totalEnrollments || 0}
+
             instructor={'YT Academy'}
+            tags={c.tags || []}
           />
         ))}
       </div>

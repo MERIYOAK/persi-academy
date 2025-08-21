@@ -40,6 +40,24 @@ exports.updateProgress = async (req, res) => {
       });
     }
 
+    // Validate numeric values
+    const validWatchedDuration = Number(watchedDuration);
+    const validTotalDuration = Number(totalDuration);
+    
+    if (isNaN(validWatchedDuration) || isNaN(validTotalDuration)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid numeric values for watchedDuration or totalDuration'
+      });
+    }
+
+    if (validWatchedDuration < 0 || validTotalDuration < 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Duration values cannot be negative'
+      });
+    }
+
     // Udemy-style: Check if update is too frequent
     const lastUpdate = lastUpdateTimes.get(progressKey);
     if (lastUpdate && (now - lastUpdate) < PROGRESS_UPDATE_INTERVAL) {
@@ -89,17 +107,26 @@ exports.updateProgress = async (req, res) => {
         { upsert: true, new: true }
       );
 
+      // Calculate watched percentage safely
+      let watchedPercentage = 0;
+      if (validTotalDuration > 0) {
+        watchedPercentage = Math.min(100, Math.round((validWatchedDuration / validTotalDuration) * 100));
+      } else if (validWatchedDuration > 0) {
+        // If total duration is 0 but we have watched duration, set to 100%
+        watchedPercentage = 100;
+      }
+
       // Update video-level progress using atomic operation
       const updatedProgress = await Progress.findOneAndUpdate(
         { _id: progress._id },
         {
           $set: {
-            totalDuration: totalDuration,
+            totalDuration: validTotalDuration,
             lastWatchedAt: new Date(),
-            watchedPercentage: Math.min(100, Math.round((watchedDuration / totalDuration) * 100))
+            watchedPercentage: watchedPercentage
           },
           $max: {
-            watchedDuration: watchedDuration // Safe concurrent updates
+            watchedDuration: validWatchedDuration // Safe concurrent updates
           },
           $inc: {
             watchCount: 1
@@ -107,7 +134,7 @@ exports.updateProgress = async (req, res) => {
           $push: {
             watchHistory: {
               $each: [{
-                timestamp: Math.round(timestamp || watchedDuration),
+                timestamp: Math.round(timestamp || validWatchedDuration),
                 watchedAt: new Date()
               }],
               $slice: -10 // Keep only last 10 entries
@@ -118,7 +145,7 @@ exports.updateProgress = async (req, res) => {
       );
 
       // Handle completion logic
-      const watchedPercentage = updatedProgress.watchedPercentage;
+      watchedPercentage = updatedProgress.watchedPercentage;
       let completionUpdate = {};
 
       if (updatedProgress.isCompleted) {
@@ -157,12 +184,14 @@ exports.updateProgress = async (req, res) => {
       // Get updated course progress
       const courseProgress = await Progress.getOverallCourseProgress(userId, courseId, course.videos.length);
 
-      // Check if course is completed and auto-generate certificate
-      if (courseProgress.courseProgressPercentage >= 90) {
+      // Check if course is 100% completed and auto-generate certificate
+      if (courseProgress.courseProgressPercentage >= 100 && 
+          courseProgress.completedVideos >= courseProgress.totalVideos &&
+          courseProgress.totalWatchedDuration >= courseProgress.courseTotalDuration) {
         try {
           const certificateController = require('./certificateController');
           await certificateController.autoGenerateCertificate(userId, courseId);
-          console.log(`🎓 [Certificate] Auto-generated certificate for completed course`);
+          console.log(`🎓 [Certificate] Auto-generated certificate for 100% completed course with full duration watched`);
         } catch (certError) {
           console.error('❌ [Certificate] Error auto-generating certificate:', certError);
           // Don't fail the progress update if certificate generation fails
@@ -424,7 +453,9 @@ exports.getDashboardProgress = async (req, res) => {
           progress: courseProgressSummary.courseProgressPercentage,
           lastWatched: courseProgressSummary.lastWatchedAt,
           videos: course.videos || [],
-          isCompleted: courseProgressSummary.courseProgressPercentage >= 90
+          isCompleted: courseProgressSummary.courseProgressPercentage >= 100 && 
+                      courseProgressSummary.completedVideos >= courseProgressSummary.totalVideos &&
+                      courseProgressSummary.totalWatchedDuration >= courseProgressSummary.courseTotalDuration
         };
       })
     );

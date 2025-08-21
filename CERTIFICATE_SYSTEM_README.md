@@ -4,9 +4,9 @@ This document describes the implementation of a comprehensive Certificate of Com
 
 ## Overview
 
-The Certificate of Completion system automatically generates professional PDF certificates when students complete courses (90% or more progress). The system includes:
+The Certificate of Completion system automatically generates professional PDF certificates when students complete courses (100% progress, all lessons completed, and full course duration watched). The system includes:
 
-- **Automatic Certificate Generation**: Triggers when course progress reaches 90%
+- **Automatic Certificate Generation**: Triggers when course progress reaches 100%, all lessons are completed, and total watched duration equals or exceeds the course total duration
 - **PDF Generation**: Creates professional certificates using pdf-lib
 - **Verification System**: Public verification endpoint for certificate authenticity
 - **Download Functionality**: Secure certificate downloads for students
@@ -15,9 +15,17 @@ The Certificate of Completion system automatically generates professional PDF ce
 ## Features
 
 ### ✅ **Automatic Generation**
-- Triggers when course progress reaches 90% completion
+- Triggers when course progress reaches 100% completion, all lessons are completed, and full course duration is watched
+- Prevents certificate generation by skipping through videos quickly
 - Generates unique certificate IDs (e.g., `CERT-ABC123-DEF456`)
 - Creates professional PDF certificates with course details
+
+### ✅ **Duration Validation**
+- Ensures users watch the entire course content before receiving certificates
+- Calculates total course duration as sum of all video lengths
+- Tracks total watched duration across all videos
+- Prevents certificate generation if watched duration is less than course duration
+- Provides helpful error messages showing remaining time needed
 
 ### ✅ **Security & Verification**
 - SHA-256 verification hashes for certificate authenticity
@@ -77,7 +85,9 @@ The system automatically triggers certificate generation in the progress control
 
 ```javascript
 // In server/controllers/progressController.js
-if (courseProgress.courseProgressPercentage >= 90) {
+if (courseProgress.courseProgressPercentage >= 100 && 
+    courseProgress.completedVideos >= courseProgress.totalVideos &&
+    courseProgress.totalWatchedDuration >= courseProgress.courseTotalDuration) {
   try {
     const certificateController = require('./certificateController');
     await certificateController.autoGenerateCertificate(userId, courseId);
@@ -214,7 +224,7 @@ node test-certificate-system.mjs
 ```
 
 ### Manual Testing
-1. Complete a course to 90% or more
+1. Complete a course to 100%, finish all lessons, and watch the full course duration
 2. Check dashboard for certificate download button
 3. Generate and download certificate
 4. Verify certificate using the verification page
@@ -251,7 +261,8 @@ node test-certificate-system.mjs
    - Check server logs for detailed error messages
 
 2. **Certificate Not Generated**
-   - Verify course progress is 90% or more
+   - Verify course progress is 100% and all lessons are completed
+   - Check if total watched duration equals or exceeds course total duration
    - Check if certificate already exists for user-course combination
    - Ensure user has purchased the course
 

@@ -39,8 +39,6 @@ const courseSchema = new mongoose.Schema({
   
   // Metadata
   totalEnrollments: { type: Number, default: 0 },
-  averageRating: { type: Number, default: 0 },
-  totalRatings: { type: Number, default: 0 },
   
   // Archive tracking
   archivedAt: { type: Date },

@@ -9,12 +9,33 @@ const Course = require('../models/Course');
  */
 async function userHasPurchased(userId, courseId) {
   try {
-    const user = await User.findById(userId);
-    if (!user) return false;
+    console.log(`🔧 [userHasPurchased] Checking purchase status:`, {
+      userId,
+      courseId
+    });
     
-    return user.purchasedCourses && user.purchasedCourses.includes(courseId);
+    const user = await User.findById(userId);
+    if (!user) {
+      console.log(`❌ [userHasPurchased] User not found:`, userId);
+      return false;
+    }
+    
+    // Convert courseId to string for comparison since purchasedCourses contains ObjectIds
+    const courseIdString = courseId.toString();
+    const hasPurchased = user.purchasedCourses && user.purchasedCourses.some(purchasedId => 
+      purchasedId.toString() === courseIdString
+    );
+    console.log(`🔧 [userHasPurchased] Purchase check result:`, {
+      userId,
+      courseId,
+      hasPurchased,
+      purchasedCourses: user.purchasedCourses || [],
+      purchasedCoursesLength: user.purchasedCourses?.length || 0
+    });
+    
+    return hasPurchased;
   } catch (error) {
-    console.error('Error checking user purchase status:', error);
+    console.error('❌ [userHasPurchased] Error checking user purchase status:', error);
     return false;
   }
 }
@@ -29,8 +50,16 @@ async function userHasPurchased(userId, courseId) {
  */
 async function filterVideosByAccess(videos, userId, courseId, isAdmin = false) {
   try {
+    console.log(`🔧 [filterVideosByAccess] Starting access control:`, {
+      userId,
+      courseId,
+      isAdmin,
+      totalVideos: videos.length
+    });
+    
     // Admins have access to all videos
     if (isAdmin) {
+      console.log(`🔧 [filterVideosByAccess] Admin user - granting full access`);
       return videos.map(video => ({
         ...video.toObject(),
         hasAccess: true,
@@ -41,12 +70,18 @@ async function filterVideosByAccess(videos, userId, courseId, isAdmin = false) {
 
     // Check if user has purchased the course
     const hasPurchased = await userHasPurchased(userId, courseId);
+    console.log(`🔧 [filterVideosByAccess] Purchase check result:`, {
+      userId,
+      courseId,
+      hasPurchased
+    });
     
-    return videos.map(video => {
+    const filteredVideos = videos.map(video => {
       const videoObj = video.toObject();
       
       if (hasPurchased) {
         // User has purchased - full access to all videos
+        console.log(`🔧 [filterVideosByAccess] Video "${video.title}" - User has purchased, granting access`);
         return {
           ...videoObj,
           hasAccess: true,
@@ -56,6 +91,7 @@ async function filterVideosByAccess(videos, userId, courseId, isAdmin = false) {
       } else {
         // User hasn't purchased - only access to free preview videos
         const isFreePreview = video.isFreePreview === true;
+        console.log(`🔧 [filterVideosByAccess] Video "${video.title}" - User hasn't purchased, isFreePreview: ${isFreePreview}`);
         return {
           ...videoObj,
           hasAccess: isFreePreview,
@@ -64,6 +100,15 @@ async function filterVideosByAccess(videos, userId, courseId, isAdmin = false) {
         };
       }
     });
+    
+    console.log(`🔧 [filterVideosByAccess] Final access summary:`, {
+      totalVideos: filteredVideos.length,
+      videosWithAccess: filteredVideos.filter(v => v.hasAccess).length,
+      videosLocked: filteredVideos.filter(v => v.isLocked).length,
+      freePreviewVideos: filteredVideos.filter(v => v.isFreePreview).length
+    });
+    
+    return filteredVideos;
   } catch (error) {
     console.error('Error filtering videos by access:', error);
     // Return all videos as locked in case of error

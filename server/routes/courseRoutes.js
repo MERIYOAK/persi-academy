@@ -12,7 +12,7 @@ router.delete('/thumbnail/:courseId', auth, adminAuthMiddleware, courseControlle
 router.put('/thumbnail/:courseId', auth, adminAuthMiddleware, upload.single('file'), courseController.updateThumbnail);
 
 // Course routes (parameterized routes after specific routes)
-router.get('/', courseController.getCourses);
+router.get('/', require('../middleware/optionalAuthMiddleware'), courseController.getCourses);
 router.get('/:id', courseController.getCourse);
 router.post('/', auth, adminAuthMiddleware, courseController.createCourse);
 router.put('/:id', auth, adminAuthMiddleware, courseController.updateCourse);

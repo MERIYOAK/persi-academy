@@ -7,9 +7,7 @@ import {
   Maximize, 
   SkipBack, 
   SkipForward,
-  Settings,
-  RotateCcw,
-  RotateCw
+  Settings
 } from 'lucide-react';
 
 interface EnhancedVideoPlayerProps {
@@ -18,7 +16,7 @@ interface EnhancedVideoPlayerProps {
   onPlay?: () => void;
   onPause?: () => void;
   onEnded?: () => void;
-  onError?: (error: any) => void;
+  onError?: (error: MediaError | null) => void;
   onReady?: () => void;
   onTimeUpdate?: (currentTime: number, duration: number) => void;
   onProgress?: (watchedDuration: number, totalDuration: number) => void;
@@ -61,19 +59,22 @@ const EnhancedVideoPlayer: React.FC<EnhancedVideoPlayerProps> = ({
   const [showSettings, setShowSettings] = useState(false);
   const [showVolumeSlider, setShowVolumeSlider] = useState(false);
   const [showKeyboardHints, setShowKeyboardHints] = useState(true);
-  const [isFullscreen, setIsFullscreen] = useState(false);
   const [buffered, setBuffered] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [controlsVisible, setControlsVisible] = useState(showControls);
-  const [controlsTimeout, setControlsTimeout] = useState<NodeJS.Timeout | null>(null);
+  const [controlsTimeout, setControlsTimeout] = useState<number | null>(null);
 
   // Security features
-  const [isRightClickDisabled, setIsRightClickDisabled] = useState(true);
   const [isKeyboardDisabled, setIsKeyboardDisabled] = useState(false);
 
+  // Function to toggle keyboard controls (for security purposes)
+  const toggleKeyboardControls = useCallback(() => {
+    setIsKeyboardDisabled(prev => !prev);
+  }, []);
+
   // Progress tracking
-  const progressUpdateTimeout = useRef<NodeJS.Timeout | null>(null);
+  const progressUpdateTimeout = useRef<number | null>(null);
   const lastProgressUpdate = useRef(0);
   const PROGRESS_UPDATE_INTERVAL = 30000; // 30 seconds
 
@@ -129,6 +130,7 @@ const EnhancedVideoPlayer: React.FC<EnhancedVideoPlayerProps> = ({
         handleVolumeChange(volume - 0.1);
         break;
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isKeyboardDisabled, volume]);
 
   // Security: Prevent drag and drop
@@ -188,10 +190,10 @@ const EnhancedVideoPlayer: React.FC<EnhancedVideoPlayerProps> = ({
 
       // Progress tracking (Udemy-style)
       if (progressUpdateTimeout.current) {
-        clearTimeout(progressUpdateTimeout.current);
+        window.clearTimeout(progressUpdateTimeout.current);
       }
 
-      progressUpdateTimeout.current = setTimeout(() => {
+      progressUpdateTimeout.current = window.setTimeout(() => {
         const now = Date.now();
         if (now - lastProgressUpdate.current >= PROGRESS_UPDATE_INTERVAL) {
           onProgress?.(currentTime, duration);
@@ -204,6 +206,8 @@ const EnhancedVideoPlayer: React.FC<EnhancedVideoPlayerProps> = ({
   const handleError = (e: React.SyntheticEvent<HTMLVideoElement, Event>) => {
     const video = e.target as HTMLVideoElement;
     console.error('❌ Enhanced video player error:', video.error);
+    console.error('❌ Video src:', src);
+    console.error('❌ Video element:', video);
     
     let errorMessage = 'Video playback error';
     
@@ -231,11 +235,13 @@ const EnhancedVideoPlayer: React.FC<EnhancedVideoPlayerProps> = ({
   };
 
   const handleLoadStart = () => {
+    console.log('🔧 [EnhancedVideoPlayer] Load start - src:', src);
     setIsLoading(true);
     setError(null);
   };
 
   const handleCanPlay = () => {
+    console.log('✅ [EnhancedVideoPlayer] Can play - video ready');
     setIsLoading(false);
   };
 
@@ -306,10 +312,8 @@ const EnhancedVideoPlayer: React.FC<EnhancedVideoPlayerProps> = ({
   const handleFullscreenToggle = () => {
     if (!document.fullscreenElement) {
       containerRef.current?.requestFullscreen();
-      setIsFullscreen(true);
     } else {
       document.exitFullscreen();
-      setIsFullscreen(false);
     }
   };
 
@@ -319,10 +323,10 @@ const EnhancedVideoPlayer: React.FC<EnhancedVideoPlayerProps> = ({
     onControlsToggle?.(true);
     
     if (controlsTimeout) {
-      clearTimeout(controlsTimeout);
+      window.clearTimeout(controlsTimeout);
     }
     
-    const timeout = setTimeout(() => {
+    const timeout = window.setTimeout(() => {
       if (isPlaying) {
         setControlsVisible(false);
         onControlsToggle?.(false);
@@ -335,11 +339,11 @@ const EnhancedVideoPlayer: React.FC<EnhancedVideoPlayerProps> = ({
 
   const hideControls = () => {
     if (controlsTimeout) {
-      clearTimeout(controlsTimeout);
+      window.clearTimeout(controlsTimeout);
     }
     
     if (isPlaying) {
-      const timeout = setTimeout(() => {
+      const timeout = window.setTimeout(() => {
         setControlsVisible(false);
         onControlsToggle?.(false);
       }, 3000);
@@ -371,13 +375,14 @@ const EnhancedVideoPlayer: React.FC<EnhancedVideoPlayerProps> = ({
     
     // Set up fullscreen change listener
     const handleFullscreenChange = () => {
-      setIsFullscreen(!!document.fullscreenElement);
+      // Fullscreen state is handled by the browser
+      // No need to track it in component state
     };
     
     document.addEventListener('fullscreenchange', handleFullscreenChange);
 
     // Auto-hide keyboard hints after 5 seconds
-    const keyboardHintsTimeout = setTimeout(() => {
+    const keyboardHintsTimeout = window.setTimeout(() => {
       setShowKeyboardHints(false);
     }, 5000);
 
@@ -386,14 +391,14 @@ const EnhancedVideoPlayer: React.FC<EnhancedVideoPlayerProps> = ({
       document.removeEventListener('fullscreenchange', handleFullscreenChange);
       
       if (progressUpdateTimeout.current) {
-        clearTimeout(progressUpdateTimeout.current);
+        window.clearTimeout(progressUpdateTimeout.current);
       }
       
       if (controlsTimeout) {
-        clearTimeout(controlsTimeout);
+        window.clearTimeout(controlsTimeout);
       }
 
-      clearTimeout(keyboardHintsTimeout);
+      window.clearTimeout(keyboardHintsTimeout);
     };
   }, [handleKeyDown, controlsTimeout]);
 
@@ -404,6 +409,14 @@ const EnhancedVideoPlayer: React.FC<EnhancedVideoPlayerProps> = ({
       videoRef.current.playbackRate = playbackRate;
     }
   }, [playbackRate, currentPlaybackRate]);
+
+  // Monitor src changes
+  useEffect(() => {
+    console.log('🔧 [EnhancedVideoPlayer] Src changed:', src);
+    if (src && src.trim() !== '') {
+      console.log('🔧 [EnhancedVideoPlayer] Setting video src:', src.substring(0, 100) + '...');
+    }
+  }, [src]);
 
   // Update playing state when prop changes
   useEffect(() => {
@@ -458,6 +471,14 @@ const EnhancedVideoPlayer: React.FC<EnhancedVideoPlayerProps> = ({
           pointerEvents: 'auto',
           WebkitFilter: 'none',
           filter: 'none',
+          // Ensure video is visible
+          display: 'block',
+          maxWidth: '100%',
+          maxHeight: '100%',
+          width: '100%',
+          height: '100%',
+          objectFit: 'contain',
+          backgroundColor: '#000',
         }}
         onLoadedData={handleLoadedData}
         onPlay={handlePlay}
@@ -467,6 +488,26 @@ const EnhancedVideoPlayer: React.FC<EnhancedVideoPlayerProps> = ({
         onError={handleError}
         onLoadStart={handleLoadStart}
         onCanPlay={handleCanPlay}
+        onLoad={() => console.log('🔧 [EnhancedVideoPlayer] Video load event - src:', src)}
+        onLoadedMetadata={() => {
+          console.log('🔧 [EnhancedVideoPlayer] Video metadata loaded');
+          if (videoRef.current) {
+            console.log('🔧 [EnhancedVideoPlayer] Video dimensions:', {
+              videoWidth: videoRef.current.videoWidth,
+              videoHeight: videoRef.current.videoHeight,
+              offsetWidth: videoRef.current.offsetWidth,
+              offsetHeight: videoRef.current.offsetHeight,
+              clientWidth: videoRef.current.clientWidth,
+              clientHeight: videoRef.current.clientHeight
+            });
+          }
+        }}
+        onCanPlayThrough={() => {
+          console.log('🔧 [EnhancedVideoPlayer] Video can play through');
+        }}
+        onPlaying={() => {
+          console.log('🔧 [EnhancedVideoPlayer] Video started playing');
+        }}
       />
 
       {/* Loading Overlay */}
@@ -667,10 +708,7 @@ const EnhancedVideoPlayer: React.FC<EnhancedVideoPlayerProps> = ({
         </div>
       )}
 
-      {/* Security Notice */}
-      <div className="absolute top-4 left-4 bg-black bg-opacity-75 text-white text-xs p-2 rounded opacity-50">
-        <div>🔒 Protected Content</div>
-      </div>
+      {/* Security Notice - Removed */}
     </div>
   );
 };

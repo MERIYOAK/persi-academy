@@ -29,8 +29,6 @@ interface Course {
   version: number;
   currentVersion: number;
   totalEnrollments: number;
-  averageRating: number;
-  totalRatings: number;
   createdBy: string;
   lastModifiedBy: string;
   createdAt: string;
@@ -431,10 +429,14 @@ const AdminCourseEditPage: React.FC = () => {
 
   const handleTagsBlur = () => {
     const tags = tagsInput.split(',').map(tag => tag.trim()).filter(tag => tag);
+    // Limit to maximum 3 tags
+    const limitedTags = tags.slice(0, 3);
     setFormData(prev => ({
       ...prev,
-      tags,
+      tags: limitedTags,
     }));
+    // Update input to reflect the limited tags
+    setTagsInput(limitedTags.join(', '));
     setError(null);
   };
 
@@ -698,7 +700,7 @@ const AdminCourseEditPage: React.FC = () => {
                   {/* Tags */}
                   <div>
                     <label htmlFor="tags" className="block text-sm font-medium text-gray-700 mb-2">
-                      Tags
+                      Tags (max 3)
                     </label>
                     <input
                       type="text"
@@ -711,8 +713,13 @@ const AdminCourseEditPage: React.FC = () => {
                       placeholder="tag1, tag2, tag3 (comma separated)"
                     />
                     <p className="mt-1 text-sm text-gray-500">
-                      Enter tags separated by commas
+                      Enter tags separated by commas (maximum 3 tags)
                     </p>
+                    {tagsInput.split(',').map(tag => tag.trim()).filter(tag => tag).length > 3 && (
+                      <p className="mt-1 text-sm text-orange-600">
+                        ⚠️ Only the first 3 tags will be saved
+                      </p>
+                    )}
                     {formData.tags.length > 0 && (
                       <div className="mt-2 flex flex-wrap gap-2">
                         {formData.tags.map((tag, index) => (
@@ -928,12 +935,7 @@ const AdminCourseEditPage: React.FC = () => {
                     <span className="text-sm text-gray-600">Enrollments:</span>
                     <span className="text-sm font-medium">{course?.totalEnrollments || 0}</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm text-gray-600">Rating:</span>
-                    <span className="text-sm font-medium">
-                      {course?.averageRating ? `${course.averageRating.toFixed(1)}/5` : 'No ratings'}
-                    </span>
-                  </div>
+                  
                   <div className="flex justify-between">
                     <span className="text-sm text-gray-600">Videos:</span>
                     <span className="text-sm font-medium">{course?.videos?.length || 0}</span>

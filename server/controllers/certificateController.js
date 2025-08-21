@@ -3,7 +3,7 @@ const User = require('../models/User');
 const Course = require('../models/Course');
 const Progress = require('../models/Progress');
 const { PDFDocument, rgb, StandardFonts } = require('pdf-lib');
-const { uploadToS3, generateS3Key, getPublicUrl } = require('../utils/s3');
+const { uploadFileWithOrganization, generateS3Key, getPublicUrl } = require('../utils/s3');
 
 /**
  * Generate certificate when course is completed
@@ -55,11 +55,29 @@ exports.generateCertificate = async (req, res) => {
     // Get course progress
     const courseProgress = await Progress.getOverallCourseProgress(userId, courseId, course.videos.length);
     
-    // Check if course is completed (90% or more)
-    if (courseProgress.courseProgressPercentage < 90) {
+    // Check if course is 100% completed and all lessons are completed
+    if (courseProgress.courseProgressPercentage < 100) {
       return res.status(400).json({
         success: false,
-        message: 'Course must be at least 90% completed to generate a certificate'
+        message: 'Course must be 100% completed to generate a certificate'
+      });
+    }
+    
+    // Check if all lessons are completed
+    if (courseProgress.completedVideos < courseProgress.totalVideos) {
+      return res.status(400).json({
+        success: false,
+        message: 'All lessons must be completed to generate a certificate'
+      });
+    }
+    
+    // Check if user has watched at least the total course duration
+    if (courseProgress.totalWatchedDuration < courseProgress.courseTotalDuration) {
+      const remainingTime = courseProgress.courseTotalDuration - courseProgress.totalWatchedDuration;
+      const remainingMinutes = Math.ceil(remainingTime / 60);
+      return res.status(400).json({
+        success: false,
+        message: `You must watch the entire course to generate a certificate. You still need to watch ${remainingMinutes} more minutes.`
       });
     }
 
@@ -642,11 +660,6 @@ async function saveCertificatePDF(pdfBuffer, certificateId, courseTitle) {
   try {
     console.log(`📤 [Certificate] Uploading PDF to S3: ${certificateId}`);
     
-    // Generate S3 key for certificate
-    const s3Key = generateS3Key('certificate', `${certificateId}.pdf`, {
-      courseName: courseTitle
-    });
-    
     // Create a file-like object for S3 upload
     const fileObject = {
       buffer: pdfBuffer,
@@ -654,13 +667,15 @@ async function saveCertificatePDF(pdfBuffer, certificateId, courseTitle) {
       originalname: `${certificateId}.pdf`
     };
     
-    // Upload to S3 with public-read ACL
-    const result = await uploadToS3(fileObject, s3Key, 'public-read');
+    // Upload to S3 using the organized upload function with ACL fallback
+    const result = await uploadFileWithOrganization(fileObject, 'certificate', {
+      courseName: courseTitle
+    });
     
-    console.log(`✅ [Certificate] PDF uploaded to S3: ${result.Location}`);
+    console.log(`✅ [Certificate] PDF uploaded to S3: ${result.url}`);
     
-    // Return the public S3 URL
-    return result.Location;
+    // Return the S3 URL (will be public if ACL worked, otherwise private)
+    return result.url;
     
   } catch (error) {
     console.error('❌ [Certificate] Error saving PDF to S3:', error);
@@ -696,9 +711,23 @@ exports.autoGenerateCertificate = async (userId, courseId) => {
     // Get course progress
     const courseProgress = await Progress.getOverallCourseProgress(userId, courseId, course.videos.length);
     
-    // Only generate if course is 90% or more completed
-    if (courseProgress.courseProgressPercentage < 90) {
-      console.log(`ℹ️ [Certificate] Course not completed enough (${courseProgress.courseProgressPercentage}%)`);
+    // Only generate if course is 100% completed and all lessons are completed
+    if (courseProgress.courseProgressPercentage < 100) {
+      console.log(`ℹ️ [Certificate] Course not 100% completed (${courseProgress.courseProgressPercentage}%)`);
+      return null;
+    }
+    
+    // Check if all lessons are completed
+    if (courseProgress.completedVideos < courseProgress.totalVideos) {
+      console.log(`ℹ️ [Certificate] Not all lessons completed (${courseProgress.completedVideos}/${courseProgress.totalVideos})`);
+      return null;
+    }
+    
+    // Check if user has watched at least the total course duration
+    if (courseProgress.totalWatchedDuration < courseProgress.courseTotalDuration) {
+      const remainingTime = courseProgress.courseTotalDuration - courseProgress.totalWatchedDuration;
+      const remainingMinutes = Math.ceil(remainingTime / 60);
+      console.log(`ℹ️ [Certificate] User hasn't watched enough content (${courseProgress.totalWatchedDuration}s/${courseProgress.courseTotalDuration}s). Need ${remainingMinutes} more minutes.`);
       return null;
     }
 

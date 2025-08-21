@@ -16,9 +16,8 @@ router.get('/cancel', paymentController.cancel);
 // Check if user has purchased a course (requires authentication)
 router.get('/check-purchase/:courseId', auth, paymentController.checkPurchase);
 
-// Receipt and resources endpoints (requires authentication)
+// Receipt endpoints (requires authentication)
 router.get('/receipt/:courseId', auth, paymentController.getReceipt);
 router.get('/download-receipt/:courseId', auth, paymentController.downloadReceipt);
-router.get('/download-resources/:courseId', auth, paymentController.downloadResources);
 
 module.exports = router; 

@@ -37,37 +37,79 @@ const ensureThumbnailPublic = async (course) => {
 
 exports.getCourses = async (req, res) => {
   try {
-    console.log('🔍 [LEGACY] getCourses called');
+    console.log('🔍 [getCourses] Called');
     
-    const courses = await Course.find().populate('videos');
-    console.log(`📚 [LEGACY] Found ${courses.length} courses from database`);
+    // Check if user is authenticated
+    const userId = req.user?.userId || req.user?.id || req.user?._id;
+    const isAuthenticated = !!userId;
+    
+    console.log(`🔍 [getCourses] User authentication:`, {
+      userId: userId || 'public',
+      isAuthenticated,
+      userRole: req.user?.role
+    });
+    
+    // Get all courses
+    const allCourses = await Course.find().populate('videos');
+    console.log(`📚 [getCourses] Found ${allCourses.length} total courses from database`);
+    
+    let filteredCourses = allCourses;
+    
+    // If user is authenticated, filter out purchased courses
+    if (isAuthenticated) {
+      const User = require('../models/User');
+      const user = await User.findById(userId);
+      
+      if (user && user.purchasedCourses && user.purchasedCourses.length > 0) {
+        const purchasedCourseIds = user.purchasedCourses.map(id => id.toString());
+        console.log(`🔍 [getCourses] User has ${purchasedCourseIds.length} purchased courses:`, purchasedCourseIds);
+        
+        // Filter out purchased courses
+        filteredCourses = allCourses.filter(course => {
+          const courseId = course._id.toString();
+          const isPurchased = purchasedCourseIds.includes(courseId);
+          
+          console.log(`🔍 [getCourses] Course "${course.title}" (${courseId}): ${isPurchased ? 'PURCHASED - EXCLUDING' : 'NOT PURCHASED - INCLUDING'}`);
+          
+          return !isPurchased;
+        });
+        
+        console.log(`📚 [getCourses] After filtering: ${filteredCourses.length} unpurchased courses remaining`);
+      } else {
+        console.log(`🔍 [getCourses] User has no purchased courses, showing all ${allCourses.length} courses`);
+      }
+    } else {
+      console.log(`🔍 [getCourses] Public user, showing all ${allCourses.length} courses`);
+    }
     
     // Debug: Log each course's thumbnail before processing
-    courses.forEach((course, index) => {
-      console.log(`📸 [LEGACY] Course ${index + 1}: "${course.title}"`);
+    filteredCourses.forEach((course, index) => {
+      console.log(`📸 [getCourses] Course ${index + 1}: "${course.title}"`);
       console.log(`   - Original thumbnailURL: ${course.thumbnailURL || 'NULL'}`);
       console.log(`   - Course ID: ${course._id}`);
     });
     
     // Ensure all thumbnails are publicly accessible
-    console.log('🔧 [LEGACY] Processing thumbnails for public access...');
+    console.log('🔧 [getCourses] Processing thumbnails for public access...');
     const coursesWithPublicThumbnails = await Promise.all(
-      courses.map(async (course, index) => {
-        console.log(`\n🔄 [LEGACY] Processing course ${index + 1}: "${course.title}"`);
+      filteredCourses.map(async (course, index) => {
+        console.log(`\n🔄 [getCourses] Processing course ${index + 1}: "${course.title}"`);
         const processedCourse = await ensureThumbnailPublic(course);
-        console.log(`   ✅ [LEGACY] Processed thumbnailURL: ${processedCourse.thumbnailURL || 'NULL'}`);
+        console.log(`   ✅ [getCourses] Processed thumbnailURL: ${processedCourse.thumbnailURL || 'NULL'}`);
         return processedCourse;
       })
     );
 
-    console.log('\n📋 [LEGACY] Final course thumbnails:');
+    console.log('\n📋 [getCourses] Final course thumbnails:');
     coursesWithPublicThumbnails.forEach((course, index) => {
       console.log(`   ${index + 1}. "${course.title}": ${course.thumbnailURL || 'NULL'}`);
     });
     
+    console.log(`✅ [getCourses] Returning ${coursesWithPublicThumbnails.length} courses to ${isAuthenticated ? 'authenticated' : 'public'} user`);
+    
     res.json(coursesWithPublicThumbnails);
   } catch (error) {
-    console.error('❌ [LEGACY] Get courses error:', error);
+    console.error('❌ [getCourses] Error:', error);
     res.status(500).json({ message: 'Failed to fetch courses', error: error.message });
   }
 };
