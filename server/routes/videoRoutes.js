@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const videoController = require('../controllers/videoController');
 const auth = require('../middleware/authMiddleware');
+const optionalAuth = require('../middleware/optionalAuthMiddleware');
 const adminAuthMiddleware = require('../middleware/adminAuthMiddleware');
 const multer = require('multer');
 
@@ -88,9 +89,9 @@ router.get('/:videoId', auth, videoController.getVideoById);
 /**
  * Get videos for a specific course version
  * GET /api/videos/course/:courseId/version/:version
- * Public access allowed for course preview
+ * Optional authentication - public users get free previews, authenticated users get full access if purchased
  */
-router.get('/course/:courseId/version/:version', videoController.getVideosByCourseVersion);
+router.get('/course/:courseId/version/:version', optionalAuth, videoController.getVideosByCourseVersion);
 
 /**
  * Get video statistics for a course

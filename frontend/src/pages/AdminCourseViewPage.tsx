@@ -12,7 +12,6 @@ interface Course {
   status: 'active' | 'inactive' | 'archived';
   thumbnailURL?: string;
   totalEnrollments: number;
-  averageRating: number;
   createdAt: string;
   updatedAt: string;
   slug: string;
@@ -265,13 +264,7 @@ const AdminCourseViewPage: React.FC = () => {
                     </div>
                     <span className="font-semibold text-gray-900">{course.totalEnrollments || 0}</span>
                   </div>
-                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                    <div className="flex items-center">
-                      <Star className="h-5 w-5 text-yellow-600 mr-2" />
-                      <span className="text-gray-700">Rating</span>
-                    </div>
-                    <span className="font-semibold text-gray-900">{(course.averageRating || 0).toFixed(1)} ⭐</span>
-                  </div>
+
                 </div>
               </div>
 

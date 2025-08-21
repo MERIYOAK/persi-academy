@@ -83,13 +83,13 @@ const AboutPage = () => {
       </div>
 
       {/* Hero Section */}
-      <section className="relative text-white pt-32 pb-20 overflow-hidden z-10">
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="relative text-white pt-24 xxs:pt-28 sm:pt-32 pb-12 xxs:pb-16 sm:pb-20 overflow-hidden z-10">
+        <div className="relative max-w-7xl mx-auto px-2 xxs:px-3 sm:px-4 lg:px-8">
           <div className={`text-center transition-all duration-1000 ease-out ${isVisible ? 'opacity-100 transform translate-y-0' : 'opacity-0 transform translate-y-8'}`}>
-            <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold mb-6 bg-gradient-to-r from-white via-red-100 to-white bg-clip-text text-transparent animate-pulse">
+            <h1 className="text-3xl xxs:text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-4 xxs:mb-6 bg-gradient-to-r from-white via-red-100 to-white bg-clip-text text-transparent animate-pulse">
               About YT Academy
             </h1>
-            <p className="text-xl md:text-2xl text-red-100 max-w-4xl mx-auto leading-relaxed">
+            <p className="text-sm xxs:text-base sm:text-xl md:text-2xl text-red-100 max-w-4xl mx-auto leading-relaxed">
               We're on a mission to help creators turn their passion into profit through 
               comprehensive YouTube education and proven monetization strategies.
             </p>
@@ -98,22 +98,22 @@ const AboutPage = () => {
       </section>
 
       {/* Stats Section */}
-      <section className="py-20 relative bg-white/95 backdrop-blur-sm z-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+      <section className="py-12 xxs:py-16 sm:py-20 relative bg-white/95 backdrop-blur-sm z-20">
+        <div className="max-w-7xl mx-auto px-2 xxs:px-3 sm:px-4 lg:px-8">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 xxs:gap-3 sm:gap-4 md:gap-6 lg:gap-8 max-w-6xl mx-auto">
             {stats.map((stat, index) => (
               <div 
                 key={index} 
                 className={`text-center transition-all duration-700 ease-out delay-${index * 100} ${isVisible ? 'opacity-100 transform translate-y-0' : 'opacity-0 transform translate-y-8'}`}
               >
-                <div className="group bg-white/80 backdrop-blur-sm rounded-2xl p-8 shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 hover:scale-105 border border-white/20">
-                  <div className="bg-gradient-to-br from-red-500 to-red-600 p-4 rounded-full w-16 h-16 mx-auto mb-6 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                    <stat.icon className="h-8 w-8 text-white" />
+                <div className="group bg-white/80 backdrop-blur-sm rounded-lg xxs:rounded-xl sm:rounded-2xl p-3 xxs:p-4 sm:p-6 lg:p-8 shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 hover:scale-105 border border-white/20 w-full h-full">
+                  <div className="bg-gradient-to-br from-red-500 to-red-600 p-1.5 xxs:p-2 sm:p-3 lg:p-4 rounded-full w-10 h-10 xxs:w-12 xxs:h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 mx-auto mb-2 xxs:mb-3 sm:mb-4 lg:mb-6 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                    <stat.icon className="h-4 w-4 xxs:h-5 xxs:w-5 sm:h-6 sm:w-6 lg:h-8 lg:w-8 text-white" />
                   </div>
-                  <div className="text-4xl font-bold text-gray-800 mb-2 bg-gradient-to-r from-red-600 to-red-800 bg-clip-text text-transparent">
+                  <div className="text-xl xxs:text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-800 mb-1 xxs:mb-2 lg:mb-3 bg-gradient-to-r from-red-600 to-red-800 bg-clip-text text-transparent">
                     {stat.value}
                   </div>
-                  <div className="text-gray-600 font-medium">{stat.label}</div>
+                  <div className="text-xs xxs:text-sm sm:text-base lg:text-lg text-gray-600 font-medium leading-tight">{stat.label}</div>
                 </div>
               </div>
             ))}
@@ -122,76 +122,76 @@ const AboutPage = () => {
       </section>
 
       {/* Mission Section */}
-      <section className="py-20 bg-white/95 backdrop-blur-sm relative z-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+      <section className="py-12 xxs:py-16 sm:py-20 bg-white/95 backdrop-blur-sm relative z-20">
+        <div className="max-w-7xl mx-auto px-2 xxs:px-3 sm:px-4 lg:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 xxs:gap-8 sm:gap-12 items-center">
             <div className={`transition-all duration-700 ease-out delay-200 ${isVisible ? 'opacity-100 transform translate-x-0' : 'opacity-0 transform -translate-x-8'}`}>
-              <h2 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-red-600 to-red-800 bg-clip-text text-transparent hover:scale-105 transition-transform duration-300">
+              <h2 className="text-2xl xxs:text-3xl sm:text-4xl md:text-5xl font-bold mb-4 xxs:mb-6 bg-gradient-to-r from-red-600 to-red-800 bg-clip-text text-transparent hover:scale-105 transition-transform duration-300">
                 Our Mission
               </h2>
-              <p className="text-lg text-gray-600 mb-6 leading-relaxed">
+              <p className="text-sm xxs:text-base sm:text-lg text-gray-600 mb-4 xxs:mb-6 leading-relaxed">
                 At YT Academy, we believe that everyone has the potential to create 
                 meaningful content and build a sustainable income from their passion. 
                 Our comprehensive courses are designed to take you from beginner to 
                 successful content creator.
               </p>
-              <p className="text-lg text-gray-600 leading-relaxed">
+              <p className="text-sm xxs:text-base sm:text-lg text-gray-600 leading-relaxed">
                 We combine cutting-edge strategies with real-world experience to 
                 provide you with the tools, knowledge, and support you need to 
                 thrive in the competitive world of YouTube content creation.
               </p>
             </div>
-            <div className={`bg-gradient-to-br from-red-500 via-red-600 to-red-700 rounded-3xl p-8 text-white shadow-2xl hover:shadow-red-500/25 transition-all duration-300 transform hover:-translate-y-2 ${isVisible ? 'opacity-100 transform translate-x-0' : 'opacity-0 transform translate-x-8'}`}>
-              <h3 className="text-3xl font-bold mb-6">Why Choose Us?</h3>
-              <ul className="space-y-4">
-                <li className="flex items-center group">
-                  <span className="w-3 h-3 bg-white rounded-full mr-4 group-hover:scale-125 transition-transform duration-300"></span>
-                  <span className="group-hover:translate-x-1 transition-transform duration-300">Expert-led courses from successful YouTubers</span>
-                </li>
-                <li className="flex items-center group">
-                  <span className="w-3 h-3 bg-white rounded-full mr-4 group-hover:scale-125 transition-transform duration-300"></span>
-                  <span className="group-hover:translate-x-1 transition-transform duration-300">Up-to-date strategies for the latest algorithm changes</span>
-                </li>
-                <li className="flex items-center group">
-                  <span className="w-3 h-3 bg-white rounded-full mr-4 group-hover:scale-125 transition-transform duration-300"></span>
-                  <span className="group-hover:translate-x-1 transition-transform duration-300">Practical, actionable content you can implement immediately</span>
-                </li>
-                <li className="flex items-center group">
-                  <span className="w-3 h-3 bg-white rounded-full mr-4 group-hover:scale-125 transition-transform duration-300"></span>
-                  <span className="group-hover:translate-x-1 transition-transform duration-300">Ongoing support and community access</span>
-                </li>
-              </ul>
+            <div className={`bg-gradient-to-br from-red-500 via-red-600 to-red-700 rounded-2xl xxs:rounded-3xl p-4 xxs:p-6 sm:p-8 text-white shadow-2xl hover:shadow-red-500/25 transition-all duration-300 transform hover:-translate-y-2 ${isVisible ? 'opacity-100 transform translate-x-0' : 'opacity-0 transform translate-x-8'}`}>
+              <h3 className="text-xl xxs:text-2xl sm:text-3xl font-bold mb-4 xxs:mb-6">Why Choose Us?</h3>
+                              <ul className="space-y-3 xxs:space-y-4">
+                  <li className="flex items-start group">
+                    <span className="w-2 h-2 xxs:w-3 xxs:h-3 bg-white rounded-full mr-2 xxs:mr-4 mt-1 xxs:mt-0 flex-shrink-0 group-hover:scale-125 transition-transform duration-300"></span>
+                    <span className="text-sm xxs:text-base group-hover:translate-x-1 transition-transform duration-300">Expert-led courses from successful YouTubers</span>
+                  </li>
+                  <li className="flex items-start group">
+                    <span className="w-2 h-2 xxs:w-3 xxs:h-3 bg-white rounded-full mr-2 xxs:mr-4 mt-1 xxs:mt-0 flex-shrink-0 group-hover:scale-125 transition-transform duration-300"></span>
+                    <span className="text-sm xxs:text-base group-hover:translate-x-1 transition-transform duration-300">Up-to-date strategies for the latest algorithm changes</span>
+                  </li>
+                  <li className="flex items-start group">
+                    <span className="w-2 h-2 xxs:w-3 xxs:h-3 bg-white rounded-full mr-2 xxs:mr-4 mt-1 xxs:mt-0 flex-shrink-0 group-hover:scale-125 transition-transform duration-300"></span>
+                    <span className="text-sm xxs:text-base group-hover:translate-x-1 transition-transform duration-300">Practical, actionable content you can implement immediately</span>
+                  </li>
+                  <li className="flex items-start group">
+                    <span className="w-2 h-2 xxs:w-3 xxs:h-3 bg-white rounded-full mr-2 xxs:mr-4 mt-1 xxs:mt-0 flex-shrink-0 group-hover:scale-125 transition-transform duration-300"></span>
+                    <span className="text-sm xxs:text-base group-hover:translate-x-1 transition-transform duration-300">Ongoing support and community access</span>
+                  </li>
+                </ul>
             </div>
           </div>
         </div>
       </section>
 
       {/* Values Section */}
-      <section className="py-20 bg-white/95 backdrop-blur-sm relative z-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold text-gray-800 mb-6 bg-gradient-to-r from-red-600 to-red-800 bg-clip-text text-transparent">
+      <section className="py-12 xxs:py-16 sm:py-20 bg-white/95 backdrop-blur-sm relative z-20">
+        <div className="max-w-7xl mx-auto px-2 xxs:px-3 sm:px-4 lg:px-8">
+          <div className="text-center mb-8 xxs:mb-12 sm:mb-16">
+            <h2 className="text-2xl xxs:text-3xl sm:text-4xl md:text-5xl font-bold text-gray-800 mb-4 xxs:mb-6 bg-gradient-to-r from-red-600 to-red-800 bg-clip-text text-transparent">
               Our Values
             </h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            <p className="text-sm xxs:text-base sm:text-xl text-gray-600 max-w-3xl mx-auto">
               The principles that guide everything we do at YT Academy
             </p>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 xxs:gap-6 sm:gap-8">
             {values.map((value, index) => (
               <div 
                 key={index}
-                className={`group bg-white/80 backdrop-blur-sm rounded-2xl p-8 shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-3 hover:scale-105 border border-white/20 ${isVisible ? 'opacity-100 transform translate-y-0' : 'opacity-0 transform translate-y-8'}`}
+                className={`group bg-white/80 backdrop-blur-sm rounded-xl xxs:rounded-2xl p-4 xxs:p-6 sm:p-8 shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-3 hover:scale-105 border border-white/20 ${isVisible ? 'opacity-100 transform translate-y-0' : 'opacity-0 transform translate-y-8'}`}
                 style={{ transitionDelay: `${index * 100}ms` }}
               >
-                <div className="bg-gradient-to-br from-red-500 to-red-600 p-4 rounded-full w-16 h-16 mx-auto mb-6 flex items-center justify-center group-hover:scale-110 group-hover:rotate-12 transition-all duration-300">
-                  <value.icon className="h-8 w-8 text-white" />
+                <div className="bg-gradient-to-br from-red-500 to-red-600 p-2 xxs:p-3 sm:p-4 rounded-full w-12 h-12 xxs:w-14 xxs:h-14 sm:w-16 sm:h-16 mx-auto mb-3 xxs:mb-4 sm:mb-6 flex items-center justify-center group-hover:scale-110 group-hover:rotate-12 transition-all duration-300">
+                  <value.icon className="h-5 w-5 xxs:h-6 xxs:w-6 sm:h-8 sm:w-8 text-white" />
                 </div>
-                <h3 className="text-xl font-bold text-gray-800 mb-4 text-center group-hover:text-red-600 transition-colors duration-300">
+                <h3 className="text-lg xxs:text-xl font-bold text-gray-800 mb-2 xxs:mb-4 text-center group-hover:text-red-600 transition-colors duration-300">
                   {value.title}
                 </h3>
-                <p className="text-gray-600 text-center leading-relaxed">
+                <p className="text-sm xxs:text-base text-gray-600 text-center leading-relaxed">
                   {value.description}
                 </p>
               </div>
@@ -201,27 +201,27 @@ const AboutPage = () => {
       </section>
 
       {/* Team Section */}
-      <section className="py-20 bg-white/95 backdrop-blur-sm relative z-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold text-gray-800 mb-6 bg-gradient-to-r from-red-600 to-red-800 bg-clip-text text-transparent">
+      <section className="py-12 xxs:py-16 sm:py-20 bg-white/95 backdrop-blur-sm relative z-20">
+        <div className="max-w-7xl mx-auto px-2 xxs:px-3 sm:px-4 lg:px-8">
+          <div className="text-center mb-8 xxs:mb-12 sm:mb-16">
+            <h2 className="text-2xl xxs:text-3xl sm:text-4xl md:text-5xl font-bold text-gray-800 mb-4 xxs:mb-6 bg-gradient-to-r from-red-600 to-red-800 bg-clip-text text-transparent">
               Meet Our Team
             </h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            <p className="text-sm xxs:text-base sm:text-xl text-gray-600 max-w-3xl mx-auto">
               Our team consists of successful content creators, marketing experts, 
               and industry professionals who are passionate about helping others succeed.
             </p>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 xxs:gap-6 sm:gap-8">
             {teamMembers.map((member, index) => (
               <div 
                 key={index}
-                className={`group bg-white/80 backdrop-blur-sm rounded-3xl p-8 shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-4 hover:scale-105 border border-white/20 perspective-1000 ${isVisible ? 'opacity-100 transform translate-y-0' : 'opacity-0 transform translate-y-8'}`}
+                className={`group bg-white/80 backdrop-blur-sm rounded-2xl xxs:rounded-3xl p-4 xxs:p-6 sm:p-8 shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-4 hover:scale-105 border border-white/20 perspective-1000 ${isVisible ? 'opacity-100 transform translate-y-0' : 'opacity-0 transform translate-y-8'}`}
                 style={{ transitionDelay: `${index * 200}ms` }}
               >
-                <div className="relative mb-6">
-                  <div className="w-32 h-32 mx-auto relative group-hover:rotate-6 transition-transform duration-500">
+                <div className="relative mb-4 xxs:mb-6">
+                  <div className="w-24 h-24 xxs:w-28 xxs:h-28 sm:w-32 sm:h-32 mx-auto relative group-hover:rotate-6 transition-transform duration-500">
                     <img
                       src={member.image}
                       alt={member.name}
@@ -231,24 +231,24 @@ const AboutPage = () => {
                   </div>
                 </div>
                 
-                <h3 className="text-2xl font-bold text-gray-800 mb-2 text-center group-hover:text-red-600 transition-colors duration-300">
+                <h3 className="text-lg xxs:text-xl sm:text-2xl font-bold text-gray-800 mb-2 text-center group-hover:text-red-600 transition-colors duration-300">
                   {member.name}
                 </h3>
-                <p className="text-red-600 font-semibold mb-4 text-center">{member.role}</p>
-                <p className="text-gray-600 text-center leading-relaxed group-hover:text-gray-700 transition-colors duration-300">
+                <p className="text-red-600 font-semibold mb-3 xxs:mb-4 text-center text-sm xxs:text-base">{member.role}</p>
+                <p className="text-sm xxs:text-base text-gray-600 text-center leading-relaxed group-hover:text-gray-700 transition-colors duration-300">
                   {member.description}
                 </p>
                 
                 {/* Social Links */}
-                <div className="flex justify-center space-x-4 mt-6 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0">
-                  <a href={member.social.linkedin} className="w-10 h-10 bg-red-600 rounded-full flex items-center justify-center hover:bg-red-700 transition-colors duration-300">
-                    <span className="text-white font-bold text-sm">in</span>
+                <div className="flex justify-center space-x-3 xxs:space-x-4 mt-4 xxs:mt-6 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0">
+                  <a href={member.social.linkedin} className="w-8 h-8 xxs:w-10 xxs:h-10 bg-red-600 rounded-full flex items-center justify-center hover:bg-red-700 transition-colors duration-300">
+                    <span className="text-white font-bold text-xs xxs:text-sm">in</span>
                   </a>
-                  <a href={member.social.twitter} className="w-10 h-10 bg-red-600 rounded-full flex items-center justify-center hover:bg-red-700 transition-colors duration-300">
-                    <span className="text-white font-bold text-sm">X</span>
+                  <a href={member.social.twitter} className="w-8 h-8 xxs:w-10 xxs:h-10 bg-red-600 rounded-full flex items-center justify-center hover:bg-red-700 transition-colors duration-300">
+                    <span className="text-white font-bold text-xs xxs:text-sm">X</span>
                   </a>
-                  <a href={member.social.youtube} className="w-10 h-10 bg-red-600 rounded-full flex items-center justify-center hover:bg-red-700 transition-colors duration-300">
-                    <span className="text-white font-bold text-sm">▶</span>
+                  <a href={member.social.youtube} className="w-8 h-8 xxs:w-10 xxs:h-10 bg-red-600 rounded-full flex items-center justify-center hover:bg-red-700 transition-colors duration-300">
+                    <span className="text-white font-bold text-xs xxs:text-sm">▶</span>
                   </a>
                 </div>
               </div>

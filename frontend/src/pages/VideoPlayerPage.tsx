@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { ChevronLeft, BookOpen, CheckCircle } from 'lucide-react';
 import VideoPlaylist from '../components/VideoPlaylist';
@@ -13,6 +13,7 @@ interface Video {
   videoUrl: string;
   completed?: boolean;
   locked?: boolean;
+  hasAccess?: boolean; // Add the missing hasAccess property
   isFreePreview?: boolean;
   requiresPurchase?: boolean;
   progress?: {
@@ -51,24 +52,20 @@ const VideoPlayerPage = () => {
   const [courseData, setCourseData] = useState<CourseData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [playerReady, setPlayerReady] = useState(false);
+
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
-  const [isMuted, setIsMuted] = useState(false);
-  const [controlsVisible, setControlsVisible] = useState(true);
-  const [controlsTimeout, setControlsTimeout] = useState<ReturnType<typeof setTimeout> | null>(null);
+  const [, setControlsVisible] = useState(true);
 
-  const [videoLoading, setVideoLoading] = useState(false);
-  const [loadingProgress, setLoadingProgress] = useState(0);
-  const [currentVideoProgress, setCurrentVideoProgress] = useState(0);
+  const [videoLoading] = useState(false);
+  const [loadingProgress] = useState(0);
   const [videoError, setVideoError] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState(0);
   const [isRetrying, setIsRetrying] = useState(false);
   const [pauseStartTime, setPauseStartTime] = useState<number | null>(null);
-  const [lastPauseTime, setLastPauseTime] = useState<number | null>(null);
   const [isPaused, setIsPaused] = useState(false);
-  const [currentVideoPosition, setCurrentVideoPosition] = useState(0); // Track actual video position
   const [currentVideoPercentage, setCurrentVideoPercentage] = useState(0); // Track actual video percentage
+  const [isRefreshingUrl, setIsRefreshingUrl] = useState(false); // Track URL refresh state
   
   // Udemy-style progress tracking: Request deduplication and batching
   const pendingProgressRequest = useRef<AbortController | null>(null);
@@ -142,33 +139,52 @@ const VideoPlayerPage = () => {
     }
   };
 
-  const isUrlExpired = (url: string): boolean => {
-    try {
-      const urlObj = new URL(url);
-      const expiresParam = urlObj.searchParams.get('X-Amz-Date') || urlObj.searchParams.get('Expires');
-      if (expiresParam) {
-        const expiryTime = parseInt(expiresParam);
-        const currentTime = Math.floor(Date.now() / 1000);
-        return currentTime > expiryTime;
-      }
-      return false;
-    } catch (error) {
-      console.log('🔍 [VideoPlayer] Could not parse URL for expiry check:', error);
-      return false;
-    }
-  };
+
 
   // Check if presigned URL is expired or will expire soon (within 5 minutes)
   const isPresignedUrlExpired = (url: string): boolean => {
     try {
+      if (!url || url === 'undefined' || url === '') {
+        return true; // Consider empty/invalid URLs as expired
+      }
+      
       const urlObj = new URL(url);
-      const expiresParam = urlObj.searchParams.get('X-Amz-Date') || urlObj.searchParams.get('Expires');
-      if (expiresParam) {
-        const expiryTime = parseInt(expiresParam);
+      
+      // Check for AWS presigned URL parameters
+      const expiresParam = urlObj.searchParams.get('X-Amz-Expires');
+      const dateParam = urlObj.searchParams.get('X-Amz-Date');
+      
+      if (expiresParam && dateParam) {
+        // Parse the date parameter (format: YYYYMMDDTHHMMSSZ)
+        const year = parseInt(dateParam.substring(0, 4));
+        const month = parseInt(dateParam.substring(4, 6)) - 1; // Month is 0-indexed
+        const day = parseInt(dateParam.substring(6, 8));
+        const hour = parseInt(dateParam.substring(9, 11));
+        const minute = parseInt(dateParam.substring(11, 13));
+        const second = parseInt(dateParam.substring(13, 15));
+        
+        const signedDate = new Date(Date.UTC(year, month, day, hour, minute, second));
+        const expiresInSeconds = parseInt(expiresParam);
+        const expiryTime = signedDate.getTime() / 1000 + expiresInSeconds;
+        
         const currentTime = Math.floor(Date.now() / 1000);
         const fiveMinutesFromNow = currentTime + (5 * 60); // 5 minutes buffer
-        return fiveMinutesFromNow > expiryTime;
+        
+        const isExpired = fiveMinutesFromNow > expiryTime;
+        console.log('🔍 [VideoPlayer] URL expiry check:', {
+          signedDate: signedDate.toISOString(),
+          expiresInSeconds,
+          expiryTime: new Date(expiryTime * 1000).toISOString(),
+          currentTime: new Date(currentTime * 1000).toISOString(),
+          fiveMinutesFromNow: new Date(fiveMinutesFromNow * 1000).toISOString(),
+          isExpired
+        });
+        
+        return isExpired;
       }
+      
+      // If we can't parse the expiry, assume it's not expired
+      console.log('🔍 [VideoPlayer] Could not parse presigned URL expiry parameters');
       return false;
     } catch (error) {
       console.log('🔍 [VideoPlayer] Could not parse presigned URL for expiry check:', error);
@@ -186,32 +202,52 @@ const VideoPlayerPage = () => {
       }
 
       console.log(`🔄 [VideoPlayer] Refreshing presigned URL for video: ${videoId}`);
+      setIsRefreshingUrl(true);
       
-      const response = await fetch(buildApiUrl(`/api/progress/course/${id}`), {
+      // Add timeout to the fetch request
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+
+      const response = await fetch(buildApiUrl(`/api/videos/${videoId}`), {
         headers: {
           'Authorization': `Bearer ${token}`
-        }
+        },
+        signal: controller.signal
       });
 
+      clearTimeout(timeoutId);
+
       if (response.ok) {
-        const result = await response.json();
-        const videoData = result.data.videos.find((v: any) => v._id === videoId);
+        const responseData = await response.json();
+        
+        // Check the correct data structure from the backend
+        const videoData = responseData?.data?.video;
         
         if (videoData && videoData.videoUrl) {
           console.log('✅ [VideoPlayer] Successfully refreshed presigned URL');
           // Cache the new URL
           cacheVideoUrl(videoId, videoData.videoUrl);
+          setIsRefreshingUrl(false);
           return videoData.videoUrl;
         } else {
-          console.error('❌ [VideoPlayer] No video data found for URL refresh');
+          console.error('❌ [VideoPlayer] No video data found for URL refresh:', {
+            hasResponseData: !!responseData,
+            hasData: !!responseData?.data,
+            hasVideo: !!responseData?.data?.video,
+            hasVideoUrl: !!responseData?.data?.video?.videoUrl,
+            responseStructure: Object.keys(responseData || {})
+          });
+          setIsRefreshingUrl(false);
           return null;
         }
       } else {
         console.error('❌ [VideoPlayer] Failed to refresh presigned URL:', response.status);
+        setIsRefreshingUrl(false);
         return null;
       }
     } catch (error) {
       console.error('❌ [VideoPlayer] Error refreshing presigned URL:', error);
+      setIsRefreshingUrl(false);
       return null;
     }
   };
@@ -275,18 +311,54 @@ const VideoPlayerPage = () => {
   const handleVideoError = (error: any) => {
     console.error('❌ [VideoPlayer] Video error occurred:', error);
 
+    // Get detailed error information
+    const errorDetails = getVideoErrorDetails(error);
+    console.log('🔍 [VideoPlayer] Error details:', errorDetails);
+
+    // Check if this is a 403 error (expired presigned URL)
+    if (errorDetails.type === 'MEDIA_ERR_SRC_NOT_SUPPORTED' || 
+        errorDetails.message.includes('403') || 
+        errorDetails.message.includes('Forbidden')) {
+      console.log('🔧 [VideoPlayer] Detected 403/expired URL error, refreshing video URL...');
+      
+      if (currentVideo?.id) {
+        refreshVideoUrl(currentVideo.id).then(freshUrl => {
+          if (freshUrl) {
+            console.log('✅ [VideoPlayer] Successfully refreshed URL after 403 error');
+            setVideoError(null);
+            // Update the course data with the fresh URL
+            setCourseData(prev => {
+              if (!prev) return null;
+              return {
+                ...prev,
+                videos: prev.videos.map(video => 
+                  video.id === currentVideo.id 
+                    ? { ...video, videoUrl: freshUrl }
+                    : video
+                )
+              };
+            });
+          } else {
+            console.error('❌ [VideoPlayer] Failed to refresh URL after 403 error');
+            setVideoError('Failed to refresh video link. Please try refreshing the page.');
+          }
+        });
+        return;
+      }
+    }
+
     // Check if we should retry
     if (retryCount < 3) {
       console.log(`🔄 [VideoPlayer] Will retry video load (attempt ${retryCount + 1}/3)`);
-      setVideoError(`Loading failed. Retrying... (${retryCount + 1}/3)`);
+      setVideoError(`${errorDetails.userMessage} Retrying... (${retryCount + 1}/3)`);
       retryVideoLoad();
       return;
     }
 
     // Max retries reached, show final error
     console.log('❌ [VideoPlayer] Max retries reached, showing final error');
-    setVideoError('Video playback error. Please try refreshing the page.');
-    setError('Video Error: Playback failed');
+    setVideoError(errorDetails.userMessage);
+    setError(`Video Error: ${errorDetails.type}`);
   };
 
   // Udemy-style progress tracking function with request deduplication
@@ -381,7 +453,6 @@ const VideoPlayerPage = () => {
             
             // Update current video progress display
             if (result.data.videoProgress) {
-              setCurrentVideoProgress(result.data.videoProgress.watchedPercentage || 0);
               console.log('✅ [Udemy-Style] Progress updated successfully:', result.data.videoProgress.watchedPercentage + '%');
             }
           }
@@ -481,7 +552,7 @@ const VideoPlayerPage = () => {
           
           // Update current video progress display
           if (result.data.videoProgress) {
-            setCurrentVideoProgress(result.data.videoProgress.watchedPercentage || 0);
+            // Progress updated successfully
           }
         }
       }
@@ -500,6 +571,13 @@ const VideoPlayerPage = () => {
   // Fetch course and video data with progress
   useEffect(() => {
     const fetchCourseData = async () => {
+      // Add a loading timeout to prevent infinite loading
+      const loadingTimeout = setTimeout(() => {
+        console.log('⚠️ [VideoPlayer] Loading timeout reached');
+        setError('Loading timeout. Please refresh the page and try again.');
+        setLoading(false);
+      }, 30000); // 30 second timeout
+      
       try {
         setLoading(true);
         console.log('🔧 [VideoPlayer] Starting to fetch course data...');
@@ -511,10 +589,28 @@ const VideoPlayerPage = () => {
           console.log('❌ [VideoPlayer] No authentication token found');
           setError('Authentication required');
           setLoading(false);
+          clearTimeout(loadingTimeout);
           return;
         }
         
         console.log('✅ [VideoPlayer] Authentication token found');
+        
+        // Fetch course data first to get the proper title
+        console.log('🔧 [VideoPlayer] Fetching course data...');
+        const courseResponse = await fetch(buildApiUrl(`/api/courses/${id}`), {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        
+        let courseData = null;
+        if (courseResponse.ok) {
+          const courseResult = await courseResponse.json();
+          courseData = courseResult.data?.course; // Access the course object from data.course
+          console.log('✅ [VideoPlayer] Course data received:', courseData);
+        } else {
+          console.log('⚠️ [VideoPlayer] Course fetch failed, will use fallback title');
+        }
         
         // Fetch videos with access control (includes free preview logic)
         console.log('🔧 [VideoPlayer] Fetching videos with access control...');
@@ -535,6 +631,13 @@ const VideoPlayerPage = () => {
         const videosWithAccess = videosResult.data.videos;
         const userHasPurchased = videosResult.data.userHasPurchased;
         
+        console.log('🔧 [VideoPlayer] Video access details:', {
+          totalVideos: videosWithAccess.length,
+          userHasPurchased,
+          videosWithUrls: videosWithAccess.filter((v: any) => v.videoUrl).length,
+          videosWithAccess: videosWithAccess.filter((v: any) => v.hasAccess).length
+        });
+        
         // Fetch course progress data
         console.log('🔧 [VideoPlayer] Fetching course progress...');
         const progressResponse = await fetch(buildApiUrl(`/api/progress/course/${id}`), {
@@ -551,9 +654,10 @@ const VideoPlayerPage = () => {
           console.log('⚠️ [VideoPlayer] Progress fetch failed, continuing without progress data');
         }
         
-        // Get course title from the first video or use a default
-        const courseTitle = videosWithAccess.length > 0 ? 
-          videosWithAccess[0].courseTitle || 'Course' : 'Course';
+        // Get course title from the course data or fallback to video data
+        const courseTitle = courseData?.title || 
+          (videosWithAccess.length > 0 ? videosWithAccess[0].courseTitle : null) || 
+          'Course';
         
         // Create a progress map for quick lookup
         const progressMap = new Map();
@@ -565,9 +669,28 @@ const VideoPlayerPage = () => {
         
         // Transform videos to match expected format with access control
         const transformedVideos = videosWithAccess.map((video: any) => {
+          // Debug: Log access details for each video
+          console.log(`🔧 [VideoPlayer] Processing video "${video.title}":`, {
+            videoId: video._id,
+            hasAccess: video.hasAccess,
+            isFreePreview: video.isFreePreview,
+            lockReason: video.lockReason,
+            hasVideoUrl: !!video.videoUrl
+          });
+          
           // Try to get cached URL first
           const cachedUrl = getCachedVideoUrl(video._id);
-          const videoUrl = cachedUrl || video.videoUrl || '';
+          let videoUrl = cachedUrl || video.videoUrl || '';
+          
+          // Validate video URL for videos with access
+          if (video.hasAccess && !videoUrl) {
+            console.warn(`⚠️ [VideoPlayer] Video "${video.title}" has access but no URL!`);
+            console.log(`   - hasAccess: ${video.hasAccess}`);
+            console.log(`   - isFreePreview: ${video.isFreePreview}`);
+            console.log(`   - cachedUrl: ${!!cachedUrl}`);
+            console.log(`   - video.videoUrl: ${!!video.videoUrl}`);
+            console.log(`   - video.videoUrl: ${!!video.videoUrl}`);
+          }
           
           // Cache the URL if it's new
           if (video.videoUrl && !cachedUrl) {
@@ -589,6 +712,7 @@ const VideoPlayerPage = () => {
             duration: video.duration ? `${Math.floor(video.duration / 60)}:${(video.duration % 60).toString().padStart(2, '0')}` : '00:00',
             videoUrl: videoUrl,
             completed: progress.isCompleted,
+            hasAccess: video.hasAccess, // Add the hasAccess property
             locked: !video.hasAccess, // Use the access control data
             progress: progress,
             isFreePreview: video.isFreePreview,
@@ -607,24 +731,38 @@ const VideoPlayerPage = () => {
           lastWatchedPosition: 0
         };
 
-        setCourseData({
+        const finalCourseData = {
           title: courseTitle,
           videos: transformedVideos,
           overallProgress,
           userHasPurchased
+        };
+        
+        console.log('🔍 [VideoPlayer] Final courseData object:', {
+          title: finalCourseData.title,
+          totalVideos: finalCourseData.videos.length,
+          userHasPurchased: finalCourseData.userHasPurchased
         });
+        
+        setCourseData(finalCourseData);
         
         // Set current video if not already set
         if (!currentVideoId && transformedVideos.length > 0) {
           console.log('🔧 [VideoPlayer] Setting current video to first video:', transformedVideos[0].id);
           setCurrentVideoId(transformedVideos[0].id);
+        } else if (currentVideoId) {
+          console.log('🔧 [VideoPlayer] Current video ID already set:', currentVideoId);
+        } else {
+          console.log('⚠️ [VideoPlayer] No videos available to set as current video');
         }
         
         console.log('✅ [VideoPlayer] Course data setup completed');
+        clearTimeout(loadingTimeout);
         
       } catch (error) {
         console.error('❌ [VideoPlayer] Error fetching course data:', error);
         setError(error instanceof Error ? error.message : 'Failed to load course data');
+        clearTimeout(loadingTimeout);
       } finally {
         setLoading(false);
       }
@@ -673,8 +811,44 @@ const VideoPlayerPage = () => {
   }, [videoId]);
 
   const currentVideo = courseData?.videos.find(v => v.id === currentVideoId);
+  
+  // Debug: Log current video details - only when video changes
+  useEffect(() => {
+    if (currentVideo) {
+      console.log('🔧 [VideoPlayer] Current video access details:', {
+        id: currentVideo.id,
+        title: currentVideo.title,
+        hasAccess: currentVideo.hasAccess,
+        locked: currentVideo.locked,
+        isFreePreview: currentVideo.isFreePreview,
+        hasVideoUrl: !!currentVideo.videoUrl,
+        videoUrlLength: currentVideo.videoUrl?.length || 0
+      });
+      
+      // INITIAL URL REFRESH: Check if URL is expired when course data is first loaded
+      if (currentVideo.videoUrl && isPresignedUrlExpired(currentVideo.videoUrl)) {
+        console.log('🔧 [VideoPlayer] Initial video URL is expired, refreshing immediately...');
+        refreshVideoUrl(currentVideo.id).then(freshUrl => {
+          if (freshUrl) {
+            console.log('✅ [VideoPlayer] Successfully refreshed initial URL');
+            setCourseData(prev => {
+              if (!prev) return null;
+              return {
+                ...prev,
+                videos: prev.videos.map(video => 
+                  video.id === currentVideo.id 
+                    ? { ...video, videoUrl: freshUrl }
+                    : video
+                )
+              };
+            });
+          }
+        });
+      }
+    }
+  }, [currentVideoId]); // Only depend on currentVideoId to prevent excessive logging
 
-  // Debug logging for video URL issues
+  // Debug logging for video URL issues - only when video changes
   useEffect(() => {
     if (currentVideo) {
       console.log('🔧 [VideoPlayer] Current video details:', {
@@ -683,8 +857,77 @@ const VideoPlayerPage = () => {
         videoUrl: currentVideo.videoUrl,
         hasVideoUrl: !!currentVideo.videoUrl,
         videoUrlLength: currentVideo.videoUrl?.length || 0,
-        videoUrlTrimmed: currentVideo.videoUrl?.trim() || ''
+        videoUrlTrimmed: currentVideo.videoUrl?.trim() || '',
+        isUrlValid: currentVideo.videoUrl && 
+                   currentVideo.videoUrl.trim() !== '' && 
+                   currentVideo.videoUrl !== window.location.href &&
+                   currentVideo.videoUrl !== 'undefined' &&
+                   currentVideo.videoUrl.startsWith('http'),
+        isExpired: currentVideo.videoUrl ? isPresignedUrlExpired(currentVideo.videoUrl) : true
       });
+      
+      // PROACTIVE URL REFRESH: Check if URL is expired and refresh before video player tries to load it
+      if (currentVideo.videoUrl && isPresignedUrlExpired(currentVideo.videoUrl)) {
+        console.log('🔧 [VideoPlayer] Current video has expired presigned URL, proactively refreshing...');
+        refreshVideoUrl(currentVideo.id).then(freshUrl => {
+          if (freshUrl) {
+            console.log('✅ [VideoPlayer] Successfully refreshed expired URL proactively');
+            setCourseData(prev => {
+              if (!prev) return null;
+              return {
+                ...prev,
+                videos: prev.videos.map(video => 
+                  video.id === currentVideo.id 
+                    ? { ...video, videoUrl: freshUrl }
+                    : video
+                )
+              };
+            });
+          }
+        });
+        return; // Skip the accessibility check since we're refreshing the URL
+      }
+      
+      // Check if video URL is valid and accessible
+      if (currentVideo.videoUrl && currentVideo.videoUrl.startsWith('http')) {
+        console.log('🔧 [VideoPlayer] Testing video URL accessibility...');
+        fetch(currentVideo.videoUrl, { method: 'HEAD' })
+          .then(response => {
+            if (response.ok) {
+              console.log('✅ [VideoPlayer] Video URL is accessible:', response.status);
+            } else {
+              console.log('⚠️ [VideoPlayer] Video URL returned error status:', response.status);
+              if (response.status === 403) {
+                console.log('❌ [VideoPlayer] Video URL returned 403 Forbidden - marking as error');
+                setVideoError('Video access denied (403 Forbidden). Please try refreshing the page.');
+              }
+            }
+          })
+          .catch(error => {
+            console.error('❌ [VideoPlayer] Video URL is not accessible:', error);
+            // If URL is not accessible, try to refresh it
+            if (currentVideo.id) {
+              console.log('🔄 [VideoPlayer] Attempting to refresh inaccessible video URL...');
+              refreshVideoUrl(currentVideo.id).then(freshUrl => {
+                if (freshUrl) {
+                  console.log('✅ [VideoPlayer] Successfully refreshed video URL');
+                  // Update the course data with the fresh URL
+                  setCourseData(prev => {
+                    if (!prev) return null;
+                    return {
+                      ...prev,
+                      videos: prev.videos.map(video => 
+                        video.id === currentVideo.id 
+                          ? { ...video, videoUrl: freshUrl }
+                          : video
+                      )
+                    };
+                  });
+                }
+              });
+            }
+          });
+      }
     } else {
       console.log('🔧 [VideoPlayer] No current video found:', {
         courseDataExists: !!courseData,
@@ -693,19 +936,9 @@ const VideoPlayerPage = () => {
         availableVideoIds: courseData?.videos?.map(v => v.id) || []
       });
     }
-  }, [currentVideo, courseData, currentVideoId]);
+  }, [currentVideoId]); // Only depend on currentVideoId to prevent excessive logging
 
-  // Format time
-  const formatTime = (time: number) => {
-    const hours = Math.floor(time / 3600);
-    const minutes = Math.floor((time % 3600) / 60);
-    const seconds = Math.floor(time % 60);
-    
-    if (hours > 0) {
-      return `${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-    }
-    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
-  };
+
 
   // Note: Time updates are now handled by EnhancedVideoPlayer's onTimeUpdate callback
 
@@ -729,10 +962,30 @@ const VideoPlayerPage = () => {
     // Check if video was paused for more than 5 seconds
     if (pauseStartTime && Date.now() - pauseStartTime > 5000) {
       console.log('▶️ [VideoPlayer] Video resumed after pause > 5 seconds');
-      setLastPauseTime(pauseStartTime);
     }
     
     setPauseStartTime(null);
+    
+    // PROACTIVE URL REFRESH: Ensure we have a fresh URL before playback starts
+    if (currentVideo && currentVideo.videoUrl && isPresignedUrlExpired(currentVideo.videoUrl)) {
+      console.log('🔧 [VideoPlayer] Video URL expired before playback, refreshing...');
+      refreshVideoUrl(currentVideo.id).then(freshUrl => {
+        if (freshUrl) {
+          console.log('✅ [VideoPlayer] Successfully refreshed URL before playback');
+          setCourseData(prev => {
+            if (!prev) return null;
+            return {
+              ...prev,
+              videos: prev.videos.map(video => 
+                video.id === currentVideo.id 
+                  ? { ...video, videoUrl: freshUrl }
+                  : video
+              )
+            };
+          });
+        }
+      });
+    }
   };
 
   // Check for long pauses and save progress
@@ -903,10 +1156,8 @@ const VideoPlayerPage = () => {
     
     setCurrentVideoId(newVideoId);
     setIsPlaying(false);
-    setPlayerReady(false);
     setCurrentTime(0);
     setDuration(0);
-    setCurrentVideoPosition(0);
     setCurrentVideoPercentage(0);
     // Reset error states when changing videos
     setVideoError(null);
@@ -931,9 +1182,6 @@ const VideoPlayerPage = () => {
       }
       
       // Clear timeouts
-      if (controlsTimeout) {
-        clearTimeout(controlsTimeout);
-      }
       if (progressUpdateTimeout.current) {
         clearTimeout(progressUpdateTimeout.current);
       }
@@ -953,7 +1201,7 @@ const VideoPlayerPage = () => {
         }));
       }
     };
-  }, [controlsTimeout, id, currentVideoId, isPlaying]);
+  }, [id, currentVideoId, isPlaying]);
 
   // Reset error states when course or video changes
   useEffect(() => {
@@ -963,7 +1211,7 @@ const VideoPlayerPage = () => {
     setError(null);
   }, [id, videoId]);
 
-  // Debug current video state
+  // Debug current video state - only log when currentVideoId changes
   useEffect(() => {
     console.log('🔧 [VideoPlayer] Current video state updated:');
     console.log('   - currentVideoId:', currentVideoId);
@@ -990,7 +1238,7 @@ const VideoPlayerPage = () => {
         console.log('✅ [VideoPlayer] Found matching video:', matchingVideo);
       }
     }
-  }, [currentVideoId, currentVideo, courseData, isPlaying, playbackRate]);
+  }, [currentVideoId]); // Only depend on currentVideoId to prevent excessive logging
 
   // Update current video progress display
   useEffect(() => {
@@ -1003,37 +1251,23 @@ const VideoPlayerPage = () => {
         actualProgress = Math.round((currentVideo.progress.watchedDuration / currentVideo.progress.totalDuration) * 100);
       }
       
-      setCurrentVideoProgress(actualProgress);
       console.log('🔧 [VideoPlayer] Updated video progress display:', actualProgress);
       console.log('🔧 [VideoPlayer] Raw progress data:', currentVideo.progress);
     } else {
-      setCurrentVideoProgress(0);
+      // No progress data available
     }
-  }, [currentVideo]);
+  }, [currentVideoId]); // Only depend on currentVideoId to prevent excessive updates
 
   // Video preloading and caching
   useEffect(() => {
     if (!courseData?.videos) return;
 
-    // Preload next video for better performance
+    // Log next video for debugging (removed problematic preload)
     const currentIndex = courseData.videos.findIndex(v => v.id === currentVideoId);
     if (currentIndex >= 0 && currentIndex < courseData.videos.length - 1) {
       const nextVideo = courseData.videos[currentIndex + 1];
       if (nextVideo.videoUrl) {
-        const preloadLink = document.createElement('link');
-        preloadLink.rel = 'preload';
-        preloadLink.as = 'video';
-        preloadLink.href = nextVideo.videoUrl;
-        document.head.appendChild(preloadLink);
-        
-        console.log('🔧 [VideoPlayer] Preloading next video:', nextVideo.title);
-        
-        // Cleanup preload link after a delay
-        setTimeout(() => {
-          if (document.head.contains(preloadLink)) {
-            document.head.removeChild(preloadLink);
-          }
-        }, 30000); // Remove after 30 seconds
+        console.log('🔧 [VideoPlayer] Next video ready:', nextVideo.title);
       }
     }
   }, [courseData, currentVideoId]);
@@ -1182,40 +1416,56 @@ const VideoPlayerPage = () => {
       <div className="flex-1 flex">
         {/* Video Player Section */}
         <div className="flex-1 flex flex-col">
-          {/* Enhanced Video Player */}
-          <div className="flex-1">
-            {currentVideo?.videoUrl && 
-             currentVideo.videoUrl.trim() !== '' && 
-             currentVideo.videoUrl !== window.location.href &&
-             currentVideo.videoUrl !== 'undefined' ? (
-              <EnhancedVideoPlayer
-                  src={currentVideo.videoUrl}
-                title={courseData?.title}
-                playing={isPlaying}
-                playbackRate={playbackRate}
-                  onPlay={handleVideoPlay}
-                  onPause={handleVideoPause}
-                onEnded={handleVideoEnd}
-                  onError={handleVideoError}
-                onReady={() => setPlayerReady(true)}
-                onTimeUpdate={(currentTime, duration) => {
-                  setCurrentTime(currentTime);
-                  setDuration(duration);
-                  setCurrentVideoPosition(currentTime);
-                      if (duration > 0) {
-                    const actualPercentage = Math.round((currentTime / duration) * 100);
-                    setCurrentVideoPercentage(actualPercentage);
-                  }
+                {/* Enhanced Video Player */}
+      <div className="flex-1" style={{ minHeight: '400px', height: '60vh' }}>
+        {currentVideo?.videoUrl && 
+         currentVideo.videoUrl.trim() !== '' && 
+         currentVideo.videoUrl !== window.location.href &&
+         currentVideo.videoUrl !== 'undefined' &&
+         currentVideo.hasAccess &&
+         !videoError &&
+         !isRefreshingUrl &&
+         !isPresignedUrlExpired(currentVideo.videoUrl) ? (
+          <>
+            <EnhancedVideoPlayer
+                src={currentVideo.videoUrl || ''}
+              title={courseData?.title}
+              playing={isPlaying}
+              playbackRate={playbackRate}
+                onPlay={() => {
+                  console.log('🔧 [VideoPlayerPage] Video play event triggered');
+                  handleVideoPlay();
                 }}
-                onProgress={(watchedDuration, totalDuration) => {
-                  updateProgress(watchedDuration, totalDuration, watchedDuration);
+                onPause={() => {
+                  console.log('🔧 [VideoPlayerPage] Video pause event triggered');
+                  handleVideoPause();
                 }}
-                onPlaybackRateChange={setPlaybackRate}
-                onControlsToggle={setControlsVisible}
-                className="w-full h-full"
-                initialTime={currentVideo?.progress?.lastPosition || 0}
-                />
-            ) : (
+              onEnded={handleVideoEnd}
+                onError={(error) => {
+                  console.error('🔧 [VideoPlayerPage] Video error:', error);
+                  handleVideoError(error);
+                }}
+              onReady={() => {
+                console.log('🔧 [VideoPlayerPage] Video player ready');
+              }}
+              onTimeUpdate={(currentTime, duration) => {
+                setCurrentTime(currentTime);
+                setDuration(duration);
+                    if (duration > 0) {
+                  const actualPercentage = Math.round((currentTime / duration) * 100);
+                  setCurrentVideoPercentage(actualPercentage);
+                }
+              }}
+              onProgress={(watchedDuration, totalDuration) => {
+                updateProgress(watchedDuration, totalDuration, watchedDuration);
+              }}
+              onPlaybackRateChange={setPlaybackRate}
+              onControlsToggle={setControlsVisible}
+              className="w-full h-full"
+              initialTime={currentVideo?.progress?.lastPosition || 0}
+              />
+          </>
+        ) : (
               <div className="w-full h-full flex items-center justify-center text-gray-400">
                 {videoError ? (
                   // Error state
@@ -1262,8 +1512,14 @@ const VideoPlayerPage = () => {
                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-500 mx-auto mb-4"></div>
                     <p>Loading video...</p>
                     <p className="text-sm mt-2">
-                      {!currentVideo?.videoUrl || currentVideo.videoUrl === 'undefined' 
-                        ? 'Refreshing video link...' 
+                      {isRefreshingUrl
+                        ? 'Refreshing video link...'
+                        : !currentVideo?.videoUrl || currentVideo.videoUrl === 'undefined' 
+                        ? 'Loading video link...' 
+                        : !currentVideo?.hasAccess
+                        ? `Checking video access... (hasAccess: ${currentVideo?.hasAccess}, locked: ${currentVideo?.locked})`
+                        : isPresignedUrlExpired(currentVideo.videoUrl)
+                        ? 'Video link expired, refreshing...'
                         : 'This may take a few moments'
                       }
                     </p>

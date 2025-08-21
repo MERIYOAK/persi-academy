@@ -30,7 +30,6 @@ const CheckoutSuccessPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [downloadingReceipt, setDownloadingReceipt] = useState(false);
-  const [downloadingResources, setDownloadingResources] = useState(false);
   const [actualAmountPaid, setActualAmountPaid] = useState<number | null>(null);
   const [isWrongCourse, setIsWrongCourse] = useState(false);
   const [correctCourseTitle, setCorrectCourseTitle] = useState<string | null>(null);
@@ -372,50 +371,7 @@ const CheckoutSuccessPage = () => {
     }
   };
 
-  const handleDownloadResources = async () => {
-    if (!effectiveCourseId) return;
 
-    setDownloadingResources(true);
-    try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        throw new Error('Authentication required');
-      }
-
-      const response = await fetch(buildApiUrl(`/api/payment/download-resources/${effectiveCourseId}`), {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to download resources');
-      }
-
-      // Get content type to determine file extension
-      const contentType = response.headers.get('content-type');
-      const isPdf = contentType && contentType.includes('application/pdf');
-      const fileExtension = isPdf ? 'pdf' : 'html';
-
-      // Create blob and download
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `resources-${courseInfo?.title?.replace(/\s+/g, '-') || 'course'}.${fileExtension}`;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-
-      console.log(`✅ Resources downloaded successfully as ${fileExtension.toUpperCase()}`);
-    } catch (error) {
-      console.error('❌ Error downloading resources:', error);
-      alert('Failed to download resources. Please try again.');
-    } finally {
-      setDownloadingResources(false);
-    }
-  };
 
   if (loading) {
     return (
@@ -577,10 +533,10 @@ const CheckoutSuccessPage = () => {
             <div className="bg-gray-50 rounded-lg p-6 mb-8">
               <div className="flex items-center mb-4">
                 <Download className="h-5 w-5 text-gray-600 mr-2" />
-                <h4 className="text-lg font-semibold text-gray-800">Receipt & Resources</h4>
+                <h4 className="text-lg font-semibold text-gray-800">Download Receipt</h4>
               </div>
               <p className="text-gray-600 mb-4">
-                Download your payment receipt and course resources for offline access.
+                Download your payment receipt for your records.
               </p>
               <div className="flex flex-col sm:flex-row gap-3">
                 <button 
@@ -594,18 +550,6 @@ const CheckoutSuccessPage = () => {
                     <Download className="h-4 w-4" />
                   )}
                   <span>{downloadingReceipt ? 'Downloading...' : 'Download Receipt (PDF)'}</span>
-                </button>
-                <button 
-                  onClick={handleDownloadResources}
-                  disabled={downloadingResources}
-                  className="flex items-center justify-center space-x-2 border border-gray-300 hover:border-gray-400 text-gray-700 px-4 py-2 rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {downloadingResources ? (
-                    <Loader className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Download className="h-4 w-4" />
-                  )}
-                  <span>{downloadingResources ? 'Downloading...' : 'Download Resources (PDF)'}</span>
                 </button>
               </div>
             </div>

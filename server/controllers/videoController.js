@@ -305,7 +305,7 @@ exports.deleteVideo = async (req, res) => {
 exports.getVideoById = async (req, res) => {
   try {
     const { videoId } = req.params;
-    const userId = req.user?.id || req.user?._id;
+    const userId = req.user?.userId || req.user?.id || req.user?._id;
     const isAdmin = req.user?.role === 'admin';
     
     console.log('[getVideoById] videoId:', videoId, 'type:', typeof videoId);
@@ -364,11 +364,12 @@ exports.getVideoById = async (req, res) => {
     try {
       if (video.s3Key) {
         console.log('🔗 [SERVER] Generating presigned URL for S3 key:', video.s3Key);
+        console.log('🔗 [SERVER] Video MIME type:', video.mimeType || 'not set');
         
         // Use shorter expiration time for enhanced security
         const expirationTime = 1800; // 30 minutes instead of 1 hour
         
-        videoUrl = await getSignedUrlForFile(video.s3Key, expirationTime);
+        videoUrl = await getSignedUrlForFile(video.s3Key, expirationTime, video.mimeType);
         
         if (videoUrl) {
           console.log('✅ [SERVER] Secure presigned URL generated successfully');
@@ -421,9 +422,19 @@ exports.getVideoById = async (req, res) => {
 exports.getVideosByCourseVersion = async (req, res) => {
   try {
     const { courseId, version } = req.params;
-    const userId = req.user?.id || req.user?._id;
+    const userId = req.user?.userId || req.user?.id || req.user?._id;
     const isAdmin = req.user?.role === 'admin';
     const isPublicUser = !req.user; // No user means public access
+    
+    console.log(`🔧 [getVideosByCourseVersion] Request details:`, {
+      courseId,
+      version,
+      userId: userId || 'public',
+      isAdmin,
+      isPublicUser,
+      hasUser: !!req.user,
+      userRole: req.user?.role
+    });
     
     console.log(`🔧 [getVideosByCourseVersion] courseId: ${courseId}, version: ${version}, userId: ${userId || 'public'}, isAdmin: ${isAdmin}`);
     
@@ -470,7 +481,9 @@ exports.getVideosByCourseVersion = async (req, res) => {
           let presignedUrl = null;
           if (isFreePreview) {
             try {
-              presignedUrl = await getSignedUrlForFile(video.s3Key);
+              console.log(`🔧 [getVideosByCourseVersion] Generating presigned URL for free preview "${video.title}"`);
+              console.log(`🔧 [getVideosByCourseVersion] Video MIME type: ${video.mimeType || 'not set'}`);
+              presignedUrl = await getSignedUrlForFile(video.s3Key, 3600, video.mimeType);
             } catch (error) {
               console.error(`❌ Error getting presigned URL for video ${video._id}:`, error);
             }
@@ -481,7 +494,8 @@ exports.getVideosByCourseVersion = async (req, res) => {
             hasAccess: isFreePreview,
             isLocked: !isFreePreview,
             lockReason: isFreePreview ? null : 'purchase_required',
-            presignedUrl: presignedUrl
+            videoUrl: presignedUrl, // Use videoUrl for consistency
+            presignedUrl: presignedUrl // Keep both for backward compatibility
           };
         }));
       } else {
@@ -504,6 +518,62 @@ exports.getVideosByCourseVersion = async (req, res) => {
         parseInt(version)
       );
       userHasPurchased = isAdmin || await require('../utils/purchaseUtils').userHasPurchased(userId, courseId);
+      
+      console.log(`🔧 [getVideosByCourseVersion] Purchase verification:`, {
+        userId,
+        courseId,
+        isAdmin,
+        userHasPurchased,
+        userRole: req.user?.role,
+        userEmail: req.user?.email
+      });
+      
+      // Debug: Check user's purchased courses directly
+      if (userId) {
+        const user = await require('../models/User').findById(userId);
+        console.log(`🔧 [getVideosByCourseVersion] User purchased courses:`, {
+          userId,
+          purchasedCourses: user?.purchasedCourses || [],
+          purchasedCoursesLength: user?.purchasedCourses?.length || 0,
+          courseIdInPurchased: user?.purchasedCourses?.includes(courseId) || false
+        });
+      }
+      
+      // Generate presigned URLs for videos that the user has access to
+      videosWithAccess = await Promise.all(videosWithAccess.map(async (video) => {
+        const videoObj = { ...video };
+        
+        console.log(`🔧 [getVideosByCourseVersion] Processing video "${video.title}":`, {
+          videoId: video._id,
+          hasAccess: video.hasAccess,
+          isLocked: video.isLocked,
+          lockReason: video.lockReason,
+          hasS3Key: !!video.s3Key,
+          isFreePreview: video.isFreePreview
+        });
+        
+        // Generate presigned URL if user has access to this video
+        if (video.hasAccess && video.s3Key) {
+          try {
+            console.log(`🔧 [getVideosByCourseVersion] Generating presigned URL for "${video.title}"`);
+            console.log(`🔧 [getVideosByCourseVersion] Video MIME type: ${video.mimeType || 'not set'}`);
+            const presignedUrl = await getSignedUrlForFile(video.s3Key, 3600, video.mimeType);
+            videoObj.videoUrl = presignedUrl;
+            videoObj.presignedUrl = presignedUrl; // Keep both for backward compatibility
+            console.log(`✅ [getVideosByCourseVersion] Successfully generated URL for "${video.title}"`);
+          } catch (error) {
+            console.error(`❌ Error getting presigned URL for video ${video._id}:`, error);
+            videoObj.videoUrl = null;
+            videoObj.presignedUrl = null;
+          }
+        } else {
+          console.log(`⚠️ [getVideosByCourseVersion] Skipping URL generation for "${video.title}": hasAccess=${video.hasAccess}, hasS3Key=${!!video.s3Key}`);
+          videoObj.videoUrl = null;
+          videoObj.presignedUrl = null;
+        }
+        
+        return videoObj;
+      }));
     }
     
     res.json({
@@ -531,7 +601,7 @@ exports.getVideosByCourseVersion = async (req, res) => {
 exports.streamVideo = async (req, res) => {
   try {
     const { videoId } = req.params;
-    const userId = req.user?.id || req.user?._id;
+    const userId = req.user?.userId || req.user?.id || req.user?._id;
     const isAdmin = req.user?.role === 'admin';
     
     console.log('[streamVideo] videoId:', videoId, 'user:', userId);
@@ -551,7 +621,7 @@ exports.streamVideo = async (req, res) => {
       });
     }
     
-    const url = await getSignedUrlForFile(video.s3Key);
+    const url = await getSignedUrlForFile(video.s3Key, 3600, video.mimeType);
     res.json({ url });
   } catch (err) {
     console.error('[streamVideo] error:', err?.message || err);

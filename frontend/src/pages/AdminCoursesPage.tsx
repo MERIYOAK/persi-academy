@@ -15,7 +15,6 @@ interface Course {
   status: 'active' | 'inactive' | 'archived';
   thumbnailURL?: string;
   totalEnrollments: number;
-  averageRating: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -296,7 +295,7 @@ const AdminCoursesPage: React.FC = () => {
                     <option value="price-desc">Price High-Low</option>
                     <option value="price-asc">Price Low-High</option>
                     <option value="totalEnrollments-desc">Most Enrolled</option>
-                    <option value="averageRating-desc">Highest Rated</option>
+
                   </select>
                   <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
                     <svg className="h-4 w-4 xxs:h-5 xxs:w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -408,7 +407,6 @@ const AdminCoursesPage: React.FC = () => {
                 <div className="flex items-center justify-between text-xs xxs:text-sm text-gray-500 mb-3 xxs:mb-4">
                   <span>${course.price || 0}</span>
                   <span>{course.totalEnrollments || 0} enrolled</span>
-                  <span>{(course.averageRating || 0).toFixed(1)} ⭐</span>
                 </div>
 
                 {/* Actions */}

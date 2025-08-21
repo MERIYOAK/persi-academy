@@ -131,7 +131,9 @@ progressSchema.statics.getOverallCourseProgress = async function(userId, courseI
       totalProgress: 0,
       lastWatchedVideo: null,
       lastWatchedPosition: 0,
-      courseProgressPercentage: 0
+      courseProgressPercentage: 0,
+      totalWatchedDuration: 0,
+      courseTotalDuration: 0
     };
   }
   
@@ -142,6 +144,12 @@ progressSchema.statics.getOverallCourseProgress = async function(userId, courseI
   // Calculate course-level progress from video completion percentages
   const totalCompletionPercentage = progressEntries.reduce((sum, p) => sum + p.completionPercentage, 0);
   const courseProgressPercentage = Math.round(totalCompletionPercentage / actualTotalVideos);
+  
+  // Calculate total watched duration across all videos
+  const totalWatchedDuration = progressEntries.reduce((sum, p) => sum + (p.watchedDuration || 0), 0);
+  
+  // Calculate course total duration (sum of all video durations)
+  const courseTotalDuration = progressEntries.reduce((sum, p) => sum + (p.totalDuration || 0), 0);
   
   // Find last watched video
   const lastWatched = progressEntries
@@ -154,7 +162,9 @@ progressSchema.statics.getOverallCourseProgress = async function(userId, courseI
     totalProgress: courseProgressPercentage,
     lastWatchedVideo: lastWatched ? lastWatched.videoId : null,
     lastWatchedPosition: lastWatched ? lastWatched.getLastPosition() : 0,
-    courseProgressPercentage
+    courseProgressPercentage,
+    totalWatchedDuration,
+    courseTotalDuration
   };
 };
 
@@ -218,7 +228,9 @@ progressSchema.statics.getCourseProgressSummary = async function(userId, courseI
       totalVideos: totalVideos || 0,
       completedVideos: 0,
       courseProgressPercentage: 0,
-      lastWatchedAt: null
+      lastWatchedAt: null,
+      totalWatchedDuration: 0,
+      courseTotalDuration: 0
     };
   }
   
@@ -228,6 +240,12 @@ progressSchema.statics.getCourseProgressSummary = async function(userId, courseI
   const totalCompletionPercentage = progressEntries.reduce((sum, p) => sum + p.completionPercentage, 0);
   const courseProgressPercentage = Math.round(totalCompletionPercentage / actualTotalVideos);
   
+  // Calculate total watched duration across all videos
+  const totalWatchedDuration = progressEntries.reduce((sum, p) => sum + (p.watchedDuration || 0), 0);
+  
+  // Calculate course total duration (sum of all video durations)
+  const courseTotalDuration = progressEntries.reduce((sum, p) => sum + (p.totalDuration || 0), 0);
+  
   const lastWatched = progressEntries
     .filter(p => p.lastWatchedAt)
     .sort((a, b) => new Date(b.lastWatchedAt) - new Date(a.lastWatchedAt))[0];
@@ -236,7 +254,9 @@ progressSchema.statics.getCourseProgressSummary = async function(userId, courseI
     totalVideos: actualTotalVideos,
     completedVideos,
     courseProgressPercentage,
-    lastWatchedAt: lastWatched ? lastWatched.lastWatchedAt : null
+    lastWatchedAt: lastWatched ? lastWatched.lastWatchedAt : null,
+    totalWatchedDuration,
+    courseTotalDuration
   };
 };
 

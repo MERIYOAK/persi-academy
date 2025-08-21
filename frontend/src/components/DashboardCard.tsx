@@ -49,8 +49,8 @@ const DashboardCard: React.FC<DashboardCardProps> = ({
 
   console.log('🔧 Watch link:', watchLink);
 
-  // Determine if course is completed (90% or more progress)
-  const courseCompleted = isCompleted || progress >= 90;
+  // Determine if course is completed (100% progress and all lessons completed)
+  const courseCompleted = isCompleted || progress >= 100;
 
   // Check if certificate exists for this course
   useEffect(() => {

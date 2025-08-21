@@ -554,7 +554,7 @@ const AdminUploadPage = () => {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Course Tags (comma-separated)
+                    Course Tags (comma-separated, max 3)
                   </label>
                   <input
                     type="text"
@@ -562,7 +562,11 @@ const AdminUploadPage = () => {
                     onChange={(e) => setTagsInput(e.target.value)}
                     onBlur={() => {
                       const tags = tagsInput.split(',').map(tag => tag.trim()).filter(tag => tag);
-                      setCourse(prev => ({ ...prev, tags: tags }));
+                      // Limit to maximum 3 tags
+                      const limitedTags = tags.slice(0, 3);
+                      setCourse(prev => ({ ...prev, tags: limitedTags }));
+                      // Update input to reflect the limited tags
+                      setTagsInput(limitedTags.join(', '));
                     }}
                     onFocus={() => {
                       // Initialize input with current tags when focused
@@ -574,8 +578,13 @@ const AdminUploadPage = () => {
                     placeholder="e.g., beginner, advanced, javascript, react"
                   />
                   <p className="mt-1 text-sm text-gray-500">
-                    Enter tags separated by commas
+                    Enter tags separated by commas (maximum 3 tags)
                   </p>
+                  {tagsInput.split(',').map(tag => tag.trim()).filter(tag => tag).length > 3 && (
+                    <p className="mt-1 text-sm text-orange-600">
+                      ⚠️ Only the first 3 tags will be saved
+                    </p>
+                  )}
                   {course.tags.length > 0 && (
                     <div className="mt-2 flex flex-wrap gap-2">
                       {course.tags.map((tag, index) => (

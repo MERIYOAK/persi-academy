@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { Clock, Users, Star, Play, CheckCircle, Award, Download, BookOpen, ShoppingCart, Loader, ArrowLeft, Eye, Lock } from 'lucide-react';
+import { Clock, Users, Play, CheckCircle, Award, Download, BookOpen, ShoppingCart, Loader, ArrowLeft, Eye, Lock } from 'lucide-react';
 import VideoPlaylist from '../components/VideoPlaylist';
 import VideoProgressBar from '../components/VideoProgressBar';
 import EnhancedVideoPlayer from '../components/EnhancedVideoPlayer';
@@ -46,6 +46,7 @@ interface Course {
   price: number;
   category?: string;
   level?: string;
+  tags?: string[];
   videos?: Array<{
     _id: string;
     title: string;
@@ -56,8 +57,8 @@ interface Course {
   instructor?: string;
   totalDuration?: number;
   totalVideos?: number;
-  rating?: number;
-  students?: number;
+
+  totalEnrollments?: number;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -189,34 +190,45 @@ const CourseDetailPage = () => {
         
         console.log(`📊 Found ${videosWithAccess.length} videos with access control`);
         console.log(`📊 User has purchased: ${userHasPurchased}`);
+        
+        // Debug: Log each video's access details
+        videosWithAccess.forEach((video: any, index: number) => {
+          console.log(`📊 Video ${index + 1} "${video.title}":`, {
+            hasAccess: video.hasAccess,
+            isFreePreview: video.isFreePreview,
+            isLocked: video.isLocked,
+            lockReason: video.lockReason,
+            hasVideoUrl: !!video.videoUrl,
+            videoUrlLength: video.videoUrl?.length || 0
+          });
+        });
 
         // Check if there are any free preview videos
         const hasFreePreviews = videosWithAccess.some((video: any) => video.isFreePreview);
         
         // Transform videos to match VideoPlayerPage format
         const transformedVideos = videosWithAccess.map((video: any) => {
-          // For public users without authentication, only show free preview videos as accessible
+          // Use the backend's access control decision
           let isAccessible = video.hasAccess;
           let isLocked = !video.hasAccess;
           
-          if (!userToken) {
-            // Public user logic
-            if (hasFreePreviews) {
-              // If course has free previews, show all videos but lock non-free ones
-              isAccessible = video.isFreePreview;
-              isLocked = !video.isFreePreview;
-            } else {
-              // If no free previews, show all videos as locked
-              isAccessible = false;
-              isLocked = true;
-            }
-          }
+          // The backend already handles access control correctly:
+          // - For purchased users: hasAccess = true for all videos
+          // - For non-purchased users: hasAccess = true only for free preview videos
+          // - For public users: hasAccess = true only for free preview videos
+          
+                     console.log(`🔧 [CourseDetailPage] Video "${video.title}":`, {
+             hasAccess: video.hasAccess,
+             isFreePreview: video.isFreePreview,
+             isLocked: isLocked,
+             hasVideoUrl: !!video.videoUrl
+           });
 
           return {
             id: video._id,
             title: video.title,
             duration: video.duration ? `${Math.floor(video.duration / 60)}:${(video.duration % 60).toString().padStart(2, '0')}` : '00:00',
-            videoUrl: isAccessible ? (video.presignedUrl || '') : '',
+            videoUrl: isAccessible ? (video.videoUrl || '') : '',
             completed: video.progress?.isCompleted || false,
             locked: isLocked,
             progress: video.progress || {
@@ -279,24 +291,53 @@ const CourseDetailPage = () => {
   // Fetch purchase status
   useEffect(() => {
     const fetchPurchaseStatus = async () => {
-      if (!userToken || !id) return;
+      if (!userToken || !id) {
+        console.log('⚠️ Skipping purchase status check - missing token or course ID');
+        console.log(`   - userToken: ${userToken ? 'Present' : 'Missing'}`);
+        console.log(`   - courseId: ${id || 'Missing'}`);
+        return;
+      }
 
       try {
         console.log('🔧 Checking purchase status...');
+        console.log(`   - Course ID: ${id}`);
+        console.log(`   - Token present: ${!!userToken}`);
         
-        const response = await fetch(`${buildApiUrl}/api/payment/check-purchase/${id}`, {
+        const response = await fetch(buildApiUrl(`/api/payment/check-purchase/${id}`), {
           headers: {
-            'Authorization': `Bearer ${userToken}`
+            'Authorization': `Bearer ${userToken}`,
+            'Content-Type': 'application/json'
           }
         });
+
+        console.log(`📊 Response status: ${response.status}`);
+        console.log(`📊 Response headers:`, Object.fromEntries(response.headers.entries()));
 
         if (response.ok) {
           const data = await response.json();
           setPurchaseStatus(data);
           console.log('✅ Purchase status:', data);
+        } else {
+          // Handle non-200 responses
+          const errorText = await response.text();
+          console.error('❌ Purchase status check failed:', {
+            status: response.status,
+            statusText: response.statusText,
+            body: errorText
+          });
+          
+          // If it's an HTML response, log it for debugging
+          if (errorText.includes('<!doctype') || errorText.includes('<html')) {
+            console.error('❌ Server returned HTML instead of JSON. This might be a routing or server error.');
+          }
         }
       } catch (error) {
         console.error('❌ Error checking purchase status:', error);
+        console.error('❌ Error details:', {
+          name: error.name,
+          message: error.message,
+          stack: error.stack
+        });
       }
     };
 
@@ -355,7 +396,7 @@ const CourseDetailPage = () => {
       setIsPurchasing(true);
       console.log('🔧 Initiating purchase...');
 
-      const response = await fetch(`${buildApiUrl}/api/payment/create-checkout-session`, {
+      const response = await fetch(buildApiUrl('/api/payment/create-checkout-session'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -753,6 +794,20 @@ const CourseDetailPage = () => {
                 </span>
               </div>
               
+              {/* Course Tags */}
+              {course.tags && course.tags.length > 0 && (
+                <div className="flex flex-wrap gap-2 mb-6">
+                  {course.tags.map((tag, index) => (
+                    <span
+                      key={index}
+                      className="bg-white/10 backdrop-blur-sm text-white px-3 py-1 rounded-full text-xs font-medium border border-white/20 hover:bg-white/20 transition-all duration-200 cursor-pointer"
+                    >
+                      #{tag}
+                    </span>
+                  ))}
+                </div>
+              )}
+              
               {/* Course Title */}
               <h1 className="text-5xl md:text-6xl font-bold mb-8 leading-tight bg-gradient-to-r from-white to-red-100 bg-clip-text text-transparent">
                 {course.title}
@@ -765,13 +820,7 @@ const CourseDetailPage = () => {
               
               {/* Course Stats */}
               <div className="flex flex-wrap items-center gap-8 mb-10">
-                <div className="flex items-center space-x-3 bg-white/10 backdrop-blur-sm px-4 py-3 rounded-lg border border-white/20">
-                  <Star className="h-6 w-6 text-yellow-400 fill-current" />
-                  <div>
-                    <span className="font-bold text-lg">{course.rating || 4.8}</span>
-                    <span className="text-red-200 text-sm ml-2">({course.students || 0} students)</span>
-                  </div>
-                </div>
+
                 <div className="flex items-center space-x-3 bg-white/10 backdrop-blur-sm px-4 py-3 rounded-lg border border-white/20">
                   <Clock className="h-6 w-6 text-red-200" />
                   <div>
@@ -1000,15 +1049,9 @@ const CourseDetailPage = () => {
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-gray-600">Students Enrolled</span>
-                  <span className="font-semibold">{course.students || 0}</span>
+                  <span className="font-semibold">{course.totalEnrollments || 0}</span>
                 </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-600">Course Rating</span>
-                  <div className="flex items-center space-x-1">
-                    <Star className="h-4 w-4 text-yellow-400 fill-current" />
-                    <span className="font-semibold">{course.rating || 4.8}</span>
-                  </div>
-                </div>
+
                 <div className="flex items-center justify-between">
                   <span className="text-gray-600">Last Updated</span>
                   <span className="font-semibold">

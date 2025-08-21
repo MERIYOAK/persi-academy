@@ -162,23 +162,29 @@ const archiveCourseContent = async (courseName, version = 1) => {
 /**
  * Get signed URL for file access with enhanced security
  */
-const getSignedUrlForFile = async (s3Key, expiresIn = 3600) => {
+const getSignedUrlForFile = async (s3Key, expiresIn = 3600, mimeType = null) => {
   if (!s3Client) {
     return null;
   }
 
   try {
     console.log('🔐 [S3] Generating secure signed URL for:', s3Key);
+    console.log('🔐 [S3] MIME type:', mimeType || 'not specified');
     
-    const command = new GetObjectCommand({
+    const commandParams = {
       Bucket: process.env.AWS_S3_BUCKET,
       Key: s3Key,
       // Add security headers to prevent downloads
       ResponseContentDisposition: 'inline', // Prevents download dialog
-      ResponseContentType: 'video/mp4', // Force video content type
       // Add referer restriction (optional - uncomment if you want to restrict by domain)
       // ResponseCacheControl: 'no-cache, no-store, must-revalidate',
-    });
+    };
+    
+    // Don't force ResponseContentType - let S3 serve the file with its original content type
+    // This prevents issues where the forced content type doesn't match the actual file format
+    console.log('🔐 [S3] Not forcing content type - letting S3 serve with original MIME type');
+    
+    const command = new GetObjectCommand(commandParams);
     
     const signedUrl = await getSignedUrl(s3Client, command, { 
       expiresIn,
