@@ -153,8 +153,10 @@ exports.webhook = async (req, res) => {
   console.log('🔧 Webhook received...');
   console.log(`   - Headers:`, req.headers);
   console.log(`   - Body length:`, req.rawBody ? req.rawBody.length : 'No raw body');
+  console.log(`   - Body type:`, typeof req.rawBody);
   console.log(`   - NODE_ENV:`, process.env.NODE_ENV);
   console.log(`   - STRIPE_SECRET_KEY:`, process.env.STRIPE_SECRET_KEY ? 'Set' : 'Not set');
+  console.log(`   - STRIPE_WEBHOOK_SECRET:`, process.env.STRIPE_WEBHOOK_SECRET ? 'Set' : 'Not set');
 
   let event;
 
@@ -166,7 +168,18 @@ exports.webhook = async (req, res) => {
     console.log(`✅ Event data:`, JSON.stringify(event, null, 2));
   } catch (error) {
     console.error('❌ Webhook signature verification failed:', error);
-    return res.status(400).send(`Webhook Error: ${error.message}`);
+    console.error('   - Error details:', error.message);
+    console.error('   - Raw body available:', !!req.rawBody);
+    console.error('   - Stripe signature header:', req.headers['stripe-signature'] ? 'Present' : 'Missing');
+    return res.status(400).json({ 
+      error: 'Webhook signature verification failed',
+      message: error.message,
+      details: {
+        hasRawBody: !!req.rawBody,
+        hasSignature: !!req.headers['stripe-signature'],
+        environment: process.env.NODE_ENV
+      }
+    });
   }
 
   // Handle the event
