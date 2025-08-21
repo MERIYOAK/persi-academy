@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import CourseCard from '../components/CourseCard';
 import { Search, Filter, X } from 'lucide-react';
+import { buildApiUrl } from '../config/environment';
 
 interface ApiCourse {
   _id: string;

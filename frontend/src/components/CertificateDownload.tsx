@@ -163,7 +163,7 @@ const CertificateDownload: React.FC<CertificateDownloadProps> = ({
     
     // Extract filename from pdfUrl and create preview URL
     const filename = certificate.pdfUrl.split('/').pop();
-    const previewUrl = buildApiUrl(`/certificates/${filename}`;
+    const previewUrl = buildApiUrl(`/certificates/${filename}`);
     
     const link = document.createElement('a');
     link.href = previewUrl;
