@@ -156,9 +156,12 @@ exports.createCheckoutSession = async (req, res) => {
  */
 exports.webhook = async (req, res) => {
   console.log('🔧 Webhook received...');
+  console.log(`   - Path: ${req.path}`);
+  console.log(`   - Method: ${req.method}`);
   console.log(`   - Headers:`, req.headers);
   console.log(`   - Body length:`, req.body ? req.body.length : 'No body');
   console.log(`   - Body type:`, typeof req.body);
+  console.log(`   - Is Buffer:`, Buffer.isBuffer(req.body));
   console.log(`   - Body preview:`, req.body ? req.body.toString().substring(0, 100) + '...' : 'No body');
   console.log(`   - NODE_ENV:`, process.env.NODE_ENV);
   console.log(`   - STRIPE_SECRET_KEY:`, process.env.STRIPE_SECRET_KEY ? 'Set' : 'Not set');

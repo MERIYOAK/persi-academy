@@ -68,8 +68,25 @@ app.use(cors({
   },
   credentials: true
 }));
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+// Parse JSON bodies for all routes except webhook
+app.use((req, res, next) => {
+  if (req.path === '/api/payment/webhook') {
+    // Skip JSON parsing for webhook route - let the route handle raw body
+    next();
+  } else {
+    express.json({ limit: '50mb' })(req, res, next);
+  }
+});
+
+// Parse URL-encoded bodies for all routes except webhook
+app.use((req, res, next) => {
+  if (req.path === '/api/payment/webhook') {
+    // Skip URL parsing for webhook route
+    next();
+  } else {
+    express.urlencoded({ extended: true, limit: '50mb' })(req, res, next);
+  }
+});
 
 // Serve static files from public directory
 app.use(express.static(path.join(__dirname, 'public')));
