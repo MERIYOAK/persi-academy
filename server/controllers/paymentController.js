@@ -166,6 +166,9 @@ exports.webhook = async (req, res) => {
   console.log(`   - NODE_ENV:`, process.env.NODE_ENV);
   console.log(`   - STRIPE_SECRET_KEY:`, process.env.STRIPE_SECRET_KEY ? 'Set' : 'Not set');
   console.log(`   - STRIPE_WEBHOOK_SECRET:`, process.env.STRIPE_WEBHOOK_SECRET ? 'Set' : 'Not set');
+  console.log(`   - User-Agent:`, req.headers['user-agent']);
+  console.log(`   - CF-Connecting-IP:`, req.headers['cf-connecting-ip']);
+  console.log(`   - X-Forwarded-For:`, req.headers['x-forwarded-for']);
 
   let event;
 
@@ -200,6 +203,10 @@ exports.webhook = async (req, res) => {
       
       case 'payment_intent.succeeded':
         console.log('✅ Payment succeeded:', event.data.object.id);
+        break;
+      
+      case 'payment_intent.created':
+        console.log('✅ Payment intent created:', event.data.object.id);
         break;
       
       case 'payment_intent.payment_failed':
