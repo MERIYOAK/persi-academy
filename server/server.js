@@ -101,13 +101,7 @@ app.get('/api/test', (req, res) => {
 
 // Handle favicon.ico requests (browsers often request this)
 app.get('/favicon.ico', (req, res) => {
-  // Try to serve favicon.svg instead, or return 204 if not found
-  const faviconPath = path.join(__dirname, 'public', 'favicon.svg');
-  if (require('fs').existsSync(faviconPath)) {
-    res.sendFile(faviconPath);
-  } else {
-    res.status(204).end(); // No content
-  }
+  res.status(204).end(); // No content - let static middleware handle favicon.svg
 });
 
 // Note: Certificate PDFs are now served directly from S3 with public-read ACL
@@ -334,10 +328,7 @@ app.get('/certificate-preview/:certificateId', async (req, res) => {
   }
 });
 
-// Serve favicon
-app.get('/favicon.svg', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'favicon.svg'));
-});
+// Favicon is handled by static middleware - no custom route needed
 
 // Database connection
 const MONGODB_URI = process.env.MONGODB_URI;
