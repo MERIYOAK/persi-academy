@@ -3,6 +3,7 @@ import { Outlet } from 'react-router-dom';
 import UserNavbar from '../components/nav/UserNavbar';
 import Footer from '../components/Footer';
 import ScrollToTop from '../components/ScrollToTop';
+import FloatingContactButton from '../components/FloatingContactButton';
 
 const UserLayout: React.FC = () => {
   return (
@@ -13,6 +14,7 @@ const UserLayout: React.FC = () => {
       </main>
       <Footer className="relative z-30" />
       <ScrollToTop />
+      <FloatingContactButton />
     </div>
   );
 };
