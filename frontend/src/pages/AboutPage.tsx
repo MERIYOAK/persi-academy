@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Award, Users, Target, Heart, Sparkles, TrendingUp, Shield, Zap } from 'lucide-react';
 
 const AboutPage = () => {
+  const { t } = useTranslation();
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
@@ -9,32 +11,32 @@ const AboutPage = () => {
   }, []);
 
   const stats = [
-    { icon: Users, value: '10,000+', label: 'Students Enrolled' },
-    { icon: Award, value: '50+', label: 'Expert Instructors' },
-    { icon: Target, value: '95%', label: 'Success Rate' },
-    { icon: Heart, value: '4.9/5', label: 'Student Rating' }
+    { icon: Users, value: '100+', label: t('about.stats.students_enrolled') },
+    { icon: Award, value: '10+', label: t('about.stats.expert_instructors') },
+    { icon: Target, value: '95%', label: t('about.stats.success_rate') },
+    { icon: Heart, value: '4.9/5', label: t('about.stats.student_rating') }
   ];
 
   const teamMembers = [
     {
-      name: 'Sarah Johnson',
-      role: 'Founder & CEO',
+      name: t('about.team_members.sarah.name'),
+      role: t('about.team_members.sarah.role'),
       image: 'https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&dpr=2',
-      description: 'Former YouTube Partner with 2M+ subscribers, helping creators build sustainable businesses.',
+      description: t('about.team_members.sarah.description'),
       social: { linkedin: '#', twitter: '#', youtube: '#' }
     },
     {
-      name: 'Mike Chen',
-      role: 'Head of Education',
+      name: t('about.team_members.mike.name'),
+      role: t('about.team_members.mike.role'),
       image: 'https://images.pexels.com/photos/614810/pexels-photo-614810.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&dpr=2',
-      description: 'Digital marketing expert with 10+ years experience in content strategy and audience growth.',
+      description: t('about.team_members.mike.description'),
       social: { linkedin: '#', twitter: '#', youtube: '#' }
     },
     {
-      name: 'Emily Rodriguez',
-      role: 'Community Manager',
+      name: t('about.team_members.emily.name'),
+      role: t('about.team_members.emily.role'),
       image: 'https://images.pexels.com/photos/415829/pexels-photo-415829.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&dpr=2',
-      description: 'Building and nurturing our community of creators, ensuring everyone gets the support they need.',
+      description: t('about.team_members.emily.description'),
       social: { linkedin: '#', twitter: '#', youtube: '#' }
     }
   ];
@@ -42,23 +44,23 @@ const AboutPage = () => {
   const values = [
     {
       icon: Sparkles,
-      title: 'Innovation',
-      description: 'Constantly evolving with the latest YouTube trends and algorithm changes.'
+      title: t('about.values.innovation.title'),
+      description: t('about.values.innovation.description')
     },
     {
       icon: Shield,
-      title: 'Trust',
-      description: 'Building lasting relationships through transparency and proven results.'
+      title: t('about.values.trust.title'),
+      description: t('about.values.trust.description')
     },
     {
       icon: TrendingUp,
-      title: 'Growth',
-      description: 'Committed to helping creators achieve sustainable, long-term success.'
+      title: t('about.values.growth.title'),
+      description: t('about.values.growth.description')
     },
     {
       icon: Zap,
-      title: 'Excellence',
-      description: 'Delivering the highest quality education and support to our community.'
+      title: t('about.values.excellence.title'),
+      description: t('about.values.excellence.description')
     }
   ];
 
@@ -87,11 +89,10 @@ const AboutPage = () => {
         <div className="relative max-w-7xl mx-auto px-2 xxs:px-3 sm:px-4 lg:px-8">
           <div className={`text-center transition-all duration-1000 ease-out ${isVisible ? 'opacity-100 transform translate-y-0' : 'opacity-0 transform translate-y-8'}`}>
             <h1 className="text-3xl xxs:text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-4 xxs:mb-6 bg-gradient-to-r from-white via-red-100 to-white bg-clip-text text-transparent animate-pulse">
-              About YT Academy
+              {t('about.page_title')}
             </h1>
             <p className="text-sm xxs:text-base sm:text-xl md:text-2xl text-red-100 max-w-4xl mx-auto leading-relaxed">
-              We're on a mission to help creators turn their passion into profit through 
-              comprehensive YouTube education and proven monetization strategies.
+              {t('about.mission_text')}
             </p>
           </div>
         </div>
@@ -127,38 +128,33 @@ const AboutPage = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 xxs:gap-8 sm:gap-12 items-center">
             <div className={`transition-all duration-700 ease-out delay-200 ${isVisible ? 'opacity-100 transform translate-x-0' : 'opacity-0 transform -translate-x-8'}`}>
               <h2 className="text-2xl xxs:text-3xl sm:text-4xl md:text-5xl font-bold mb-4 xxs:mb-6 bg-gradient-to-r from-red-600 to-red-800 bg-clip-text text-transparent hover:scale-105 transition-transform duration-300">
-                Our Mission
+                {t('about.mission_title')}
               </h2>
               <p className="text-sm xxs:text-base sm:text-lg text-gray-600 mb-4 xxs:mb-6 leading-relaxed">
-                At YT Academy, we believe that everyone has the potential to create 
-                meaningful content and build a sustainable income from their passion. 
-                Our comprehensive courses are designed to take you from beginner to 
-                successful content creator.
+                {t('about.mission_text')}
               </p>
               <p className="text-sm xxs:text-base sm:text-lg text-gray-600 leading-relaxed">
-                We combine cutting-edge strategies with real-world experience to 
-                provide you with the tools, knowledge, and support you need to 
-                thrive in the competitive world of YouTube content creation.
+                {t('about.vision_text')}
               </p>
             </div>
             <div className={`bg-gradient-to-br from-red-500 via-red-600 to-red-700 rounded-2xl xxs:rounded-3xl p-4 xxs:p-6 sm:p-8 text-white shadow-2xl hover:shadow-red-500/25 transition-all duration-300 transform hover:-translate-y-2 ${isVisible ? 'opacity-100 transform translate-x-0' : 'opacity-0 transform translate-x-8'}`}>
-              <h3 className="text-xl xxs:text-2xl sm:text-3xl font-bold mb-4 xxs:mb-6">Why Choose Us?</h3>
+              <h3 className="text-xl xxs:text-2xl sm:text-3xl font-bold mb-4 xxs:mb-6">{t('about.why_choose_title')}</h3>
                               <ul className="space-y-3 xxs:space-y-4">
                   <li className="flex items-start group">
                     <span className="w-2 h-2 xxs:w-3 xxs:h-3 bg-white rounded-full mr-2 xxs:mr-4 mt-1 xxs:mt-0 flex-shrink-0 group-hover:scale-125 transition-transform duration-300"></span>
-                    <span className="text-sm xxs:text-base group-hover:translate-x-1 transition-transform duration-300">Expert-led courses from successful YouTubers</span>
+                    <span className="text-sm xxs:text-base group-hover:translate-x-1 transition-transform duration-300">{t('about.why_choose_points.expert_courses')}</span>
                   </li>
                   <li className="flex items-start group">
                     <span className="w-2 h-2 xxs:w-3 xxs:h-3 bg-white rounded-full mr-2 xxs:mr-4 mt-1 xxs:mt-0 flex-shrink-0 group-hover:scale-125 transition-transform duration-300"></span>
-                    <span className="text-sm xxs:text-base group-hover:translate-x-1 transition-transform duration-300">Up-to-date strategies for the latest algorithm changes</span>
+                    <span className="text-sm xxs:text-base group-hover:translate-x-1 transition-transform duration-300">{t('about.why_choose_points.up_to_date')}</span>
                   </li>
                   <li className="flex items-start group">
                     <span className="w-2 h-2 xxs:w-3 xxs:h-3 bg-white rounded-full mr-2 xxs:mr-4 mt-1 xxs:mt-0 flex-shrink-0 group-hover:scale-125 transition-transform duration-300"></span>
-                    <span className="text-sm xxs:text-base group-hover:translate-x-1 transition-transform duration-300">Practical, actionable content you can implement immediately</span>
+                    <span className="text-sm xxs:text-base group-hover:translate-x-1 transition-transform duration-300">{t('about.why_choose_points.practical_content')}</span>
                   </li>
                   <li className="flex items-start group">
                     <span className="w-2 h-2 xxs:w-3 xxs:h-3 bg-white rounded-full mr-2 xxs:mr-4 mt-1 xxs:mt-0 flex-shrink-0 group-hover:scale-125 transition-transform duration-300"></span>
-                    <span className="text-sm xxs:text-base group-hover:translate-x-1 transition-transform duration-300">Ongoing support and community access</span>
+                    <span className="text-sm xxs:text-base group-hover:translate-x-1 transition-transform duration-300">{t('about.why_choose_points.ongoing_support')}</span>
                   </li>
                 </ul>
             </div>
@@ -171,10 +167,10 @@ const AboutPage = () => {
         <div className="max-w-7xl mx-auto px-2 xxs:px-3 sm:px-4 lg:px-8">
           <div className="text-center mb-8 xxs:mb-12 sm:mb-16">
             <h2 className="text-2xl xxs:text-3xl sm:text-4xl md:text-5xl font-bold text-gray-800 mb-4 xxs:mb-6 bg-gradient-to-r from-red-600 to-red-800 bg-clip-text text-transparent">
-              Our Values
+              {t('about.values_title')}
             </h2>
             <p className="text-sm xxs:text-base sm:text-xl text-gray-600 max-w-3xl mx-auto">
-              The principles that guide everything we do at YT Academy
+              {t('about.values_subtitle', { brandName: t('brand.name') })}
             </p>
           </div>
           
@@ -205,11 +201,10 @@ const AboutPage = () => {
         <div className="max-w-7xl mx-auto px-2 xxs:px-3 sm:px-4 lg:px-8">
           <div className="text-center mb-8 xxs:mb-12 sm:mb-16">
             <h2 className="text-2xl xxs:text-3xl sm:text-4xl md:text-5xl font-bold text-gray-800 mb-4 xxs:mb-6 bg-gradient-to-r from-red-600 to-red-800 bg-clip-text text-transparent">
-              Meet Our Team
+              {t('about.team_title')}
             </h2>
             <p className="text-sm xxs:text-base sm:text-xl text-gray-600 max-w-3xl mx-auto">
-              Our team consists of successful content creators, marketing experts, 
-              and industry professionals who are passionate about helping others succeed.
+              {t('about.team_description')}
             </p>
           </div>
           

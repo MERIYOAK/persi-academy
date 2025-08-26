@@ -1,0 +1,328 @@
+{
+  "navbar": {
+    "home": "መበገሲ",
+    "courses": "ኮርሳት",
+    "about": "ብዛዕባና",
+    "contact": "መራኸቢታትና",
+    "login": "መአተዊ",
+    "register": "ተመዝገብ",
+    "profile": "ብዛዕባኻ",
+    "dashboard": "ዳሽቦርድ",
+    "logout": "መውጽኢ"
+  },
+  "footer": {
+    "contact_info": "ብዛዕባ መራኸቢና",
+    "address": "ኣድራሻ: ኦንታርዮ፣ ካናዳ",
+    "phone": "ስልኪ: +001 1 123456",
+    "email": "ኢመይል: info@example.com",
+    "social_links": "ማሕበራዊ መራኸቢታትና",
+    "follow_us": "ተኸተሉና",
+    "copyright": "መሰል ወናኒ ዝተሓለወ እዩ።",
+    "privacy_policy": "ፖሊሲ ብሕቲ",
+    "terms_of_service": "ውዕል ኣገልግሎት",
+    "refund_policy": "ፖሊሲ ምምላስ ሕሳብ",
+    "help_center": "ማእከል ሓገዝ",
+    "help": "ሓገዝ",
+    "verify_certificate": "ሰርቲፊኬት ኣረጋግጽ"
+  },
+  "home": {
+    "hero_title": "መርሓ ጎደናና ንምምሃር ብሉጽነት",
+    "hero_subtitle": "ብምኩራት መማህራንናን ዘመናዊ ብሉጽ ሞያ ቅሰሙ",
+    "get_started": "ጀምር",
+    "learn_more": "ዝያዳ ተምሃር",
+    "featured_courses": "ዝበለጹ ኮርሳት",
+    "view_all_courses": "ኩሉ ኮርስ ርአ",
+    "testimonials": "ምስክር",
+    "student_success": "ዕውታት ተምሃሮ",
+    "hero_variations": {
+      "variation1": {
+        "headline": "ማስተር ዲጂታላዊ ትሕዝቶ ፈጠራውነት",
+        "subtext": "ቓሕታኻ ናብ ኣታዊ ዘለዎ ስራሕ ክትቅይሮ ምስ አትደሊ ኮርሳትና ውሰድ ፣ ቪዲዮ ምምሃር፣ ፎቶግራፊ፣ ዲጂታል ሚድያ ኣብ ዝምልከት ዝተዳለወ ትምህርቲ",
+        "button1": "ሎሚ ምምሃር ጀምር",
+        "button2": "ኮርሳት ርአ",
+        "stats": "100+ ተምሃሮ • 10+ ሰዓታት ዘለዎም ኮርሳት • 4.9★ ደረጃ"
+      },
+      "variation2": {
+        "headline": "ፕሮፈሽናል ሞያ ምሳና ተማሃር",
+        "subtext": "ምስ ዝተሞክሩ ቴክኒካት ንምምሃር ካሜራ፣ ቪዲዮ ኤዲቲን፣ ፎቶ ኤዲቲን፣ ምፍጣር ዲጂታላዊ ትሕዝቶ ብብቑዓት መማህራን",
+        "button1": "ብነፃ ጀምር",
+        "button2": "ኮርሳት ርአ",
+        "stats": "ብፕሮፈሽናላት ዝተኣመነ ኮርሳት • 95% ደረጃ ዕግበት"
+      },
+      "variation3": {
+        "headline": "ካብ ጀማሪ ናብ ምኩር ፕሮፈሽናል",
+        "subtext": "ትመኩሮ የብልካን/ኪን? ጸገም የለን። ኮርሳትና ካብ ዜሮ ኣብ ዲጂታል ሚድያን ቴክኖሎጂን ዝምልከት ዕውታት ክገብረኩም አዩ።",
+        "button1": "ጉዕዞኻ ጀምር",
+        "button2": "እንታይ ከም ዝሰርሕ ርአ",
+        "stats": "10+ ምኩራት መምህራን • ብሉጽን ሓጋዝን ማሕበረ ተምሃሮ"
+      },
+      "variation4": {
+        "headline": "ተመሃር. ፍጠር. ተዓወት.",
+        "subtext": "ምስ ውሕሉል ኮርሳትና ኣብ ዲጂታላዊ ድርሰት፣ ምፍራይ ሚድያ፣ ቴክኖሎጂኣዊ ክእለትታት፣ ፕሮፈሽናል ምዕባለ — ኩሉ ኣብ ሓደ መድረኽ",
+        "button1": "ብነፃ ተሓወሱና",
+        "button2": "ትሕዝቶና ርአ",
+        "stats": "ቀጻሊ ምዕባለታት • ኮርሳትና ምስ ትገዝኡ ንሓዋሩ ወነንቱ ኢኹም"
+      }
+    },
+    "featured_courses_title": "ዝተመርጹ ኮርሳት",
+    "featured_courses_subtitle": "ኮርሳትና፣ ኣብ ዝሕጸረ አዋን ፕሮፈሽናል ክገብሩኹም ኣብ ግምት ዘአተዉ አዮም",
+    "why_choose_title": "ስለምንታይ ኣካደሚና ትመርጽ?",
+    "why_choose_subtitle": "ንሓደ ኮርስ አንምህር ጥራይ ኣይንኮናን። ኣብ ፕሮፈሽናላዊ ዕውትካ አውን ኣብ ጎድንኻ ኢና።",
+    "benefits": {
+      "targeted_learning": {
+        "title": "ዕላማ ዝገበረ ኣመሃህራ",
+        "description": "ኣብ ኣገደስቲ ክእለትታትን ስትራተጂታትን ኣትኲሩ ኣብ ሞያኻ ንክትዕወት ዝዓልመ አዩ።"
+      },
+      "expert_instructors": {
+        "title": "ምኩራት መምህራን",
+        "description": "ካብ ዕዉታት መምህራን ናይ ዓመታት ትመኩሮ ኣብ ኢንዱስትሪታቶም ዘለዎም ምምሃር።"
+      },
+      "actionable_content": {
+        "title": "ተግባራዊ ትሕዝቶ",
+        "description": "ነፍሲ ወከፍ ትምህርቲ ምስ ተግባራዊ ዕዮታት ይዳሎ፣ ስራሕካ ብቕጽበት ክትጅምር ትኽእል።"
+      },
+      "proven_strategies": {
+        "title": "ዝተሞክሩ ስትራተጂታት",
+        "description": "ብዝለዓሉ ፕሮፈሽናላት ኣብ ኩሉ ኢንዱስትሪታትን ዓውድታትን ዝተፈተነ ቴክኒካት።"
+      }
+    },
+    "success_stories_title": "ዕውታትና",
+    "success_stories_subtitle": "ካብ ኮርሳትና ዝተማህሩን ሞያኦም ክብ ዘበሉን ዝበልዎ ስምዑ",
+    "testimonials": {
+      "jessica": {
+        "name": "ጀሲካ ቶምፕሰን",
+        "role": "ደራሲት ዲጂታላዊ ትሕዝቶ",
+        "content": "ኣብ ሽድሽተ ኣዋርሕ ኮርስኩም ክእለትታተይ ካብ መሰረታዊ ናብ ፕሮፈሽናል ደረጃ የዕብይዎ።"
+      },
+      "david": {
+        "name": "ዳዊድ ፓርክ",
+        "role": "ኣፍራዪ ቪዲዮ",
+        "content": "ቪዲዮ ኤዲቲን ቴክኒካት ናይ ኮርስኩም ኣብ ቀዳማይ ኣዋርሕ ዕድል ስራሕ ክረክብ ገይሩኒ።"
+      },
+      "maria": {
+        "name": "ማሪያ ጋርሺያ",
+        "role": "ሰኣሊት",
+        "content": "መወዳአቱስ መብጸዓኡ ዘተግብር ኮርስ ረኺበ። ናይ ሰአሊ ስራሕና ብክልተ ዕጽፊ ዓብዩ።"
+      }
+    },
+    "cta_title": "ሞያኻ/ኺ ንምምሕያሽ ድሉይ ዲኻ/ኺ?",
+    "cta_subtitle": "ጉዕዞ ፕሮፈሽናላዊ ዕውትካ ጀምር",
+    "cta_button": "ብነፃ ጀምር"
+  },
+  "courses": {
+    "page_title": "ኮርሳት",
+    "page_title_all": "ኩሉ ኮርስ",
+    "page_subtitle": "ኣገደስቲ ሞያታት ሰፋሕቲ ኮርሳትና ደልብ",
+    "search_placeholder": "ኮርስ ድለ...",
+    "filter_all": "ኩሉ",
+    "filter_beginner": "ጀማሪ",
+    "filter_intermediate": "ማአከላይ",
+    "filter_advanced": "ዝለዓለ",
+    "sort_by": "ስርዓዮ ብ",
+    "sort_newest": "ዝሓደሰ",
+    "sort_popular": "ዝሃበበ",
+    "sort_rating": "ዝበለጸ ደረጃ",
+    "enroll_now": "ተመዝገብ ሕጂ",
+    "course_duration": "ንውሓት ኮርስ",
+    "students_enrolled": "ተምሃሮት ዝተመዝገቡ",
+    "filter_category": "ጉጅለ",
+    "filter_skill_level": "ደረጃ ክእለት",
+    "filter_tags": "ታግስ",
+    "filter_price_range": "መጠን ዋጋ",
+    "price_all": "ኩሉ ዋጋታት",
+    "price_free": "ነፃ ኮርሳት",
+    "price_under_50": "ካብ $50 ንታሕቲ",
+    "price_50_100": "$50 - $100",
+    "price_over_100": "ካብ $100 ንላዕሊ",
+    "filter_active": "ድሉዋት ኮርሳት",
+    "filtered_by": "ፊልተር ብ:",
+    "no_courses_available": "ገና ኮርሳት ኣይተረኽቡን። ካልአ ግዜ ተመለስ።",
+    "no_courses_match": "ዝደለኻዮም ኮርሳት ኣይተረኽቡን።"
+  },
+  "about": {
+    "page_title": "ብዛዕባና",
+    "mission_title": "ተልእኾና",
+    "mission_text": "ፕሮፈሽናላዊ ሞያታት ንምምሃርን ኣብዚ ዲጃታላዊ ግዜ ኣገደስቲ ተመኩሮ ምትሕልላፍን",
+    "vision_title": "ራኢና",
+    "vision_text": "ካብቶም ዝበለጹ ናይ ኦንላይን ቤት ትምህርትታት ኮይንና ሰፊሕ ምዕባለን ንዲጂታላዊ ዝምልከት መሪሕ ፕላትፎርም ክንኮን፣ ብቕዓት ዘለዎ ትምህርቲ ንኩሉ ሰብ ከነብጽሕ",
+    "values_title": "ክብርታትና",
+    "values_subtitle": "ኩሉ ኣብ ቤት ትምህርትና እንገብሮ ብመምርሒታና ዝተቐየደ እዩ",
+    "team_title": "ኣባላትና",
+    "contact_us": "ርኸቡና",
+    "stats": {
+      "students_enrolled": "ተምሃሮ ዝተመዝገቡ",
+      "expert_instructors": "ምኩራት መምህራን",
+      "success_rate": "ደረጃ ዓወት",
+      "student_rating": "ደረጃ ተምሃሮ"
+    },
+    "why_choose_title": "ስለምንታይ ንዓና ትመርጽ?",
+    "why_choose_points": {
+      "expert_courses": "ኣብ ግብሪ ተፈቲኖም ዝተዳለዉ ሰፋሕቲ ኮርሳት",
+      "up_to_date": "ኣዥዩ ዘመናዊ ደረጃታት ኢንዱስትሪ ዝሓለወ እመሃህራ",
+      "practical_content": "ተግባራዊ ትምህርቲታት ኣብ ግብሪ ከተውዕሎም እትኽእል",
+      "ongoing_support": "ቀጻሊ ሓገዝ ካባናን ካብ ማሕበረሰብናን"
+    },
+    "team_description": "ኣባላትና ካብ ዕዉት ስራሕን፣ ኢንዱስትሪ ንጥፈታትን፣ ከምኡ'ውን ንካልኦት ክዕውቱ ዝጽዕሩ መምህራን ዝሓዙ እዮም።",
+    "values": {
+      "innovation": {
+        "title": "መሃዝነት",
+        "description": "ምስ ሓድሽ ኢንዱስትሪኣዊ ምዕባለታት ቴክኖሎጂ ቀጻሊ ዝምዕበሉ።"
+      },
+      "trust": {
+        "title": "ምትእምማን",
+        "description": "ብግልጽነትን ዝተሞክሩ ውጽኢታትን ዘለዎም ርክባት ንምህናጽ።"
+      },
+      "growth": {
+        "title": "ምዕባለ",
+        "description": "ንተምሃሮ ቀጻሊ፣ ናብ ቀጻሊ ግዜ ዓወት ክረኽቡ ንምሓጋዝ ዝተወፈዩ።"
+      },
+      "excellence": {
+        "title": "ብሉጽነት",
+        "description": "ንማሕበረሰብና ዝለዓለ ሞያ ምምሃርን ሓገዝ ምሃብን።"
+      }
+    },
+    "team_members": {
+      "sarah": {
+        "name": "ሳራ ጆንሰን",
+        "role": "መስራቲ ቤት ትምህርቲ",
+        "description": "ምኩር ፕሮፈሽናል ምስ 10+ ዓመት ተመኩሮ፣ ተምሃሮ ዕውት ስራሕ ክሃንጹ እብ ምሕጋዝ ዝርከብ።"
+      },
+      "mike": {
+        "name": "ማይክ ቸን",
+        "role": "ርእሰ መምህራን",
+        "description": "ዲጂታላዊ ምምሃር ተምኩሮ ምስ 10+ ዓመት ኣብ ምዕባለ ስርዓትን ክእለት ስልጠናን።"
+      },
+      "emily": {
+        "name": "ኤሚሊ ሮድሪጋዝ",
+        "role": "ሓለቓ ማሕበረሰብ",
+        "description": "ማሕበረሰብ ተምሃሮ ምህናጽን ምምሕድርን፣ ኩሉ ዘድልዮም ሓገዝ ክረክቡ ከም ዘለዎም ዘረጋገጽ።"
+      }
+    }
+  },
+  "contact": {
+    "page_title": "ኣድራሻ",
+    "get_in_touch": "ርኸቡና",
+    "contact_form": "ፎርም ኣድራሻ",
+    "name": "ስም",
+    "email": "ኢመይል",
+    "subject": "ኣርእስቲ",
+    "message": "መልእኽቲ",
+    "send_message": "መልእኽቲ ስደድ",
+    "contact_info": "ሓበሬታ ኣድራሻና",
+    "address": "ኣድራሻ",
+    "phone": "ስልኪ",
+    "email_label": "ኢመይል",
+    "working_hours": "ሰዓታት ስራሕ",
+    "monday_friday": "ሰኑይ - ዓርቢ",
+    "saturday": "ቐዳም",
+    "sunday": "ሰንበት",
+    "hours": "ሰዓታት",
+    "why_choose_title": "ስለምንታይ ኣካደሚና ትመርጽ?",
+    "contact_description": "ኣብ ናይ ምምሃር ጉዕዞኻ ንምሓጋዝ ድሉዋት ኢና። ካብ ኣብ ታሕቲ ዘለዉ መራኸቢታት ኣድራሻና ርኸብ።",
+    "form_placeholders": {
+      "name": "ስምካ",
+      "email": "ኢመይልካ",
+      "subject": "መልእኽቲኻ ብዛዕባ እንታይ እዩ?",
+      "message": "እንታይ ከም ንዝሕግዘካ ንገልጽልና..."
+    },
+    "contact_details": {
+      "email": {
+        "title": "ኢመይል"
+      },
+      "phone": {
+        "title": "ስልኪ",
+        "details": {
+          "1": "ሰኑይ-ዓርቢ: 9AM-6PM EST"
+        }
+      },
+      "office": {
+        "title": "ቤት ጽሕፈት"
+      },
+      "business_hours": {
+        "title": "ሰዓታት ስራሕ",
+        "details": {
+          "0": "ሰኑይ - ዓርቢ: 9AM - 6PM EST",
+          "1": "ሰንበት: 10AM - 4PM EST",
+          "2": "ሰንበት: ዕጹው"
+        }
+      }
+    },
+    "faq": {
+      "title": "ብብዝሒ ዝሕተቱ ሕቶታት",
+      "questions": {
+        "get_started": {
+          "question": "ኮርስ ብከመይ እየ ዝጀምር?",
+          "answer": "መጀመርያ ብነጻ ተመዝገብ ብቐሊሉ ኣብ ዝኾነ ኮርስ ክትጅምር እንተኾንካ፣ ኩሉ ሓጋዚ ንጥብታት ብቕጽበት ክትረክብ ኢኻ።"
+        },
+        "refunds": {
+          "question": "ክፍሊት ምምላስ ይከኣል ድዩ?",
+          "answer": "እወ! ኣብ ኩሉ ኮርሶሳት 5 መዓልቲ ዋጋ መመለሲ ውሕስነት ንህብ።"
+        },
+        "mobile": {
+          "question": "ኣብ ሞባይለይ ክመሃር እኽእል ድየ?",
+          "answer": "ብርግጽ! ኩሉ ኮርሳትና ንሞባይል ታብሌትታትን ኣብ ግምት የእትዩ ዝተዳለወ እዩ።"
+        }
+      }
+    },
+    "stats": {
+      "support": "ሓገዝ",
+      "guarantee": "ውሕስነት",
+      "support_24_7": "24/7",
+      "guarantee_30_day": "5-መዓልቲ"
+    },
+    "success_message": "ስለ መልእኽትካ ነመስግነካ! ብቕልጡፍ ክንመለስ ኢና።"
+  },
+  "common": {
+    "loading": "ይጽዓን ኣሎ...",
+    "error": "ጌጋ ኣጋጢሙ",
+    "success": "ዕውት",
+    "cancel": "ዕጾ",
+    "save": "ኣቐምጥ",
+    "edit": "ምምሕያሽ",
+    "delete": "ደምስስ",
+    "back": "ተመለስ",
+    "next": "ቀጽል",
+    "previous": "ቀዳማይ",
+    "close": "ዕጾ",
+    "search": "ድለ",
+    "filter": "ፊልተር",
+    "sort": "ስራዕ",
+    "view": "ርአ",
+    "download": "ኣውርድ",
+    "upload": "ልኣኽ",
+    "submit": "ስደድ",
+    "reset": "ምለስ",
+    "confirm": "ኣረጋግጽ",
+    "yes": "እወ",
+    "no": "ኣይኮነን",
+    "ok": "እወ",
+    "required": "ግዴታ እዩ",
+    "optional": "ግዴታ ኣይኮነን"
+  },
+  "course_card": {
+    "processing": "ይስራሕ ኣሎ...",
+    "buy_now": "ሕጂ ግዛእ",
+    "view_details": "ዝርዝር ርአ",
+    "image_error": "ጌጋ ስእሊ",
+    "loading": "ይጽዓን ኣሎ...",
+    "more_tags": "ተወሳኺ ታግ",
+    "lessons": "ክላሳት",
+    "by_instructor": "ብ ቤት-ትምህርትና"
+  },
+  "brand": {
+    "name": "ፕሮፈሽናላዊ ኣካደሚ"
+  },
+  "language": {
+    "tigrinya": "ትግርኛ",
+    "english": "English"
+  },
+  "categories": {
+    "youtube": "ዩትዩብ ማስተር",
+    "camera": "ካሜራ",
+    "photo": "ፎቶ ኤዲቲን",
+    "video": "ቪዲዮ ኤዲቲን",
+    "computer": "መሰረታዊ ኮምፒዩተር ትምህርቲ",
+    "english": "እንግሊዝኛ",
+    "other": "ካልእ"
+  }
+}

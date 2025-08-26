@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Mail, Phone, MapPin, Clock, Send, MessageCircle, Users, Star } from 'lucide-react';
 
 const ContactPage = () => {
+  const { t } = useTranslation();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -23,7 +25,7 @@ const ContactPage = () => {
     await new Promise(resolve => setTimeout(resolve, 1000));
     
     // Simulate form submission
-    alert('Thank you for your message! We\'ll get back to you soon.');
+    alert(t('contact.success_message'));
     setFormData({ name: '', email: '', subject: '', message: '' });
     setIsSubmitting(false);
   };
@@ -38,42 +40,46 @@ const ContactPage = () => {
   const contactInfo = [
     {
       icon: Mail,
-      title: 'Email',
+      title: t('contact.contact_details.email.title'),
       details: ['support@ytacademy.com', 'info@ytacademy.com'],
       color: 'from-blue-500 to-blue-600'
     },
     {
       icon: Phone,
-      title: 'Phone',
-      details: ['+1 (555) 123-4567', 'Mon-Fri: 9AM-6PM EST'],
+      title: t('contact.contact_details.phone.title'),
+      details: ['+1 (555) 123-4567', t('contact.contact_details.phone.details.1')],
       color: 'from-green-500 to-green-600'
     },
     {
       icon: MapPin,
-      title: 'Office',
+      title: t('contact.contact_details.office.title'),
       details: ['123 Creator Street', 'New York, NY 10001'],
       color: 'from-purple-500 to-purple-600'
     },
     {
       icon: Clock,
-      title: 'Business Hours',
-      details: ['Monday - Friday: 9AM - 6PM EST', 'Saturday: 10AM - 4PM EST', 'Sunday: Closed'],
+      title: t('contact.contact_details.business_hours.title'),
+      details: [
+        t('contact.contact_details.business_hours.details.0'),
+        t('contact.contact_details.business_hours.details.1'),
+        t('contact.contact_details.business_hours.details.2')
+      ],
       color: 'from-orange-500 to-orange-600'
     }
   ];
 
   const faqs = [
     {
-      question: 'How do I get started with a course?',
-      answer: 'Simply enroll in any course and you\'ll get immediate access to all the content and resources.'
+      question: t('contact.faq.questions.get_started.question'),
+      answer: t('contact.faq.questions.get_started.answer')
     },
     {
-      question: 'Do you offer refunds?',
-      answer: 'Yes! We offer a 30-day money-back guarantee on all our courses.'
+      question: t('contact.faq.questions.refunds.question'),
+      answer: t('contact.faq.questions.refunds.answer')
     },
     {
-      question: 'Can I access courses on mobile?',
-      answer: 'Absolutely! All our courses are optimized for mobile devices and tablets.'
+      question: t('contact.faq.questions.mobile.question'),
+      answer: t('contact.faq.questions.mobile.answer')
     }
   ];
 
@@ -102,11 +108,10 @@ const ContactPage = () => {
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className={`text-center transition-all duration-1000 ease-out ${isVisible ? 'opacity-100 transform translate-y-0' : 'opacity-0 transform translate-y-8'}`}>
             <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold mb-6 bg-gradient-to-r from-white via-red-100 to-white bg-clip-text text-transparent animate-pulse">
-              Get in Touch
+              {t('contact.page_title')}
             </h1>
             <p className="text-xl md:text-2xl text-red-100 max-w-4xl mx-auto leading-relaxed">
-              Have questions about our courses? Need help with your YouTube journey? 
-              We're here to help you succeed.
+              {t('contact.get_in_touch')}
             </p>
           </div>
         </div>
@@ -119,14 +124,14 @@ const ContactPage = () => {
             {/* Contact Form */}
             <div className={`bg-white/80 backdrop-blur-sm rounded-3xl shadow-2xl p-8 border border-white/20 transition-all duration-700 ease-out h-fit ${isVisible ? 'opacity-100 transform translate-x-0' : 'opacity-0 transform -translate-x-8'}`}>
               <h2 className="text-3xl font-bold text-gray-800 mb-6 bg-gradient-to-r from-red-600 to-red-800 bg-clip-text text-transparent">
-                Send us a Message
+                {t('contact.contact_form')}
               </h2>
               
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="group">
                     <label htmlFor="name" className="block text-sm font-semibold text-gray-700 mb-2 group-hover:text-red-600 transition-colors duration-300">
-                      Name
+                      {t('contact.name')}
                     </label>
                     <input
                       type="text"
@@ -136,13 +141,13 @@ const ContactPage = () => {
                       onChange={handleChange}
                       required
                       className="w-full px-4 py-4 bg-white/50 backdrop-blur-sm border border-gray-300/50 rounded-xl focus:ring-4 focus:ring-red-500/20 focus:border-red-500 transition-all duration-300 transform focus:scale-105 shadow-lg hover:shadow-xl"
-                      placeholder="Your name"
+                      placeholder={t('contact.form_placeholders.name')}
                     />
                   </div>
                   
                   <div className="group">
                     <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-2 group-hover:text-red-600 transition-colors duration-300">
-                      Email
+                      {t('contact.email')}
                     </label>
                     <input
                       type="email"
@@ -152,14 +157,14 @@ const ContactPage = () => {
                       onChange={handleChange}
                       required
                       className="w-full px-4 py-4 bg-white/50 backdrop-blur-sm border border-gray-300/50 rounded-xl focus:ring-4 focus:ring-red-500/20 focus:border-red-500 transition-all duration-300 transform focus:scale-105 shadow-lg hover:shadow-xl"
-                      placeholder="your@email.com"
+                      placeholder={t('contact.form_placeholders.email')}
                     />
                   </div>
                 </div>
                 
                 <div className="group">
                   <label htmlFor="subject" className="block text-sm font-semibold text-gray-700 mb-2 group-hover:text-red-600 transition-colors duration-300">
-                    Subject
+                    {t('contact.subject')}
                   </label>
                   <input
                     type="text"
@@ -169,13 +174,13 @@ const ContactPage = () => {
                     onChange={handleChange}
                     required
                     className="w-full px-4 py-4 bg-white/50 backdrop-blur-sm border border-gray-300/50 rounded-xl focus:ring-4 focus:ring-red-500/20 focus:border-red-500 transition-all duration-300 transform focus:scale-105 shadow-lg hover:shadow-xl"
-                    placeholder="What's this about?"
+                    placeholder={t('contact.form_placeholders.subject')}
                   />
                 </div>
                 
                 <div className="group">
                   <label htmlFor="message" className="block text-sm font-semibold text-gray-700 mb-2 group-hover:text-red-600 transition-colors duration-300">
-                    Message
+                    {t('contact.message')}
                   </label>
                   <textarea
                     id="message"
@@ -185,7 +190,7 @@ const ContactPage = () => {
                     required
                     rows={6}
                     className="w-full px-4 py-4 bg-white/50 backdrop-blur-sm border border-gray-300/50 rounded-xl focus:ring-4 focus:ring-red-500/20 focus:border-red-500 transition-all duration-300 transform focus:scale-105 shadow-lg hover:shadow-xl resize-none"
-                    placeholder="Tell us how we can help you..."
+                    placeholder={t('contact.form_placeholders.message')}
                   />
                 </div>
                 
@@ -200,7 +205,7 @@ const ContactPage = () => {
                   
                   <span className="relative flex items-center space-x-2">
                     <Send className={`h-5 w-5 transition-transform duration-300 ${isSubmitting ? 'animate-spin' : 'group-hover:translate-x-1'}`} />
-                    <span>{isSubmitting ? 'Sending...' : 'Send Message'}</span>
+                    <span>{isSubmitting ? t('common.loading') : t('contact.send_message')}</span>
                   </span>
                 </button>
               </form>
@@ -210,11 +215,10 @@ const ContactPage = () => {
             <div className={`space-y-8 transition-all duration-700 ease-out delay-200 ${isVisible ? 'opacity-100 transform translate-x-0' : 'opacity-0 transform translate-x-8'}`}>
               <div>
                 <h2 className="text-3xl font-bold text-gray-800 mb-6 bg-gradient-to-r from-red-600 to-red-800 bg-clip-text text-transparent">
-                  Contact Information
+                  {t('contact.contact_info')}
                 </h2>
                 <p className="text-lg text-gray-600 mb-8 leading-relaxed">
-                  We're here to help you on your YouTube journey. Reach out to us 
-                  through any of the channels below.
+                  {t('contact.contact_description')}
                 </p>
               </div>
 
@@ -247,7 +251,7 @@ const ContactPage = () => {
               {/* FAQ Section */}
               <div className={`bg-white/80 backdrop-blur-sm rounded-3xl shadow-2xl p-8 border border-white/20 transition-all duration-700 ease-out delay-400 ${isVisible ? 'opacity-100 transform translate-y-0' : 'opacity-0 transform translate-y-8'}`}>
                 <h3 className="text-2xl font-bold text-gray-800 mb-6 bg-gradient-to-r from-red-600 to-red-800 bg-clip-text text-transparent">
-                  Frequently Asked Questions
+                  {t('contact.faq.title')}
                 </h3>
                 <div className="space-y-6">
                   {faqs.map((faq, index) => (
@@ -270,15 +274,15 @@ const ContactPage = () => {
               {/* Stats Section */}
               <div className={`bg-gradient-to-br from-red-500 to-red-700 rounded-3xl p-8 text-white shadow-2xl hover:shadow-red-500/25 transition-all duration-300 transform hover:-translate-y-2 ${isVisible ? 'opacity-100 transform translate-y-0' : 'opacity-0 transform translate-y-8'}`}>
                 <div className="text-center">
-                  <h3 className="text-2xl font-bold mb-4">Why Choose YT Academy?</h3>
+                  <h3 className="text-2xl font-bold mb-4">{t('contact.why_choose_title')}</h3>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="text-center">
-                      <div className="text-3xl font-bold mb-1">24/7</div>
-                      <div className="text-red-100 text-sm">Support</div>
+                      <div className="text-3xl font-bold mb-1">{t('contact.stats.support_24_7')}</div>
+                      <div className="text-red-100 text-sm">{t('contact.stats.support')}</div>
                     </div>
                     <div className="text-center">
-                      <div className="text-3xl font-bold mb-1">30-Day</div>
-                      <div className="text-red-100 text-sm">Guarantee</div>
+                      <div className="text-3xl font-bold mb-1">{t('contact.stats.guarantee_30_day')}</div>
+                      <div className="text-red-100 text-sm">{t('contact.stats.guarantee')}</div>
                   </div>
                   </div>
                 </div>

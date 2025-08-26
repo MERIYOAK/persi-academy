@@ -50,7 +50,7 @@ const courseSchema = new mongoose.Schema({
   tags: [{ type: String }],
   category: { 
     type: String, 
-    enum: ['youtube mastering', 'video editing', 'camera'],
+    enum: ['youtube', 'camera', 'photo', 'video', 'computer', 'english', 'other'],
     required: true 
   },
   level: { 

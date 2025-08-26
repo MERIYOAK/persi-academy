@@ -529,9 +529,13 @@ const AdminUploadPage = () => {
                     required
                   >
                     <option value="">Select a category</option>
-                    <option value="youtube mastering">YouTube Mastering</option>
-                    <option value="video editing">Video Editing</option>
+                    <option value="youtube">YouTube Mastery</option>
                     <option value="camera">Camera</option>
+                    <option value="photo">Photo Editing</option>
+                    <option value="video">Video Editing</option>
+                    <option value="computer">Basic Computer Learning</option>
+                    <option value="english">English</option>
+                    <option value="other">Other</option>
                   </select>
                 </div>
 

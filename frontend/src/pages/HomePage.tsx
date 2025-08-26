@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { ArrowRight, Star, Award, Zap, Target, TrendingUp } from 'lucide-react';
 import CourseCard from '../components/CourseCard';
 import { buildApiUrl } from '../config/environment';
@@ -16,107 +17,109 @@ interface ApiCourse {
 }
 
 // Hero section data with rotating variations
-const heroVariations = [
-  {
-    id: 1,
-    headline: "Master YouTube Success",
-    subtext: "Transform your passion into profit with our comprehensive video courses. Learn from creators who've built million-subscriber channels.",
-    buttons: [
-      { text: "Start Learning Today", link: "/register", primary: true },
-      { text: "Browse Courses", link: "/courses", primary: false }
-    ],
-    stats: "10,000+ Students • 50+ Hours of Content • 4.9★ Rating",
-    backgroundImage: "https://images.pexels.com/photos/3183150/pexels-photo-3183150.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080&dpr=2"
-  },
-  {
-    id: 2,
-    headline: "Turn Views Into Income",
-    subtext: "Discover proven strategies to grow, monetize, and scale your channel with step-by-step lessons from industry experts.",
-    buttons: [
-      { text: "Get Started Free", link: "/register", primary: true },
-      { text: "Explore Courses", link: "/courses", primary: false }
-    ],
-    stats: "Trusted by Creators Worldwide • 95% Satisfaction Rate",
-    backgroundImage: "https://images.pexels.com/photos/3183153/pexels-photo-3183153.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080&dpr=2"
-  },
-  {
-    id: 3,
-    headline: "From Beginner to YouTube Pro",
-    subtext: "No experience? No problem. Our structured courses take you from zero to building a thriving channel with a loyal audience.",
-    buttons: [
-      { text: "Start Your Journey", link: "/register", primary: true },
-      { text: "See How It Works", link: "/courses", primary: false }
-    ],
-    stats: "20+ Expert Instructors • Global Community of Learners",
-    backgroundImage: "https://images.pexels.com/photos/3184291/pexels-photo-3184291.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080&dpr=2"
-  },
-  {
-    id: 4,
-    headline: "Learn. Create. Grow.",
-    subtext: "Access powerful lessons on content creation, video editing, audience building, and monetization—all in one platform.",
-    buttons: [
-      { text: "Join for Free", link: "/register", primary: true },
-      { text: "Browse Library", link: "/courses", primary: false }
-    ],
-    stats: "Continuous Updates • Lifetime Access to Materials",
-    backgroundImage: "https://images.pexels.com/photos/3184296/pexels-photo-3184296.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080&dpr=2"
-  }
-];
-
-const benefits = [
-  {
-    icon: Target,
-    title: 'Targeted Learning',
-    description: 'Focus on specific YouTube strategies that drive real results for your channel.'
-  },
-  {
-    icon: Award,
-    title: 'Expert Instructors',
-    description: 'Learn from successful YouTube creators with millions of views and subscribers.'
-  },
-  {
-    icon: Zap,
-    title: 'Actionable Content',
-    description: 'Every lesson comes with practical steps you can implement immediately.'
-  },
-  {
-    icon: TrendingUp,
-    title: 'Proven Strategies',
-    description: 'Techniques tested and refined by top YouTube creators across all niches.'
-  }
-];
-
-const testimonials = [
-  {
-    name: 'Jessica Thompson',
-    role: 'Beauty YouTuber',
-    content: 'These courses transformed my channel from 500 to 50K subscribers in just 6 months!',
-    avatar: 'https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&dpr=2',
-    rating: 5
-  },
-  {
-    name: 'David Park',
-    role: 'Tech Reviewer',
-    content: 'The monetization strategies alone paid for the entire course within the first month.',
-    avatar: 'https://images.pexels.com/photos/614810/pexels-photo-614810.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&dpr=2',
-    rating: 5
-  },
-  {
-    name: 'Maria Garcia',
-    role: 'Lifestyle Creator',
-    content: 'Finally, a course that actually delivers on its promises. My engagement rates doubled!',
-    avatar: 'https://images.pexels.com/photos/415829/pexels-photo-415829.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&dpr=2',
-    rating: 5
-  }
-];
-
 const HomePage = () => {
+  const { t } = useTranslation();
   console.log('🏠 HomePage component rendering');
   
   const [recent, setRecent] = useState<ApiCourse[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [currentVariation, setCurrentVariation] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
+
+  // Hero variations with translations
+  const heroVariations = [
+    {
+      id: 1,
+      headline: t('home.hero_variations.variation1.headline'),
+      subtext: t('home.hero_variations.variation1.subtext'),
+      buttons: [
+        { text: t('home.hero_variations.variation1.button1'), link: "/register", primary: true },
+        { text: t('home.hero_variations.variation1.button2'), link: "/courses", primary: false }
+      ],
+      stats: t('home.hero_variations.variation1.stats'),
+      backgroundImage: "https://images.pexels.com/photos/3183150/pexels-photo-3183150.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080&dpr=2"
+    },
+    {
+      id: 2,
+      headline: t('home.hero_variations.variation2.headline'),
+      subtext: t('home.hero_variations.variation2.subtext'),
+      buttons: [
+        { text: t('home.hero_variations.variation2.button1'), link: "/register", primary: true },
+        { text: t('home.hero_variations.variation2.button2'), link: "/courses", primary: false }
+      ],
+      stats: t('home.hero_variations.variation2.stats'),
+      backgroundImage: "https://images.pexels.com/photos/3183153/pexels-photo-3183153.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080&dpr=2"
+    },
+    {
+      id: 3,
+      headline: t('home.hero_variations.variation3.headline'),
+      subtext: t('home.hero_variations.variation3.subtext'),
+      buttons: [
+        { text: t('home.hero_variations.variation3.button1'), link: "/register", primary: true },
+        { text: t('home.hero_variations.variation3.button2'), link: "/courses", primary: false }
+      ],
+      stats: t('home.hero_variations.variation3.stats'),
+      backgroundImage: "https://images.pexels.com/photos/3184291/pexels-photo-3184291.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080&dpr=2"
+    },
+    {
+      id: 4,
+      headline: t('home.hero_variations.variation4.headline'),
+      subtext: t('home.hero_variations.variation4.subtext'),
+      buttons: [
+        { text: t('home.hero_variations.variation4.button1'), link: "/register", primary: true },
+        { text: t('home.hero_variations.variation4.button2'), link: "/courses", primary: false }
+      ],
+      stats: t('home.hero_variations.variation4.stats'),
+      backgroundImage: "https://images.pexels.com/photos/3184296/pexels-photo-3184296.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080&dpr=2"
+    }
+  ];
+
+  const testimonials = [
+    {
+      name: t('home.testimonials.jessica.name'),
+      role: t('home.testimonials.jessica.role'),
+      content: t('home.testimonials.jessica.content'),
+      avatar: 'https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&dpr=2',
+      rating: 5
+    },
+    {
+      name: t('home.testimonials.david.name'),
+      role: t('home.testimonials.david.role'),
+      content: t('home.testimonials.david.content'),
+      avatar: 'https://images.pexels.com/photos/614810/pexels-photo-614810.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&dpr=2',
+      rating: 5
+    },
+    {
+      name: t('home.testimonials.maria.name'),
+      role: t('home.testimonials.maria.role'),
+      content: t('home.testimonials.maria.content'),
+      avatar: 'https://images.pexels.com/photos/415829/pexels-photo-415829.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&dpr=2',
+      rating: 5
+    }
+  ];
+
+  const benefits = [
+    {
+      icon: Target,
+      title: t('home.benefits.targeted_learning.title'),
+      description: t('home.benefits.targeted_learning.description')
+    },
+    {
+      icon: Award,
+      title: t('home.benefits.expert_instructors.title'),
+      description: t('home.benefits.expert_instructors.description')
+    },
+    {
+      icon: Zap,
+      title: t('home.benefits.actionable_content.title'),
+      description: t('home.benefits.actionable_content.description')
+    },
+    {
+      icon: TrendingUp,
+      title: t('home.benefits.proven_strategies.title'),
+      description: t('home.benefits.proven_strategies.description')
+    }
+  ];
 
   // Auto-rotate hero variations
   useEffect(() => {
@@ -230,10 +233,10 @@ const HomePage = () => {
             description={c.description}
             thumbnail={c.thumbnailURL || ''}
             price={c.price}
-            duration={`${c.videos?.length || 0} lessons`}
+                            duration={`${c.videos?.length || 0} ${t('course_card.lessons')}`}
             students={c.totalEnrollments || 0}
 
-            instructor={'YT Academy'}
+                            instructor={t('brand.name')}
             tags={c.tags || []}
           />
         ))}
@@ -272,15 +275,10 @@ const HomePage = () => {
             {/* Headline - Responsive text sizes */}
             <h1 className="text-2xl xs:text-3xl sm:text-4xl md:text-5xl lg:text-7xl xl:text-8xl font-bold mb-4 sm:mb-6 leading-tight animate-fade-in-up px-2">
               {currentHero.headline.split(' ').map((word, index) => (
-                <span key={index} className="inline-block">
-                  {word === 'YouTube' ? (
-                    <span className="bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent animate-pulse">
-                      {word}
-                    </span>
-                  ) : (
-                    word
-                  )}
-                  {index < currentHero.headline.split(' ').length - 1 && ' '}
+                <span key={index} className="inline-block mr-2">
+                  <span className="bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent animate-pulse">
+                    {word}
+                  </span>
                 </span>
               ))}
             </h1>
@@ -349,10 +347,10 @@ const HomePage = () => {
         <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
           <div className="text-center mb-12 sm:mb-16">
             <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-800 mb-3 sm:mb-4">
-              Featured Courses
+              {t('home.featured_courses_title')}
             </h2>
             <p className="text-sm sm:text-base md:text-xl text-gray-600 max-w-2xl mx-auto px-4">
-              Our most popular courses, designed to accelerate your YouTube journey
+              {t('home.featured_courses_subtitle')}
             </p>
           </div>
           {featuredGrid}
@@ -361,7 +359,7 @@ const HomePage = () => {
               to="/courses"
               className="inline-flex items-center space-x-2 bg-red-600 hover:bg-red-700 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-lg font-semibold text-sm sm:text-base md:text-lg transition-all duration-200 transform hover:scale-105 shadow-lg"
             >
-              <span>View All Courses</span>
+              <span>{t('home.view_all_courses')}</span>
               <ArrowRight className="h-4 w-4 sm:h-5 sm:w-5" />
             </Link>
           </div>
@@ -373,10 +371,10 @@ const HomePage = () => {
         <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
           <div className="text-center mb-12 sm:mb-16">
             <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-800 mb-3 sm:mb-4">
-              Why Choose YT Academy?
+              {t('home.why_choose_title')}
             </h2>
             <p className="text-sm sm:text-base md:text-xl text-gray-600 max-w-2xl mx-auto px-4">
-              We're not just another course platform. We're your partner in YouTube success.
+              {t('home.why_choose_subtitle')}
             </p>
           </div>
           
@@ -402,10 +400,10 @@ const HomePage = () => {
         <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
           <div className="text-center mb-12 sm:mb-16">
             <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-800 mb-3 sm:mb-4">
-              Success Stories
+              {t('home.success_stories_title')}
             </h2>
             <p className="text-sm sm:text-base md:text-xl text-gray-600 max-w-2xl mx-auto px-4">
-              Hear from creators who transformed their channels with our courses
+              {t('home.success_stories_subtitle')}
             </p>
           </div>
           
@@ -444,23 +442,23 @@ const HomePage = () => {
       <section className="py-12 sm:py-16 md:py-20 bg-gradient-to-r from-red-600 to-red-700 text-white">
         <div className="max-w-4xl mx-auto text-center px-3 sm:px-4 md:px-6 lg:px-8">
           <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-4 sm:mb-6">
-            Ready to Transform Your YouTube Channel?
+            {t('home.cta_title')}
           </h2>
           <p className="text-sm sm:text-base md:text-xl mb-6 sm:mb-8 text-red-100 px-4">
-            Join thousands of creators who've already accelerated their growth with our proven strategies.
+            {t('home.cta_subtitle')}
           </p>
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
             <Link
               to="/register"
               className="bg-white text-red-600 px-6 sm:px-8 py-3 sm:py-4 rounded-full font-bold text-sm sm:text-base md:text-lg hover:bg-red-50 transition-all duration-300 transform hover:scale-105 shadow-xl"
             >
-              Get Started Now
+              {t('home.cta_button')}
             </Link>
             <Link
               to="/courses"
               className="border-2 border-white text-white px-6 sm:px-8 py-3 sm:py-4 rounded-full font-bold text-sm sm:text-base md:text-lg hover:bg-white hover:text-red-600 transition-all duration-300 transform hover:scale-105"
             >
-              Browse Courses
+              {t('home.view_all_courses')}
             </Link>
           </div>
         </div>
