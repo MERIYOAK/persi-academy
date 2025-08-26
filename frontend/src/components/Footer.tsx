@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { BookOpen, Mail, Phone, MapPin, Youtube, Twitter, Instagram, Shield } from 'lucide-react';
 
 interface FooterProps {
@@ -7,6 +8,8 @@ interface FooterProps {
 }
 
 const Footer: React.FC<FooterProps> = ({ className = '' }) => {
+  const { t } = useTranslation();
+  
   return (
     <footer className={`bg-gray-900 text-white ${className}`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -17,10 +20,10 @@ const Footer: React.FC<FooterProps> = ({ className = '' }) => {
               <div className="bg-red-600 p-2 rounded-lg">
                 <BookOpen className="h-6 w-6 text-white" />
               </div>
-              <span className="text-2xl font-bold">YT Academy</span>
+                              <span className="text-2xl font-bold">{t('brand.name')}</span>
             </Link>
             <p className="text-gray-400 leading-relaxed">
-              Master YouTube success with our comprehensive video courses. Learn from industry experts and grow your channel exponentially.
+              {t('footer.contact_info')}
             </p>
             <div className="flex space-x-4">
               <a href="#" className="text-gray-400 hover:text-red-500 transition-colors duration-200">
@@ -37,26 +40,26 @@ const Footer: React.FC<FooterProps> = ({ className = '' }) => {
 
           {/* Quick Links */}
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-white">Quick Links</h3>
+            <h3 className="text-lg font-semibold text-white">{t('footer.social_links')}</h3>
             <ul className="space-y-2">
               <li>
                 <Link to="/courses" className="text-gray-400 hover:text-white transition-colors duration-200">
-                  All Courses
+                  {t('navbar.courses')}
                 </Link>
               </li>
               <li>
                 <Link to="/about" className="text-gray-400 hover:text-white transition-colors duration-200">
-                  About Us
+                  {t('navbar.about')}
                 </Link>
               </li>
               <li>
                 <Link to="/contact" className="text-gray-400 hover:text-white transition-colors duration-200">
-                  Contact
+                  {t('navbar.contact')}
                 </Link>
               </li>
               <li>
                 <Link to="/dashboard" className="text-gray-400 hover:text-white transition-colors duration-200">
-                  My Dashboard
+                  {t('navbar.dashboard')}
                 </Link>
               </li>
             </ul>
@@ -68,33 +71,33 @@ const Footer: React.FC<FooterProps> = ({ className = '' }) => {
                 className="inline-flex items-center space-x-2 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white px-4 py-2 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg"
               >
                 <Shield className="h-4 w-4" />
-                <span className="text-sm font-medium">Verify Certificate</span>
+                <span className="text-sm font-medium">{t('footer.verify_certificate')}</span>
               </Link>
             </div>
           </div>
 
           {/* Support */}
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-white">Support</h3>
+            <h3 className="text-lg font-semibold text-white">{t('footer.follow_us')}</h3>
             <ul className="space-y-2">
               <li>
                 <Link to="/help-center" className="text-gray-400 hover:text-white transition-colors duration-200">
-                  Help Center
+                  {t('footer.help_center')}
                 </Link>
               </li>
               <li>
                 <Link to="/terms-of-service" className="text-gray-400 hover:text-white transition-colors duration-200">
-                  Terms of Service
+                  {t('footer.terms_of_service')}
                 </Link>
               </li>
               <li>
                 <Link to="/privacy-policy" className="text-gray-400 hover:text-white transition-colors duration-200">
-                  Privacy Policy
+                  {t('footer.privacy_policy')}
                 </Link>
               </li>
               <li>
                 <Link to="/refund-policy" className="text-gray-400 hover:text-white transition-colors duration-200">
-                  Refund Policy
+                  {t('footer.refund_policy')}
                 </Link>
               </li>
             </ul>
@@ -102,19 +105,19 @@ const Footer: React.FC<FooterProps> = ({ className = '' }) => {
 
           {/* Contact Info */}
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-white">Contact Info</h3>
+            <h3 className="text-lg font-semibold text-white">{t('footer.contact_info')}</h3>
             <div className="space-y-3">
               <div className="flex items-center space-x-3">
                 <Mail className="h-5 w-5 text-red-500" />
-                <span className="text-gray-400">support@ytacademy.com</span>
+                <span className="text-gray-400">{t('footer.email')}</span>
               </div>
               <div className="flex items-center space-x-3">
                 <Phone className="h-5 w-5 text-red-500" />
-                <span className="text-gray-400">+1 (555) 123-4567</span>
+                <span className="text-gray-400">{t('footer.phone')}</span>
               </div>
               <div className="flex items-center space-x-3">
                 <MapPin className="h-5 w-5 text-red-500" />
-                <span className="text-gray-400">New York, NY 10001</span>
+                <span className="text-gray-400">{t('footer.address')}</span>
               </div>
             </div>
           </div>
@@ -123,21 +126,21 @@ const Footer: React.FC<FooterProps> = ({ className = '' }) => {
         <div className="border-t border-gray-800 mt-8 pt-8">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <p className="text-gray-400 text-sm">
-              © 2024 YT Academy. All rights reserved.
+              © {new Date().getFullYear()} {t('footer.copyright')}
             </p>
             <div className="flex space-x-6 mt-4 md:mt-0">
               <Link to="/privacy-policy" className="text-gray-400 hover:text-white text-sm transition-colors duration-200">
-                Privacy
+                {t('footer.privacy_policy')}
               </Link>
               <Link to="/terms-of-service" className="text-gray-400 hover:text-white text-sm transition-colors duration-200">
-                Terms
+                {t('footer.terms_of_service')}
               </Link>
               <Link to="/help-center" className="text-gray-400 hover:text-white text-sm transition-colors duration-200">
-                Help
+                {t('footer.help')}
               </Link>
               <Link to="/verify" className="text-gray-400 hover:text-white text-sm transition-colors duration-200 flex items-center space-x-1">
                 <Shield className="h-3 w-3" />
-                <span>Verify Certificate</span>
+                <span>{t('footer.verify_certificate')}</span>
               </Link>
             </div>
           </div>

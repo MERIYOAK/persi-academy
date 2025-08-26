@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { buildApiUrl } from '../config/environment';
+import { useTranslation } from 'react-i18next';
 
 import { Link, useNavigate } from 'react-router-dom';
 import { Clock, Users, Star, Play, ShoppingCart, CheckCircle, Loader } from 'lucide-react';
@@ -33,6 +34,7 @@ const CourseCard: React.FC<CourseCardProps> = ({
   className = '',
   onPurchaseSuccess
 }) => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [purchaseStatus, setPurchaseStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
@@ -144,7 +146,7 @@ const CourseCard: React.FC<CourseCardProps> = ({
           className="w-full bg-gray-400 text-white font-semibold py-2 xxs:py-3 px-4 xxs:px-6 rounded-lg transition-all duration-200 flex items-center justify-center space-x-1 xxs:space-x-2 cursor-not-allowed text-sm xxs:text-base"
         >
           <Loader className="h-4 w-4 xxs:h-5 xxs:w-5 animate-spin" />
-          <span>Processing...</span>
+          <span>{t('course_card.processing')}</span>
         </button>
       );
     }
@@ -163,7 +165,7 @@ const CourseCard: React.FC<CourseCardProps> = ({
          className="w-full bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-semibold py-2 xxs:py-3 px-4 xxs:px-6 rounded-lg transition-all duration-300 transform hover:scale-105 hover:-translate-y-1 shadow-2xl hover:shadow-3xl flex items-center justify-center space-x-1 xxs:space-x-2 text-sm xxs:text-base shadow-red-500/40 hover:shadow-red-600/60 border border-red-500/20"
        >
         <ShoppingCart className="h-4 w-4 xxs:h-5 xxs:w-5" />
-        <span>Buy Now - ${price}</span>
+        <span>{t('course_card.buy_now')} - ${price}</span>
       </button>
     );
   };
@@ -173,7 +175,7 @@ const CourseCard: React.FC<CourseCardProps> = ({
              <div className="relative overflow-hidden h-36 xxs:h-40 sm:h-48 shadow-inner">
         {imgLoading && (
           <div className="w-full h-full bg-gray-200 flex items-center justify-center">
-            <div className="text-gray-500 text-sm xxs:text-base">Loading...</div>
+            <div className="text-gray-500 text-sm xxs:text-base">{t('course_card.loading')}</div>
           </div>
         )}
         <img
@@ -186,7 +188,7 @@ const CourseCard: React.FC<CourseCardProps> = ({
         />
         {imgError && (
           <div className="absolute top-2 left-2 bg-red-100 text-red-800 px-2 py-1 rounded text-xs">
-            Image Error
+            {t('course_card.image_error')}
           </div>
         )}
         <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-300 flex items-center justify-center">
@@ -236,7 +238,7 @@ const CourseCard: React.FC<CourseCardProps> = ({
             ))}
                          {tags.length > 3 && (
                <span className="inline-flex items-center px-2 xxs:px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600 shadow-sm hover:shadow-md transition-all duration-300 transform hover:-translate-y-0.5">
-                 +{tags.length - 3} more
+                 +{tags.length - 3} {t('course_card.more_tags')}
                </span>
              )}
           </div>
@@ -245,9 +247,9 @@ const CourseCard: React.FC<CourseCardProps> = ({
         <div className="flex items-center justify-between mb-3 xxs:mb-4">
           <div className="flex items-center space-x-1 text-gray-500 text-xs xxs:text-sm">
             <Clock className="h-3 w-3 xxs:h-4 xxs:w-4" />
-            <span>{duration}</span>
+            <span>{students.toLocaleString()} {t('course_card.lessons')}</span>
           </div>
-          <span className="text-xs xxs:text-sm text-gray-500">by {instructor}</span>
+          <span className="text-xs xxs:text-sm text-gray-500">{t('brand.name')}</span>
         </div>
 
         <div className="space-y-2 xxs:space-y-3">
@@ -257,7 +259,7 @@ const CourseCard: React.FC<CourseCardProps> = ({
              to={`/course/${id}`}
              className="w-full bg-gradient-to-r from-gray-100 to-gray-200 hover:from-gray-200 hover:to-gray-300 text-gray-800 font-semibold py-2 xxs:py-3 px-4 xxs:px-6 rounded-lg transition-all duration-300 transform hover:scale-105 hover:-translate-y-1 shadow-lg hover:shadow-xl text-center block text-sm xxs:text-base shadow-gray-400/40 hover:shadow-gray-500/60 border border-gray-200/50"
            >
-            View Details
+            {t('course_card.view_details')}
           </Link>
         </div>
       </div>

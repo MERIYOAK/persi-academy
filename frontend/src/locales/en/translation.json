@@ -1,0 +1,328 @@
+{
+  "navbar": {
+    "home": "Home",
+    "courses": "Courses",
+    "about": "About",
+    "contact": "Contact",
+    "login": "Login",
+    "register": "Register",
+    "profile": "Profile",
+    "dashboard": "Dashboard",
+    "logout": "Logout"
+  },
+  "footer": {
+    "contact_info": "Contact Information",
+    "address": "Address: Ontario, Canada",
+    "phone": "Phone: +001 1 123456",
+    "email": "Email: info@example.com",
+    "social_links": "Social Links",
+    "follow_us": "Follow Us",
+    "copyright": "All Rights Reserved.",
+    "privacy_policy": "Privacy Policy",
+    "terms_of_service": "Terms of Service",
+    "refund_policy": "Refund Policy",
+    "help_center": "Help Center",
+    "help": "Help",
+    "verify_certificate": "Verify Certificate"
+  },
+  "home": {
+    "hero_title": "Your Gateway to Professional Excellence",
+    "hero_subtitle": "Master essential skills with expert-led courses in technology, media, and digital content creation",
+    "get_started": "Get Started",
+    "learn_more": "Learn More",
+    "featured_courses": "Featured Courses",
+    "view_all_courses": "View All Courses",
+    "testimonials": "Testimonials",
+    "student_success": "Student Success",
+    "hero_variations": {
+      "variation1": {
+        "headline": "Master Digital Content Creation",
+        "subtext": "Transform your creative passion into a profitable career with our comprehensive courses in video production, photography, and digital media.",
+        "button1": "Start Learning Today",
+        "button2": "Browse Courses",
+        "stats": "100+ Students • 10+ Hours of Content • 4.9★ Rating"
+      },
+      "variation2": {
+        "headline": "Learn Professional Skills",
+        "subtext": "Discover proven techniques to master camera work, video editing, photo editing, and digital content creation from industry experts.",
+        "button1": "Get Started Free",
+        "button2": "Explore Courses",
+        "stats": "Trusted by Professionals Worldwide • 95% Satisfaction Rate"
+      },
+      "variation3": {
+        "headline": "From Beginner to Professional",
+        "subtext": "No experience? No problem. Our structured courses take you from zero to building a successful career in digital media and technology.",
+        "button1": "Start Your Journey",
+        "button2": "See How It Works",
+        "stats": "20+ Expert Instructors • Global Community of Learners"
+      },
+      "variation4": {
+        "headline": "Learn. Create. Succeed.",
+        "subtext": "Access powerful lessons on content creation, media production, technology skills, and professional development—all in one platform.",
+        "button1": "Join for Free",
+        "button2": "Browse Library",
+        "stats": "Continuous Updates • Lifetime Access to Materials"
+      }
+    },
+    "featured_courses_title": "Featured Courses",
+    "featured_courses_subtitle": "Our most popular courses, designed to accelerate your professional development",
+    "why_choose_title": "Why Choose Our Academy?",
+    "why_choose_subtitle": "We're not just another course platform. We're your partner in professional success and skill development.",
+    "benefits": {
+      "targeted_learning": {
+        "title": "Targeted Learning",
+        "description": "Focus on specific skills and strategies that drive real results in your chosen field."
+      },
+      "expert_instructors": {
+        "title": "Expert Instructors",
+        "description": "Learn from successful professionals with years of experience in their respective industries."
+      },
+      "actionable_content": {
+        "title": "Actionable Content",
+        "description": "Every lesson comes with practical steps you can implement immediately in your work."
+      },
+      "proven_strategies": {
+        "title": "Proven Strategies",
+        "description": "Techniques tested and refined by top professionals across all industries and niches."
+      }
+    },
+    "success_stories_title": "Success Stories",
+    "success_stories_subtitle": "Hear from professionals who transformed their careers with our courses",
+    "testimonials": {
+      "jessica": {
+        "name": "Jessica Thompson",
+        "role": "Digital Content Creator",
+        "content": "These courses transformed my skills from basic to professional level in just 6 months!"
+      },
+      "david": {
+        "name": "David Park",
+        "role": "Video Producer",
+        "content": "The video editing techniques alone helped me land my dream job within the first month."
+      },
+      "maria": {
+        "name": "Maria Garcia",
+        "role": "Photographer",
+        "content": "Finally, a course that actually delivers on its promises. My photography business doubled!"
+      }
+    },
+    "cta_title": "Ready to Transform Your Skills?",
+    "cta_subtitle": "Start your journey to professional success",
+    "cta_button": "Get Started Free"
+  },
+  "courses": {
+    "page_title": "Courses",
+    "page_title_all": "All Courses",
+    "page_subtitle": "Master essential skills with our comprehensive course library",
+    "search_placeholder": "Search courses...",
+    "filter_all": "All",
+    "filter_beginner": "Beginner",
+    "filter_intermediate": "Intermediate",
+    "filter_advanced": "Advanced",
+    "sort_by": "Sort by",
+    "sort_newest": "Newest",
+    "sort_popular": "Popular",
+    "sort_rating": "Rating",
+    "enroll_now": "Enroll Now",
+    "course_duration": "Course Duration",
+    "students_enrolled": "Students Enrolled",
+    "filter_category": "Category",
+    "filter_skill_level": "Skill Level",
+    "filter_tags": "Tags",
+    "filter_price_range": "Price Range",
+    "price_all": "All Prices",
+    "price_free": "Free Courses",
+    "price_under_50": "Under $50",
+    "price_50_100": "$50 - $100",
+    "price_over_100": "Over $100",
+    "filter_active": "Active",
+    "filtered_by": "Filtered by:",
+    "no_courses_available": "No courses available yet. Check back soon.",
+    "no_courses_match": "No courses match your search criteria."
+  },
+  "about": {
+    "page_title": "About Us",
+    "mission_title": "Our Mission",
+    "mission_text": "To provide high-quality, accessible education that empowers individuals to master essential skills and advance their careers in the digital age",
+    "vision_title": "Our Vision",
+    "vision_text": "To be the leading platform for professional skill development and digital education, making quality learning accessible to everyone",
+    "values_title": "Our Values",
+    "values_subtitle": "The principles that guide everything we do at our academy",
+    "team_title": "Our Team",
+    "contact_us": "Contact Us",
+    "stats": {
+      "students_enrolled": "Students Enrolled",
+      "expert_instructors": "Expert Instructors",
+      "success_rate": "Success Rate",
+      "student_rating": "Student Rating"
+    },
+    "why_choose_title": "Why Choose Us?",
+    "why_choose_points": {
+      "expert_courses": "Expert-led courses from industry professionals",
+      "up_to_date": "Up-to-date content reflecting current industry standards",
+      "practical_content": "Practical, actionable content you can implement immediately",
+      "ongoing_support": "Ongoing support and community access"
+    },
+    "team_description": "Our team consists of successful professionals, industry experts, and passionate educators who are dedicated to helping others succeed in their chosen fields.",
+    "values": {
+      "innovation": {
+        "title": "Innovation",
+        "description": "Constantly evolving with the latest industry trends and technological advancements."
+      },
+      "trust": {
+        "title": "Trust",
+        "description": "Building lasting relationships through transparency and proven results."
+      },
+      "growth": {
+        "title": "Growth",
+        "description": "Committed to helping learners achieve sustainable, long-term success."
+      },
+      "excellence": {
+        "title": "Excellence",
+        "description": "Delivering the highest quality education and support to our community."
+      }
+    },
+    "team_members": {
+      "sarah": {
+        "name": "Sarah Johnson",
+        "role": "Founder & CEO",
+        "description": "Formeር professional with 10+ years experience, helping learners build successful careers."
+      },
+      "mike": {
+        "name": "Mike Chen",
+        "role": "Head of Education",
+        "description": "Digital education expert with 10+ years experience in curriculum development and skill training."
+      },
+      "emily": {
+        "name": "Emily Rodriguez",
+        "role": "Community Manager",
+        "description": "Building and nurturing our community of learners, ensuring everyone gets the support they need."
+      }
+    }
+  },
+  "contact": {
+    "page_title": "Contact",
+    "get_in_touch": "Get in Touch",
+    "contact_form": "Contact Form",
+    "name": "Name",
+    "email": "Email",
+    "subject": "Subject",
+    "message": "Message",
+    "send_message": "Send Message",
+    "contact_info": "Contact Information",
+    "address": "Address",
+    "phone": "Phone",
+    "email_label": "Email",
+    "working_hours": "Working Hours",
+    "monday_friday": "Monday - Friday",
+    "saturday": "Saturday",
+    "sunday": "Sunday",
+    "hours": "Hours",
+    "why_choose_title": "Why Choose Our Academy?",
+    "contact_description": "We're here to help you on your learning journey. Reach out to us through any of the channels below.",
+    "form_placeholders": {
+      "name": "Your name",
+      "email": "your@email.com",
+      "subject": "What's this about?",
+      "message": "Tell us how we can help you..."
+    },
+    "contact_details": {
+      "email": {
+        "title": "Email"
+      },
+      "phone": {
+        "title": "Phone",
+        "details": {
+          "1": "Mon-Fri: 9AM-6PM EST"
+        }
+      },
+      "office": {
+        "title": "Office"
+      },
+      "business_hours": {
+        "title": "Business Hours",
+        "details": {
+          "0": "Monday - Friday: 9AM - 6PM EST",
+          "1": "Saturday: 10AM - 4PM EST",
+          "2": "Sunday: Closed"
+        }
+      }
+    },
+    "faq": {
+      "title": "Frequently Asked Questions",
+      "questions": {
+        "get_started": {
+          "question": "How do I get started with a course?",
+          "answer": "Simply enroll in any course and you'll get immediate access to all the content and resources."
+        },
+        "refunds": {
+          "question": "Do you offer refunds?",
+          "answer": "Yes! We offer a 5-day money-back guarantee on all our courses."
+        },
+        "mobile": {
+          "question": "Can I access courses on mobile?",
+          "answer": "Absolutely! All our courses are optimized for mobile devices and tablets."
+        }
+      }
+    },
+    "stats": {
+      "support": "Support",
+      "guarantee": "Guarantee",
+      "support_24_7": "24/7",
+      "guarantee_30_day": "5-Day"
+    },
+    "success_message": "Thank you for your message! We'll get back to you soon."
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "success": "Success",
+    "cancel": "Cancel",
+    "save": "Save",
+    "edit": "Edit",
+    "delete": "Delete",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "close": "Close",
+    "search": "Search",
+    "filter": "Filter",
+    "sort": "Sort",
+    "view": "View",
+    "download": "Download",
+    "upload": "Upload",
+    "submit": "Submit",
+    "reset": "Reset",
+    "confirm": "Confirm",
+    "yes": "Yes",
+    "no": "No",
+    "ok": "OK",
+    "required": "Required",
+    "optional": "Optional"
+  },
+  "course_card": {
+    "processing": "Processing...",
+    "buy_now": "Buy Now",
+    "view_details": "View Details",
+    "image_error": "Image Error",
+    "loading": "Loading...",
+    "more_tags": "more",
+    "lessons": "lessons",
+    "by_instructor": "by our academy"
+  },
+  "brand": {
+    "name": "Professional Academy"
+  },
+  "language": {
+    "tigrinya": "ትግርኛ",
+    "english": "English"
+  },
+  "categories": {
+    "youtube": "YouTube Mastery",
+    "camera": "Camera",
+    "photo": "Photo Editing",
+    "video": "Video Editing",
+    "computer": "Basic Computer Learning",
+    "english": "English",
+    "other": "Other"
+  }
+}

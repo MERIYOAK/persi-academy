@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import CourseCard from '../components/CourseCard';
 import { Search, Filter, X } from 'lucide-react';
 import { buildApiUrl } from '../config/environment';
@@ -17,6 +18,7 @@ interface ApiCourse {
 }
 
 const CoursesPage: React.FC = () => {
+  const { t } = useTranslation();
   const [courses, setCourses] = useState<ApiCourse[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -143,7 +145,13 @@ const CoursesPage: React.FC = () => {
         ));
 
       // Category filter
-      const matchesCategory = selectedCategory === '' || course.category === selectedCategory;
+      const categoryMapping = {
+        'youtube mastering': 'youtube',
+        'video editing': 'video',
+        'camera': 'camera'
+      };
+      const courseCategory = categoryMapping[course.category] || course.category;
+      const matchesCategory = selectedCategory === '' || courseCategory === selectedCategory;
 
       // Level filter
       const matchesLevel = selectedLevel === '' || course.level === selectedLevel;
@@ -193,8 +201,33 @@ const CoursesPage: React.FC = () => {
 
   // Get unique categories and levels for dropdowns
   const categories = useMemo(() => {
-    const uniqueCategories = [...new Set(courses.map(course => course.category).filter(Boolean))];
-    return uniqueCategories.sort();
+    // Predefined categories in the order we want them to appear
+    const predefinedCategories = ['youtube', 'camera', 'photo', 'video', 'computer', 'english', 'other'];
+    
+    // Category mapping from old to new values
+    const categoryMapping = {
+      'youtube mastering': 'youtube',
+      'video editing': 'video',
+      'camera': 'camera'
+    };
+    
+    // Get categories from existing courses and map them to new values
+    const existingCategories = [...new Set(courses.map(course => {
+      const category = course.category;
+      return categoryMapping[category] || category;
+    }).filter(Boolean))];
+    
+    // Combine predefined categories with existing ones, maintaining order
+    const allCategories = [...predefinedCategories];
+    
+    // Add any additional categories from courses that aren't in our predefined list
+    existingCategories.forEach(category => {
+      if (!predefinedCategories.includes(category)) {
+        allCategories.push(category);
+      }
+    });
+    
+    return allCategories;
   }, [courses]);
 
   const levels = useMemo(() => {
@@ -254,12 +287,13 @@ const CoursesPage: React.FC = () => {
       console.log('🔍 [CoursesPage] Showing empty state...');
       return (
         <div className="text-center text-gray-500 py-12 xxs:py-20 text-sm xxs:text-base">
-          {courses.length === 0 ? 'No courses available yet. Check back soon.' : 'No courses match your search criteria.'}
+          {courses.length === 0 ? t('courses.no_courses_available') : t('courses.no_courses_match')}
         </div>
       );
     }
     
     console.log('🔍 [CoursesPage] Rendering course grid...');
+    
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 xxs:gap-6 sm:gap-8">
         {filteredCourses.map((c) => (
@@ -270,10 +304,9 @@ const CoursesPage: React.FC = () => {
             description={c.description}
             thumbnail={c.thumbnailURL || ''}
             price={c.price}
-            duration={`${c.videos?.length || 0} lessons`}
+            duration={`${c.videos?.length || 0} ${t('course_card.lessons')}`}
             students={c.totalEnrollments || 0}
-
-            instructor={'YT Academy'}
+            instructor={t('brand.name')}
             tags={c.tags || []}
             onPurchaseSuccess={handlePurchaseSuccess}
           />
@@ -287,10 +320,10 @@ const CoursesPage: React.FC = () => {
       <div className="max-w-7xl mx-auto px-2 sm:px-3 xxs:px-4 lg:px-8">
         <div className="text-center mb-6 sm:mb-8 xxs:mb-12">
           <h1 className="text-xl sm:text-2xl xxs:text-3xl lg:text-4xl font-bold text-gray-900 mb-2 xxs:mb-4">
-            All Courses
+            {t('courses.page_title_all')}
           </h1>
           <p className="text-sm sm:text-base xxs:text-lg lg:text-xl text-gray-600">
-            Master YouTube with our comprehensive courses
+            {t('courses.page_subtitle')}
           </p>
         </div>
 
@@ -303,7 +336,7 @@ const CoursesPage: React.FC = () => {
             </div>
             <input
               type="text"
-              placeholder="Search for courses, skills, or topics..."
+              placeholder={t('courses.search_placeholder')}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="block w-full pl-8 sm:pl-10 xxs:pl-12 pr-4 py-1.5 sm:py-2 xxs:py-3 lg:py-4 text-xs sm:text-sm xxs:text-lg border-2 border-gray-200 rounded-lg sm:rounded-xl xxs:rounded-2xl focus:ring-4 focus:ring-red-100 focus:border-red-500 transition-all duration-200 shadow-sm hover:shadow-md"
@@ -325,10 +358,10 @@ const CoursesPage: React.FC = () => {
               <div className="flex flex-col xxs:flex-row xxs:items-center xxs:justify-between space-y-1.5 sm:space-y-2 xxs:space-y-3 lg:space-y-0">
                 <div className="flex items-center space-x-1 sm:space-x-2 xxs:space-x-3">
                   <Filter className="h-3 w-3 sm:h-4 sm:w-4 xxs:h-5 xxs:w-5 text-red-600" />
-                  <h3 className="text-xs sm:text-sm xxs:text-base lg:text-lg font-semibold text-gray-900">Advanced Filters</h3>
+                  <h3 className="text-xs sm:text-sm xxs:text-base lg:text-lg font-semibold text-gray-900">{t('courses.page_title')}</h3>
                   {(searchTerm || selectedCategory || selectedLevel || selectedTag || priceRange) && (
                     <span className="bg-red-100 text-red-800 text-xs font-medium px-1 sm:px-1.5 xxs:px-2 lg:px-2.5 py-0.5 rounded-full">
-                      Active
+                      {t('courses.filter_active')}
                     </span>
                   )}
                 </div>
@@ -339,14 +372,14 @@ const CoursesPage: React.FC = () => {
                       className="flex items-center space-x-1 xxs:space-x-2 px-1 sm:px-1.5 xxs:px-2 lg:px-3 py-0.5 xxs:py-1 lg:py-1.5 text-xs xxs:text-sm text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200"
                     >
                       <X className="h-3 w-3 xxs:h-4 xxs:w-4" />
-                      <span>Clear all</span>
+                      <span>{t('common.reset')}</span>
                     </button>
                   )}
                   <button
                     onClick={() => setShowFilters(!showFilters)}
                     className="flex items-center space-x-1 xxs:space-x-2 px-1.5 sm:px-2 xxs:px-3 lg:px-4 py-0.5 xxs:py-1 lg:py-1.5 xxs:py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-all duration-200 shadow-sm text-xs xxs:text-sm"
                   >
-                    <span>{showFilters ? 'Hide' : 'Show'} Filters</span>
+                    <span>{showFilters ? t('common.close') : t('common.filter')}</span>
                   </button>
                 </div>
               </div>
@@ -359,7 +392,7 @@ const CoursesPage: React.FC = () => {
                   {/* Category Filter */}
                   <div className="space-y-1 sm:space-y-2">
                     <label className="block text-xs xxs:text-sm font-semibold text-gray-700">
-                      Category
+                      {t('courses.filter_category')}
                     </label>
                     <div className="relative">
                       <select
@@ -367,10 +400,10 @@ const CoursesPage: React.FC = () => {
                         onChange={(e) => setSelectedCategory(e.target.value)}
                         className="w-full px-1.5 sm:px-2 xxs:px-3 lg:px-4 py-1 sm:py-1.5 xxs:py-2 lg:py-3 border-2 border-gray-200 rounded-lg sm:rounded-xl focus:ring-4 focus:ring-red-100 focus:border-red-500 transition-all duration-200 appearance-none bg-white text-xs sm:text-sm xxs:text-base"
                       >
-                        <option value="">All Categories</option>
+                        <option value="">{t('courses.filter_all')}</option>
                         {categories.map(category => (
                           <option key={category} value={category}>
-                            {category.charAt(0).toUpperCase() + category.slice(1)}
+                            {t(`categories.${category}`)}
                           </option>
                         ))}
                       </select>
@@ -385,7 +418,7 @@ const CoursesPage: React.FC = () => {
                   {/* Level Filter */}
                   <div className="space-y-1 sm:space-y-2">
                     <label className="block text-xs xxs:text-sm font-semibold text-gray-700">
-                      Skill Level
+                      {t('courses.filter_skill_level')}
                     </label>
                     <div className="relative">
                       <select
@@ -393,10 +426,13 @@ const CoursesPage: React.FC = () => {
                         onChange={(e) => setSelectedLevel(e.target.value)}
                         className="w-full px-1.5 sm:px-2 xxs:px-3 lg:px-4 py-1 sm:py-1.5 xxs:py-2 lg:py-3 border-2 border-gray-200 rounded-lg sm:rounded-xl focus:ring-4 focus:ring-red-100 focus:border-red-500 transition-all duration-200 appearance-none bg-white text-xs sm:text-sm xxs:text-base"
                       >
-                        <option value="">All Levels</option>
+                        <option value="">{t('courses.filter_all')}</option>
                         {levels.map(level => (
                           <option key={level} value={level}>
-                            {level.charAt(0).toUpperCase() + level.slice(1)}
+                            {level === 'beginner' ? t('courses.filter_beginner') :
+                             level === 'intermediate' ? t('courses.filter_intermediate') :
+                             level === 'advanced' ? t('courses.filter_advanced') :
+                             level.charAt(0).toUpperCase() + level.slice(1)}
                           </option>
                         ))}
                       </select>
@@ -411,7 +447,7 @@ const CoursesPage: React.FC = () => {
                   {/* Tag Filter */}
                   <div className="space-y-1 sm:space-y-2">
                     <label className="block text-xs xxs:text-sm font-semibold text-gray-700">
-                      Tags
+                      {t('courses.filter_tags')}
                     </label>
                     <div className="relative">
                       <select
@@ -419,7 +455,7 @@ const CoursesPage: React.FC = () => {
                         onChange={(e) => setSelectedTag(e.target.value)}
                         className="w-full px-1.5 sm:px-2 xxs:px-3 lg:px-4 py-1 sm:py-1.5 xxs:py-2 lg:py-3 border-2 border-gray-200 rounded-lg sm:rounded-xl focus:ring-4 focus:ring-red-100 focus:border-red-500 transition-all duration-200 appearance-none bg-white text-xs sm:text-sm xxs:text-base"
                       >
-                        <option value="">All Tags</option>
+                        <option value="">{t('courses.filter_all')}</option>
                         {tags.map(tag => (
                           <option key={tag} value={tag}>
                             #{tag}
@@ -437,7 +473,7 @@ const CoursesPage: React.FC = () => {
                   {/* Price Range Filter */}
                   <div className="space-y-1 sm:space-y-2 sm:col-span-2 md:col-span-1">
                     <label className="block text-xs xxs:text-sm font-semibold text-gray-700">
-                      Price Range
+                      {t('courses.filter_price_range')}
                     </label>
                     <div className="relative">
                       <select
@@ -445,11 +481,11 @@ const CoursesPage: React.FC = () => {
                         onChange={(e) => setPriceRange(e.target.value)}
                         className="w-full px-1.5 sm:px-2 xxs:px-3 lg:px-4 py-1 sm:py-1.5 xxs:py-2 lg:py-3 border-2 border-gray-200 rounded-lg sm:rounded-xl focus:ring-4 focus:ring-red-100 focus:border-red-500 transition-all duration-200 appearance-none bg-white text-xs sm:text-sm xxs:text-base"
                       >
-                        <option value="">All Prices</option>
-                        <option value="free">Free Courses</option>
-                        <option value="under-50">Under $50</option>
-                        <option value="50-100">$50 - $100</option>
-                        <option value="over-100">Over $100</option>
+                        <option value="">{t('courses.price_all')}</option>
+                        <option value="free">{t('courses.price_free')}</option>
+                        <option value="under-50">{t('courses.price_under_50')}</option>
+                        <option value="50-100">{t('courses.price_50_100')}</option>
+                        <option value="over-100">{t('courses.price_over_100')}</option>
                       </select>
                       <div className="absolute inset-y-0 right-0 flex items-center pr-1.5 sm:pr-2 xxs:pr-3 lg:pr-3 pointer-events-none">
                         <svg className="h-3 w-3 sm:h-4 sm:w-4 xxs:h-5 xxs:w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -468,16 +504,16 @@ const CoursesPage: React.FC = () => {
             <div className="flex items-center space-x-1.5 sm:space-x-2 xxs:space-x-4">
               <div className="text-xs xxs:text-sm text-gray-600">
                 {loading ? (
-                  <span>Loading courses...</span>
+                  <span>{t('common.loading')}</span>
                 ) : (
                   <>
-                    <span className="font-semibold text-gray-900">{filteredCourses.length}</span> of <span className="font-semibold text-gray-900">{courses.length}</span> courses
+                    <span className="font-semibold text-gray-900">{filteredCourses.length}</span> of <span className="font-semibold text-gray-900">{courses.length}</span> {t('navbar.courses').toLowerCase()}
                   </>
                 )}
               </div>
               {(searchTerm || selectedCategory || selectedLevel || selectedTag || priceRange) && (
                 <div className="flex flex-col xxs:flex-row xxs:items-center space-y-1 xxs:space-y-0 xxs:space-x-2">
-                  <span className="text-xs xxs:text-sm text-gray-500">Filtered by:</span>
+                  <span className="text-xs xxs:text-sm text-gray-500">{t('courses.filtered_by')}</span>
                   <div className="flex flex-wrap gap-1 xxs:gap-2">
                     {searchTerm && (
                       <span className="inline-flex items-center px-1.5 sm:px-2 xxs:px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
@@ -486,7 +522,7 @@ const CoursesPage: React.FC = () => {
                     )}
                     {selectedCategory && (
                       <span className="inline-flex items-center px-1.5 sm:px-2 xxs:px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                        {selectedCategory}
+                        {t(`categories.${selectedCategory}`)}
                       </span>
                     )}
                     {selectedLevel && (
@@ -501,9 +537,9 @@ const CoursesPage: React.FC = () => {
                     )}
                     {priceRange && (
                       <span className="inline-flex items-center px-1.5 sm:px-2 xxs:px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                        {priceRange === 'free' ? 'Free' : 
-                         priceRange === 'under-50' ? 'Under $50' :
-                         priceRange === '50-100' ? '$50-$100' : 'Over $100'}
+                        {priceRange === 'free' ? t('courses.price_free') : 
+                         priceRange === 'under-50' ? t('courses.price_under_50') :
+                         priceRange === '50-100' ? t('courses.price_50_100') : t('courses.price_over_100')}
                       </span>
                     )}
                   </div>

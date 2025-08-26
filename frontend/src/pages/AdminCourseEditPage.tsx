@@ -671,9 +671,13 @@ const AdminCourseEditPage: React.FC = () => {
                       className="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
                     >
                       <option value="">Select Category</option>
-                      <option value="youtube mastering">YouTube Mastering</option>
-                      <option value="video editing">Video Editing</option>
+                      <option value="youtube">YouTube Mastery</option>
                       <option value="camera">Camera</option>
+                      <option value="photo">Photo Editing</option>
+                      <option value="video">Video Editing</option>
+                      <option value="computer">Basic Computer Learning</option>
+                      <option value="english">English</option>
+                      <option value="other">Other</option>
                     </select>
                   </div>
 
