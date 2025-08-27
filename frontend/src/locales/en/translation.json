@@ -11,19 +11,21 @@
     "logout": "Logout"
   },
   "footer": {
-    "contact_info": "Contact Information",
+    "contact_info": "Contact Us",
     "address": "Address: Ontario, Canada",
     "phone": "Phone: +001 1 123456",
     "email": "Email: info@example.com",
-    "social_links": "Social Links",
-    "follow_us": "Follow Us",
+    "social_links": "Pages",
+    "follow_us": "Additional Pages",
     "copyright": "All Rights Reserved.",
     "privacy_policy": "Privacy Policy",
     "terms_of_service": "Terms of Service",
     "refund_policy": "Refund Policy",
     "help_center": "Help Center",
     "help": "Help",
-    "verify_certificate": "Verify Certificate"
+    "verify_certificate": "Verify Certificate",
+    "cookie_settings": "Cookie Settings",
+    "made_by": "This website is made by -> "
   },
   "home": {
     "hero_title": "Your Gateway to Professional Excellence",
@@ -32,7 +34,7 @@
     "learn_more": "Learn More",
     "featured_courses": "Featured Courses",
     "view_all_courses": "View All Courses",
-    "testimonials": "Testimonials",
+    "testimonials_title": "Testimonials",
     "student_success": "Student Success",
     "hero_variations": {
       "variation1": {

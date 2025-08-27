@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { CreditCard, Clock, CheckCircle, XCircle, AlertTriangle, Mail, Phone, MessageCircle } from 'lucide-react';
+import { config } from '../config/environment';
 
 const RefundPolicyPage = () => {
   return (
@@ -29,8 +30,8 @@ const RefundPolicyPage = () => {
               <div className="bg-green-100 rounded-full p-4 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
                 <CheckCircle className="h-8 w-8 text-green-600" />
               </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">30-Day Guarantee</h3>
-              <p className="text-gray-600 text-sm">Full refund within 30 days of purchase</p>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">5-Day Guarantee</h3>
+              <p className="text-gray-600 text-sm">Full refund within 5 days of purchase</p>
             </div>
             <div className="text-center">
               <div className="bg-blue-100 rounded-full p-4 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
@@ -56,7 +57,7 @@ const RefundPolicyPage = () => {
             <h2 className="text-2xl font-bold text-gray-900 mb-4">Overview</h2>
             <div className="prose prose-gray max-w-none">
               <p className="text-gray-600 mb-4">
-                At YT Academy, we stand behind the quality of our educational content. We understand that sometimes a course may not meet your expectations, and we want to ensure you have a positive experience with our platform.
+                At {config.APP_NAME}, we stand behind the quality of our educational content. We understand that sometimes a course may not meet your expectations, and we want to ensure you have a positive experience with our platform.
               </p>
               <p className="text-gray-600">
                 This refund policy outlines the terms and conditions for requesting and receiving refunds for our courses and services.
@@ -68,14 +69,14 @@ const RefundPolicyPage = () => {
           <section className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
             <h2 className="text-2xl font-bold text-gray-900 mb-4">Refund Eligibility</h2>
             <div className="prose prose-gray max-w-none">
-              <h3 className="text-lg font-semibold text-gray-900 mb-3">30-Day Money-Back Guarantee</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-3">5-Day Money-Back Guarantee</h3>
               <p className="text-gray-600 mb-4">
-                We offer a 30-day money-back guarantee for all course purchases. If you're not completely satisfied with your purchase, you may request a full refund within 30 days of the purchase date.
+                We offer a 5-day money-back guarantee for course purchases. If you're not completely satisfied with your purchase, you may request a refund within 5 days of the purchase date.
               </p>
               
               <h3 className="text-lg font-semibold text-gray-900 mb-3">Eligibility Requirements</h3>
               <ul className="list-disc list-inside text-gray-600 space-y-2 mb-4">
-                <li>Purchase must be within the last 30 days</li>
+                <li>Purchase must be within the last 5 days</li>
                 <li>Refund request must be submitted through proper channels</li>
                 <li>Course must not be completed (less than 90% watched)</li>
                 <li>No violation of our Terms of Service</li>
@@ -83,7 +84,7 @@ const RefundPolicyPage = () => {
 
               <h3 className="text-lg font-semibold text-gray-900 mb-3">Non-Eligible Cases</h3>
               <ul className="list-disc list-inside text-gray-600 space-y-2">
-                <li>Requests made after 30 days from purchase</li>
+                <li>Requests made after 5 days from purchase</li>
                 <li>Courses that have been completed (90% or more watched)</li>
                 <li>Violation of platform terms or abuse of refund policy</li>
                 <li>Free courses or promotional content</li>
@@ -104,7 +105,7 @@ const RefundPolicyPage = () => {
                   </div>
                   <div>
                     <h4 className="font-semibold text-gray-900">Contact Support</h4>
-                    <p className="text-gray-600">Email our support team at support@ytacademy.com or use our contact form</p>
+                    <p className="text-gray-600">Email our support team at {config.SUPPORT_EMAIL} or use our contact form</p>
                   </div>
                 </div>
                 <div className="flex items-start space-x-4">
@@ -159,10 +160,7 @@ const RefundPolicyPage = () => {
               
               <h3 className="text-lg font-semibold text-gray-900 mb-3">Refund Methods</h3>
               <ul className="list-disc list-inside text-gray-600 space-y-2 mb-4">
-                <li><strong>Credit/Debit Cards:</strong> 5-10 business days</li>
-                <li><strong>PayPal:</strong> 3-5 business days</li>
-                <li><strong>Apple Pay:</strong> 5-10 business days</li>
-                <li><strong>Bank Transfers:</strong> 7-14 business days</li>
+                <li><strong>Credit/Debit Cards (via Stripe):</strong> 5-10 business days</li>
               </ul>
 
               <h3 className="text-lg font-semibold text-gray-900 mb-3">What Happens After Refund</h3>
@@ -181,7 +179,7 @@ const RefundPolicyPage = () => {
             <div className="prose prose-gray max-w-none">
               <h3 className="text-lg font-semibold text-gray-900 mb-3">Technical Issues</h3>
               <p className="text-gray-600 mb-4">
-                If you experience technical issues that prevent you from accessing or completing a course, we may offer a refund or course credit, even beyond the 30-day period. Please contact our support team with detailed information about the technical problems you encountered.
+                If you experience technical issues that prevent you from accessing or completing a course, we may offer a refund or course credit, even beyond the 5-day period. Please contact our support team with detailed information about the technical problems you encountered.
               </p>
               
               <h3 className="text-lg font-semibold text-gray-900 mb-3">Course Updates</h3>
@@ -227,8 +225,8 @@ const RefundPolicyPage = () => {
                     <h3 className="font-semibold text-gray-900">Email Support</h3>
                   </div>
                   <p className="text-gray-600 text-sm mb-2">For refund requests and general inquiries</p>
-                  <a href="mailto:support@ytacademy.com" className="text-red-600 hover:text-red-700 text-sm font-medium">
-                    support@ytacademy.com
+                  <a href={`mailto:${config.SUPPORT_EMAIL}`} className="text-red-600 hover:text-red-700 text-sm font-medium">
+                    {config.SUPPORT_EMAIL}
                   </a>
                 </div>
                 
@@ -238,9 +236,14 @@ const RefundPolicyPage = () => {
                     <h3 className="font-semibold text-gray-900">Live Chat</h3>
                   </div>
                   <p className="text-gray-600 text-sm mb-2">Get immediate assistance</p>
-                  <button className="text-red-600 hover:text-red-700 text-sm font-medium">
-                    Start Chat
-                  </button>
+                  <a
+                    href={`https://wa.me/${config.SUPPORT_WHATSAPP.replace(/[^\\d]/g, '')}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-red-600 hover:text-red-700 text-sm font-medium"
+                  >
+                    WhatsApp Chat
+                  </a>
                 </div>
                 
                 <div className="bg-gray-50 rounded-lg p-4">
@@ -249,8 +252,8 @@ const RefundPolicyPage = () => {
                     <h3 className="font-semibold text-gray-900">Phone Support</h3>
                   </div>
                   <p className="text-gray-600 text-sm mb-2">Speak with our support team</p>
-                  <a href="tel:+15551234567" className="text-red-600 hover:text-red-700 text-sm font-medium">
-                    +1 (555) 123-4567
+                  <a href={`tel:${config.SUPPORT_WHATSAPP}`} className="text-red-600 hover:text-red-700 text-sm font-medium">
+                    {config.SUPPORT_WHATSAPP}
                   </a>
                 </div>
               </div>
@@ -280,7 +283,7 @@ const RefundPolicyPage = () => {
             </div>
             <div>
               <h3 className="text-lg font-semibold text-gray-900 mb-2">What if I've watched most of the course?</h3>
-              <p className="text-gray-600">If you've watched less than 90% of the course content, you're still eligible for a refund within the 30-day period.</p>
+              <p className="text-gray-600">If you've watched less than 90% of the course content, you're still eligible for a refund within the 5-day period.</p>
             </div>
             <div>
               <h3 className="text-lg font-semibold text-gray-900 mb-2">How long does it take to receive my refund?</h3>
@@ -311,7 +314,7 @@ const RefundPolicyPage = () => {
               Contact Support
             </Link>
             <a
-              href="mailto:support@ytacademy.com"
+              href={`mailto:${config.SUPPORT_EMAIL}`}
               className="border border-gray-300 text-gray-700 hover:bg-gray-50 px-6 py-3 rounded-lg font-semibold transition-colors duration-200"
             >
               Email Refund Request

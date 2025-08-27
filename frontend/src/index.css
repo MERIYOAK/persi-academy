@@ -77,6 +77,30 @@
   }
 }
 
+/* Neon pulse for glowing text/elements */
+@keyframes neon-pulse {
+  0%, 100% {
+    filter: drop-shadow(0 0 4px rgba(236, 72, 153, 0.6)) drop-shadow(0 0 10px rgba(124, 58, 237, 0.4));
+  }
+  50% {
+    filter: drop-shadow(0 0 10px rgba(236, 72, 153, 0.95)) drop-shadow(0 0 22px rgba(124, 58, 237, 0.8));
+  }
+}
+
+/* Slow spin for hover state */
+@keyframes spin-custom {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Gentle 3D tilt wobble */
+@keyframes tilt-wobble {
+  0%, 100% { transform: rotateX(0deg) rotateY(0deg); }
+  25% { transform: rotateX(6deg) rotateY(-6deg); }
+  50% { transform: rotateX(-4deg) rotateY(4deg); }
+  75% { transform: rotateX(5deg) rotateY(2deg); }
+}
+
 /* Floating Contact Button Wave Animation */
 @keyframes wave-pulse {
   0% {
@@ -154,6 +178,19 @@
 .animate-gradient-shift {
   background-size: 200% 200%;
   animation: gradient-shift 3s ease infinite;
+}
+
+.animate-neon-pulse {
+  animation: neon-pulse 2s ease-in-out infinite;
+}
+
+.spin-on-hover:hover {
+  animation: spin-custom 1.2s linear infinite;
+}
+
+.tilt-wobble {
+  animation: tilt-wobble 6s ease-in-out infinite;
+  transform-style: preserve-3d;
 }
 
 /* Animation delays */
@@ -353,4 +390,15 @@ html {
 ::-moz-selection {
   background: rgba(239, 68, 68, 0.2);
   color: #dc2626;
+}
+
+/* Footer link visibility: hide link group under 500px */
+.hide-under-500 {
+  display: flex;
+}
+
+@media (max-width: 500px) {
+  .hide-under-500 {
+    display: none !important;
+  }
 }

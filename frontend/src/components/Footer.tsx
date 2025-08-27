@@ -101,6 +101,15 @@ const Footer: React.FC<FooterProps> = ({ className = '', openCookieSettingsRef }
                   {t('footer.refund_policy')}
                 </Link>
               </li>
+              <li>
+                <button
+                  type="button"
+                  onClick={() => openCookieSettingsRef?.current && openCookieSettingsRef.current()}
+                  className="text-gray-400 hover:text-white transition-colors duration-200"
+                >
+                  {t('footer.cookie_settings')}
+                </button>
+              </li>
             </ul>
           </div>
 
@@ -126,10 +135,25 @@ const Footer: React.FC<FooterProps> = ({ className = '', openCookieSettingsRef }
 
         <div className="border-t border-gray-800 mt-8 pt-8">
           <div className="flex flex-col md:flex-row justify-between items-center">
-            <p className="text-gray-400 text-sm">
-              © {new Date().getFullYear()} {t('footer.copyright')}
-            </p>
-            <div className="flex space-x-6 mt-4 md:mt-0">
+            <div className="flex flex-col md:flex-row items-center gap-2 text-gray-400 text-sm">
+              <p>
+                © {new Date().getFullYear()} {t('footer.copyright')}
+              </p>
+              <span className="hidden md:inline">•</span>
+              <span className="inline-flex items-center tilt-wobble">
+                <span className="mr-1">{t('footer.made_by')}</span>
+                <a
+                  href="https://www.meronvault.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="relative inline-block font-extrabold tracking-wider bg-gradient-to-r from-red-500 via-pink-500 to-purple-500 bg-clip-text text-transparent drop-shadow transition-all duration-500 transform hover:scale-125 hover:-rotate-6 hover:skew-x-6 hover:skew-y-1 hover:brightness-125 animate-neon-pulse spin-on-hover"
+                >
+                  MERONI
+                  <span className="absolute inset-0 -z-10 pointer-events-none blur-md opacity-80 bg-gradient-to-r from-red-500 via-pink-500 to-purple-500 rounded animate-gradient-shift"></span>
+                </a>
+              </span>
+            </div>
+            <div className="flex hide-under-500 space-x-6 mt-4 md:mt-0">
               <Link to="/privacy-policy" className="text-gray-400 hover:text-white text-sm transition-colors duration-200">
                 {t('footer.privacy_policy')}
               </Link>
@@ -143,13 +167,6 @@ const Footer: React.FC<FooterProps> = ({ className = '', openCookieSettingsRef }
                 <Shield className="h-3 w-3" />
                 <span>{t('footer.verify_certificate')}</span>
               </Link>
-              <button
-                type="button"
-                onClick={() => openCookieSettingsRef?.current && openCookieSettingsRef.current()}
-                className="text-gray-400 hover:text-white text-sm transition-colors duration-200 underline"
-              >
-                Cookie Settings
-              </button>
             </div>
           </div>
         </div>

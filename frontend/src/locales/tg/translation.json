@@ -11,19 +11,21 @@
     "logout": "መውጽኢ"
   },
   "footer": {
-    "contact_info": "ብዛዕባ መራኸቢና",
-    "address": "ኣድራሻ: ኦንታርዮ፣ ካናዳ",
+    "contact_info": "ርኸቡና",
+    "address": "ኣድራሻ: ኦንታርዮ ፣ ካናዳ",
     "phone": "ስልኪ: +001 1 123456",
     "email": "ኢመይል: info@example.com",
-    "social_links": "ማሕበራዊ መራኸቢታትና",
-    "follow_us": "ተኸተሉና",
+    "social_links": "ገጻትና",
+    "follow_us": "ተወሳኺ ገጻት",
     "copyright": "መሰል ወናኒ ዝተሓለወ እዩ።",
     "privacy_policy": "ፖሊሲ ብሕቲ",
     "terms_of_service": "ውዕል ኣገልግሎት",
     "refund_policy": "ፖሊሲ ምምላስ ሕሳብ",
     "help_center": "ማእከል ሓገዝ",
     "help": "ሓገዝ",
-    "verify_certificate": "ሰርቲፊኬት ኣረጋግጽ"
+    "verify_certificate": "ሰርቲፊኬት ኣረጋግጽ",
+    "cookie_settings": "ስርዓተ ኩኪ",
+    "made_by": "ነዚ ወብሳይት ዝሰርሐ -> "
   },
   "home": {
     "hero_title": "መርሓ ጎደናና ንምምሃር ብሉጽነት",
@@ -32,7 +34,7 @@
     "learn_more": "ዝያዳ ተምሃር",
     "featured_courses": "ዝበለጹ ኮርሳት",
     "view_all_courses": "ኩሉ ኮርስ ርአ",
-    "testimonials": "ምስክር",
+    "testimonials_title": "ምስክር",
     "student_success": "ዕውታት ተምሃሮ",
     "hero_variations": {
       "variation1": {

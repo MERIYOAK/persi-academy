@@ -1,0 +1,203 @@
+import React, { useEffect, useState, useMemo } from 'react';
+import { useParams, Link, useNavigate } from 'react-router-dom';
+import { Clock, BookOpen, CheckCircle, Users, ArrowLeft, Award } from 'lucide-react';
+import { buildApiUrl } from '../config/environment';
+
+interface Course {
+  _id: string;
+  title: string;
+  description: string;
+  thumbnailURL?: string;
+  price: number;
+  category?: string;
+  level?: string;
+  tags?: string[];
+  totalEnrollments?: number;
+  videos?: Array<{ _id: string; title: string; duration?: number; description?: string }>;
+}
+
+const UserCourseDetailPage: React.FC = () => {
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const [course, setCourse] = useState<Course | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      navigate('/login');
+      return;
+    }
+  }, [navigate]);
+
+  useEffect(() => {
+    const fetchCourse = async () => {
+      if (!id) return;
+      try {
+        setLoading(true);
+        setError(null);
+        const res = await fetch(buildApiUrl(`/api/courses/${id}`));
+        if (!res.ok) {
+          throw new Error('Failed to load course');
+        }
+        const data = await res.json();
+        const courseData = data?.data?.course || data;
+        setCourse(courseData);
+      } catch (e) {
+        setError(e instanceof Error ? e.message : 'Unknown error');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchCourse();
+  }, [id]);
+
+  const totalDuration = useMemo(() => {
+    if (!course?.videos) return 0;
+    return course.videos.reduce((sum, v) => sum + (v.duration || 0), 0);
+  }, [course?.videos]);
+
+  const formatDuration = (seconds?: number) => {
+    if (!seconds) return '0:00';
+    const s = Math.floor(seconds);
+    const h = Math.floor(s / 3600);
+    const m = Math.floor((s % 3600) / 60);
+    const sec = s % 60;
+    return h > 0
+      ? `${h}:${m.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`
+      : `${m}:${sec.toString().padStart(2, '0')}`;
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 pt-16 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-red-600 mx-auto mb-4" />
+          <p className="text-gray-600">Loading course...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !course) {
+    return (
+      <div className="min-h-screen bg-gray-50 pt-16 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-gray-600 mb-4">{error || 'Course not found'}</p>
+          <Link to="/dashboard" className="text-red-600 hover:text-red-700 font-semibold">Back to Dashboard</Link>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50 pt-16">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        {/* Header */}
+        <div className="mb-6">
+          <button
+            onClick={() => navigate('/dashboard')}
+            className="inline-flex items-center space-x-2 text-gray-600 hover:text-red-600"
+          >
+            <ArrowLeft className="h-5 w-5" />
+            <span>Back to Dashboard</span>
+          </button>
+        </div>
+
+        {/* Hero card */}
+        <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100">
+          <div className="grid grid-cols-1 lg:grid-cols-3">
+            <div className="lg:col-span-2 p-6 sm:p-8">
+              <div className="flex flex-wrap gap-2 mb-4">
+                {course.category && (
+                  <span className="bg-red-50 text-red-700 px-3 py-1 rounded-full text-xs font-semibold border border-red-100">{course.category}</span>
+                )}
+                {course.level && (
+                  <span className="bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-xs font-semibold border border-blue-100">{course.level}</span>
+                )}
+              </div>
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-3">{course.title}</h1>
+              <p className="text-gray-600 leading-relaxed mb-6">{course.description}</p>
+              <div className="flex flex-wrap items-center gap-6">
+                <div className="flex items-center space-x-2 text-gray-700">
+                  <Clock className="h-5 w-5 text-red-600" />
+                  <span className="font-semibold">{formatDuration(totalDuration)}</span>
+                  <span className="text-gray-500 text-sm ml-1">total</span>
+                </div>
+                <div className="flex items-center space-x-2 text-gray-700">
+                  <BookOpen className="h-5 w-5 text-red-600" />
+                  <span className="font-semibold">{course.videos?.length || 0}</span>
+                  <span className="text-gray-500 text-sm ml-1">lessons</span>
+                </div>
+                <div className="flex items-center space-x-2 text-gray-700">
+                  <Users className="h-5 w-5 text-red-600" />
+                  <span className="font-semibold">{course.totalEnrollments || 0}</span>
+                  <span className="text-gray-500 text-sm ml-1">students</span>
+                </div>
+              </div>
+            </div>
+            <div className="p-6 sm:p-8 bg-gradient-to-br from-gray-50 to-white border-l border-gray-100">
+              {course.thumbnailURL ? (
+                <img src={course.thumbnailURL} alt={course.title} className="w-full h-40 object-cover rounded-xl shadow" />
+              ) : (
+                <div className="w-full h-40 rounded-xl bg-gray-100 flex items-center justify-center">
+                  <BookOpen className="h-10 w-10 text-gray-400" />
+                </div>
+              )}
+              <div className="mt-4">
+                <div className="flex items-center space-x-2 text-green-700">
+                  <CheckCircle className="h-5 w-5" />
+                  <span className="text-sm font-semibold">Purchased course</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Curriculum */}
+        <div className="mt-10 grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-2 space-y-6">
+            <section className="bg-white rounded-xl shadow p-6">
+              <h2 className="text-xl font-bold text-gray-900 mb-4">Course Curriculum</h2>
+              {course.videos && course.videos.length > 0 ? (
+                <div className="divide-y divide-gray-100">
+                  {course.videos.map((v, idx) => (
+                    <div key={v._id} className="py-4 flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <span className="w-6 text-gray-500 text-sm">{idx + 1}.</span>
+                        <div>
+                          <div className="font-medium text-gray-800">{v.title}</div>
+                          {v.description && <div className="text-sm text-gray-500 mt-1">{v.description}</div>}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm text-gray-600">
+                        <Clock className="h-4 w-4" />
+                        <span>{formatDuration(v.duration)}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-gray-500">No lessons available.</div>
+              )}
+            </section>
+          </div>
+          <div className="space-y-6">
+            <section className="bg-white rounded-xl shadow p-6">
+              <h3 className="text-lg font-bold text-gray-900 mb-4">What's Included</h3>
+              <ul className="space-y-3 text-gray-700">
+                <li className="flex items-center gap-2"><CheckCircle className="h-5 w-5 text-green-600" /> Lifetime access</li>
+                <li className="flex items-center gap-2"><Award className="h-5 w-5 text-green-600" /> Certificate of completion</li>
+                <li className="flex items-center gap-2"><BookOpen className="h-5 w-5 text-green-600" /> Regular course updates</li>
+              </ul>
+            </section>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default UserCourseDetailPage;
+

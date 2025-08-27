@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronDown, ChevronUp, Mail, MessageCircle, BookOpen, Video, Award, CreditCard, Shield, Clock } from 'lucide-react';
+import { config } from '../config/environment';
 
 interface FAQItem {
   question: string;
@@ -21,7 +22,7 @@ const HelpCenterPage = () => {
     },
     {
       question: "How do I purchase a course?",
-      answer: "Browse our course catalog, select the course you want, and click 'Purchase Course'. You'll be redirected to our secure payment system. After successful payment, the course will be immediately available in your dashboard.",
+      answer: "Browse our course catalog, select the course you want, and click 'Buy Now'. You'll be redirected to our secure Stripe checkout. After successful payment, the course will be immediately available in your dashboard.",
       category: "getting-started"
     },
     {
@@ -32,7 +33,7 @@ const HelpCenterPage = () => {
     // Course Access
     {
       question: "How long do I have access to purchased courses?",
-      answer: "You have lifetime access to all courses you purchase. Once you buy a course, it's yours forever with no expiration date. You can watch the videos as many times as you want.",
+      answer: "You retain ongoing access to purchased courses as long as your account remains in good standing. You can rewatch lessons anytime from your dashboard.",
       category: "course-access"
     },
     {
@@ -64,7 +65,7 @@ const HelpCenterPage = () => {
     // Certificates
     {
       question: "How do I get a certificate of completion?",
-      answer: "Certificates are automatically generated when you complete a course (watch 90% or more of the content). You can download your certificates from the 'My Certificates' section in your dashboard.",
+      answer: "Certificates are automatically generated when you fully complete a course (all lessons completed and required watch time reached). You can download certificates from the 'My Certificates' section in your dashboard.",
       category: "certificates"
     },
     {
@@ -75,12 +76,12 @@ const HelpCenterPage = () => {
     // Payments & Refunds
     {
       question: "What payment methods do you accept?",
-      answer: "We accept all major credit cards (Visa, MasterCard, American Express), PayPal, and Apple Pay. All payments are processed securely through Stripe.",
+      answer: "We accept major credit and debit cards (Visa, MasterCard, American Express). All payments are processed securely through Stripe.",
       category: "payments"
     },
     {
       question: "Can I get a refund if I'm not satisfied?",
-      answer: "Yes! We offer a 30-day money-back guarantee. If you're not satisfied with your purchase, contact our support team within 30 days for a full refund.",
+      answer: "Yes — we offer a 5-day money-back guarantee. If you're not satisfied with your purchase, contact our support team within 5 days for a refund.",
       category: "payments"
     },
     {
@@ -119,7 +120,7 @@ const HelpCenterPage = () => {
           <div className="text-center">
             <h1 className="text-4xl font-bold mb-4">Help Center</h1>
             <p className="text-xl text-red-100 max-w-3xl mx-auto">
-              Find answers to common questions, get technical support, and learn how to make the most of your YT Academy experience.
+              Find answers to common questions, get technical support, and learn how to make the most of your {config.APP_NAME} experience.
             </p>
           </div>
         </div>
@@ -135,10 +136,10 @@ const HelpCenterPage = () => {
             </div>
             <p className="text-gray-600 mb-4">Get detailed help from our support team</p>
             <a 
-              href="mailto:support@ytacademy.com" 
+              href={`mailto:${config.SUPPORT_EMAIL}`}
               className="text-red-600 hover:text-red-700 font-medium"
             >
-              support@ytacademy.com
+              {config.SUPPORT_EMAIL}
             </a>
           </div>
 
@@ -148,9 +149,14 @@ const HelpCenterPage = () => {
               <h3 className="text-lg font-semibold">Live Chat</h3>
             </div>
             <p className="text-gray-600 mb-4">Chat with our support team in real-time</p>
-            <button className="text-red-600 hover:text-red-700 font-medium">
-              Start Chat
-            </button>
+            <a
+              href={`https://wa.me/${config.SUPPORT_WHATSAPP.replace(/[^\d]/g, '')}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-red-600 hover:text-red-700 font-medium"
+            >
+              WhatsApp Chat
+            </a>
           </div>
 
           <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
@@ -159,7 +165,7 @@ const HelpCenterPage = () => {
               <h3 className="text-lg font-semibold">Response Time</h3>
             </div>
             <p className="text-gray-600 mb-4">We typically respond within 24 hours</p>
-            <span className="text-green-600 font-medium">24/7 Support</span>
+            <span className="text-green-600 font-medium">Business hours support</span>
           </div>
         </div>
 
@@ -226,7 +232,7 @@ const HelpCenterPage = () => {
                 Contact Support
               </Link>
               <a
-                href="mailto:support@ytacademy.com"
+                href={`mailto:${config.SUPPORT_EMAIL}`}
                 className="border border-gray-300 text-gray-700 hover:bg-gray-50 px-6 py-3 rounded-lg font-semibold transition-colors duration-200"
               >
                 Send Email
