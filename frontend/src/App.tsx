@@ -39,6 +39,7 @@ import TermsOfServicePage from './pages/TermsOfServicePage';
 import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
 import RefundPolicyPage from './pages/RefundPolicyPage';
 import GoogleCallbackPage from './pages/GoogleCallbackPage';
+import UserCourseDetailPage from './pages/UserCourseDetailPage';
 
 function App() {
   return (
@@ -57,6 +58,7 @@ function App() {
           <Route path="/verify" element={<CertificateVerificationPage />} />
           <Route path="/verify/:certificateId" element={<CertificateVerificationPage />} />
           <Route path="/course/:id" element={<CourseDetailPage />} />
+          <Route path="/my-course/:id" element={<UserCourseDetailPage />} />
           <Route path="/courses" element={<CoursesPage />} />
           <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/course/:id/watch/:videoId" element={<VideoPlayerPage />} />

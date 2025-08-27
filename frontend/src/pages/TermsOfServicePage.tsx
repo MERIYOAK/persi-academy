@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Shield, Users, CreditCard, Eye, Lock, AlertTriangle } from 'lucide-react';
+import { config } from '../config/environment';
 
 const TermsOfServicePage = () => {
   return (
@@ -11,7 +12,7 @@ const TermsOfServicePage = () => {
           <div className="text-center">
             <h1 className="text-4xl font-bold mb-4">Terms of Service</h1>
             <p className="text-xl text-red-100 max-w-3xl mx-auto">
-              Please read these terms carefully before using YT Academy. By using our platform, you agree to these terms and conditions.
+              Please read these terms carefully before using {config.APP_NAME}. By using our platform, you agree to these terms and conditions.
             </p>
             <p className="text-sm text-red-200 mt-4">
               Last updated: {new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
@@ -59,7 +60,7 @@ const TermsOfServicePage = () => {
             <h2 className="text-2xl font-bold text-gray-900 mb-4">1. Acceptance of Terms</h2>
             <div className="prose prose-gray max-w-none">
               <p className="text-gray-600 mb-4">
-                By accessing and using YT Academy ("the Platform"), you accept and agree to be bound by the terms and provision of this agreement. If you do not agree to abide by the above, please do not use this service.
+                By accessing and using {config.APP_NAME} ("the Platform"), you accept and agree to be bound by the terms and provision of this agreement. If you do not agree to abide by the above, please do not use this service.
               </p>
               <p className="text-gray-600 mb-4">
                 These Terms of Service ("Terms") govern your use of our website and services. By using our platform, you agree to these terms in full. If you disagree with any part of these terms, you may not access our service.
@@ -72,14 +73,12 @@ const TermsOfServicePage = () => {
             <h2 className="text-2xl font-bold text-gray-900 mb-4">2. Services Description</h2>
             <div className="prose prose-gray max-w-none">
               <p className="text-gray-600 mb-4">
-                YT Academy provides online educational content focused on YouTube success strategies, content creation, and digital marketing. Our services include:
+                {config.APP_NAME} provides online educational content. Our services include:
               </p>
               <ul className="list-disc list-inside text-gray-600 space-y-2 mb-4">
                 <li>Access to video courses and educational content</li>
-                <li>Progress tracking and completion certificates</li>
-                <li>Community features and support forums</li>
-                <li>Downloadable resources and materials</li>
-                <li>Email support and customer service</li>
+                <li>Progress tracking and completion certificates (upon full course completion and required watch time)</li>
+                <li>Email and WhatsApp support</li>
               </ul>
               <p className="text-gray-600">
                 We reserve the right to modify, suspend, or discontinue any aspect of our services at any time with reasonable notice.
@@ -119,12 +118,12 @@ const TermsOfServicePage = () => {
               
               <h3 className="text-lg font-semibold text-gray-900 mb-3">Payment Processing</h3>
               <p className="text-gray-600 mb-4">
-                Payments are processed securely through Stripe. By making a purchase, you authorize us to charge your payment method for the specified amount. All payments are non-refundable except as specified in our refund policy.
+                Payments are processed securely through Stripe. By making a purchase, you authorize us to charge your payment method for the specified amount. All payments are subject to our refund policy.
               </p>
               
               <h3 className="text-lg font-semibold text-gray-900 mb-3">Refunds</h3>
               <p className="text-gray-600">
-                We offer a 30-day money-back guarantee for all course purchases. If you're not satisfied with your purchase, contact our support team within 30 days for a full refund. No refunds will be issued after 30 days.
+                We offer a 5-day money-back guarantee for course purchases. If you're not satisfied with your purchase, contact our support team within 5 days for a refund. No refunds will be issued after 5 days.
               </p>
             </div>
           </section>
@@ -135,7 +134,7 @@ const TermsOfServicePage = () => {
             <div className="prose prose-gray max-w-none">
               <h3 className="text-lg font-semibold text-gray-900 mb-3">Our Content</h3>
               <p className="text-gray-600 mb-4">
-                All content on YT Academy, including but not limited to text, graphics, videos, audio, software, and course materials, is owned by YT Academy or its licensors and is protected by copyright, trademark, and other intellectual property laws.
+                All content on {config.APP_NAME}, including but not limited to text, graphics, videos, audio, software, and course materials, is owned by {config.APP_NAME} or its licensors and is protected by copyright, trademark, and other intellectual property laws.
               </p>
               
               <h3 className="text-lg font-semibold text-gray-900 mb-3">License to Use</h3>
@@ -209,7 +208,7 @@ const TermsOfServicePage = () => {
               
               <h3 className="text-lg font-semibold text-gray-900 mb-3">Limitation of Liability</h3>
               <p className="text-gray-600">
-                In no event shall YT Academy be liable for any indirect, incidental, special, consequential, or punitive damages, including without limitation, loss of profits, data, use, goodwill, or other intangible losses.
+                In no event shall {config.APP_NAME} be liable for any indirect, incidental, special, consequential, or punitive damages, including without limitation, loss of profits, data, use, goodwill, or other intangible losses.
               </p>
             </div>
           </section>
@@ -236,9 +235,8 @@ const TermsOfServicePage = () => {
               </p>
               <div className="bg-gray-50 rounded-lg p-4">
                 <p className="text-gray-600">
-                  <strong>Email:</strong> legal@ytacademy.com<br />
-                  <strong>Address:</strong> YT Academy, 123 Learning Street, New York, NY 10001<br />
-                  <strong>Phone:</strong> +1 (555) 123-4567
+                  <strong>Email:</strong> {config.SUPPORT_EMAIL}<br />
+                  <strong>WhatsApp:</strong> <a className="text-red-600 hover:text-red-700" href={`https://wa.me/${config.SUPPORT_WHATSAPP.replace(/[^\\d]/g, '')}`} target="_blank" rel="noopener noreferrer">{config.SUPPORT_WHATSAPP}</a>
                 </p>
               </div>
             </div>
@@ -259,10 +257,10 @@ const TermsOfServicePage = () => {
               Contact Us
             </Link>
             <a
-              href="mailto:legal@ytacademy.com"
+              href={`mailto:${config.SUPPORT_EMAIL}`}
               className="border border-gray-300 text-gray-700 hover:bg-gray-50 px-6 py-3 rounded-lg font-semibold transition-colors duration-200"
             >
-              Email Legal Team
+              Email Support
             </a>
           </div>
         </div>

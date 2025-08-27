@@ -71,14 +71,17 @@ exports.generateCertificate = async (req, res) => {
       });
     }
     
-    // Check if user has watched at least the total course duration
+    // Check if user has watched at least the total course duration (with small tolerance)
     if (courseProgress.totalWatchedDuration < courseProgress.courseTotalDuration) {
-      const remainingTime = courseProgress.courseTotalDuration - courseProgress.totalWatchedDuration;
-      const remainingMinutes = Math.ceil(remainingTime / 60);
-      return res.status(400).json({
-        success: false,
-        message: `You must watch the entire course to generate a certificate. You still need to watch ${remainingMinutes} more minutes.`
-      });
+      const remainingTime = Math.max(0, courseProgress.courseTotalDuration - courseProgress.totalWatchedDuration);
+      const toleranceSeconds = 120; // allow up to 2 minutes remaining as tolerance
+      if (remainingTime > toleranceSeconds) {
+        const remainingMinutes = Math.ceil(remainingTime / 60);
+        return res.status(400).json({
+          success: false,
+          message: `You must watch the entire course to generate a certificate. You still need to watch ${remainingMinutes} more minutes.`
+        });
+      }
     }
 
     // Generate certificate ID
@@ -730,12 +733,15 @@ exports.autoGenerateCertificate = async (userId, courseId) => {
       return null;
     }
     
-    // Check if user has watched at least the total course duration
+    // Check if user has watched at least the total course duration (with small tolerance)
     if (courseProgress.totalWatchedDuration < courseProgress.courseTotalDuration) {
-      const remainingTime = courseProgress.courseTotalDuration - courseProgress.totalWatchedDuration;
-      const remainingMinutes = Math.ceil(remainingTime / 60);
-      console.log(`ℹ️ [Certificate] User hasn't watched enough content (${courseProgress.totalWatchedDuration}s/${courseProgress.courseTotalDuration}s). Need ${remainingMinutes} more minutes.`);
-      return null;
+      const remainingTime = Math.max(0, courseProgress.courseTotalDuration - courseProgress.totalWatchedDuration);
+      const toleranceSeconds = 120; // allow up to 2 minutes remaining as tolerance
+      if (remainingTime > toleranceSeconds) {
+        const remainingMinutes = Math.ceil(remainingTime / 60);
+        console.log(`ℹ️ [Certificate] User hasn't watched enough content (${courseProgress.totalWatchedDuration}s/${courseProgress.courseTotalDuration}s). Need ${remainingMinutes} more minutes.`);
+        return null;
+      }
     }
 
     // Generate certificate

@@ -293,7 +293,7 @@ const DashboardCard: React.FC<DashboardCardProps> = ({
             {courseCompleted ? 'Review Course' : progress > 0 ? 'Continue' : 'Start Course'}
           </Link>
           <Link
-            to={`/course/${_id}`}
+            to={`/my-course/${_id}`}
             className="flex-1 border border-gray-300 hover:border-red-300 text-gray-700 hover:text-red-600 font-semibold py-2 px-3 xxs:px-4 rounded-lg transition-all duration-200 text-center text-xs xxs:text-sm"
           >
             View Details

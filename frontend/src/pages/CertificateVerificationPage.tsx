@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Helmet } from 'react-helmet-async';
 import { Search, CheckCircle, XCircle, FileText, Calendar, User, BookOpen, Shield, Award, Sparkles } from 'lucide-react';
 import { useParams, Link } from 'react-router-dom';
 import { buildApiUrl } from '../config/environment';
@@ -124,8 +125,30 @@ const CertificateVerificationPage = () => {
 
 
 
+  const shareImage = 'https://persi-edu-platform.s3.us-east-1.amazonaws.com/persi-academy/Ig-images/congratulations.jpeg';
+  const pageTitle = 'Congratulations on Your Certificate!';
+  const pageDescription = 'Celebrate your achievement with Persi Academy. View and share your certificate now.';
+  const certificateUrl = typeof window !== 'undefined' && urlCertificateId
+    ? `${window.location.origin}/verify/${urlCertificateId}`
+    : `${window.location.origin}/verify`;
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 pt-16">
+      <Helmet>
+        <title>{pageTitle}</title>
+        <meta name="description" content={pageDescription} />
+        {/* Open Graph */}
+        <meta property="og:type" content="website" />
+        <meta property="og:title" content={pageTitle} />
+        <meta property="og:description" content={pageDescription} />
+        <meta property="og:image" content={shareImage} />
+        <meta property="og:url" content={certificateUrl} />
+        {/* Twitter Card */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={pageTitle} />
+        <meta name="twitter:description" content={pageDescription} />
+        <meta name="twitter:image" content={shareImage} />
+      </Helmet>
       {/* Animated Background Elements */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-blue-400/20 to-purple-400/20 rounded-full blur-3xl animate-pulse"></div>

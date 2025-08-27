@@ -2,7 +2,6 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { BookOpen, Search, Filter, Trophy, TrendingUp, Clock, Users } from 'lucide-react';
 import DashboardCard from '../components/DashboardCard';
-import CertificateDownload from '../components/CertificateDownload';
 import { buildApiUrl } from '../config/environment';
 
 interface UserData {
@@ -44,6 +43,15 @@ const DashboardPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<'all' | 'in-progress' | 'completed'>('all');
 
+  // Derive a friendly display name
+  const displayName = useMemo(() => {
+    const rawName = userData?.name?.trim();
+    if (rawName && rawName.length > 0) return rawName;
+    const rawEmail = userData?.email?.trim();
+    if (rawEmail && rawEmail.includes('@')) return rawEmail.split('@')[0];
+    return 'Learner';
+  }, [userData?.name, userData?.email]);
+
   // Fetch user data and enrolled courses with progress
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -68,7 +76,8 @@ const DashboardPage = () => {
         }
 
         const userResult = await userResponse.json();
-        setUserData(userResult.data.user);
+        const me = userResult?.data?.user || userResult?.data || null;
+        setUserData(me);
 
         // Fetch dashboard progress data
         const progressResponse = await fetch(buildApiUrl('/api/progress/dashboard'), {
@@ -82,7 +91,8 @@ const DashboardPage = () => {
         }
 
         const progressResult = await progressResponse.json();
-        setEnrolledCourses(progressResult.data.courses);
+        const courses = Array.isArray(progressResult?.data?.courses) ? progressResult.data.courses : [];
+        setEnrolledCourses(courses);
 
           } catch (error) {
         console.error('Error fetching dashboard data:', error);
@@ -109,10 +119,13 @@ const DashboardPage = () => {
     // Filter by status
     switch (filterStatus) {
       case 'in-progress':
-        filtered = filtered.filter(course => !course.isCompleted && course.progress > 0);
+        filtered = filtered.filter(course => {
+          const isCompletedLike = course.isCompleted || course.progress >= 90;
+          return !isCompletedLike && course.progress > 0;
+        });
         break;
       case 'completed':
-        filtered = filtered.filter(course => course.isCompleted);
+        filtered = filtered.filter(course => course.isCompleted || course.progress >= 90);
         break;
       default:
         // 'all' - no additional filtering
@@ -125,8 +138,8 @@ const DashboardPage = () => {
   // Calculate dashboard statistics
   const dashboardStats = useMemo(() => {
     const totalCourses = enrolledCourses.length;
-    const completedCourses = enrolledCourses.filter(course => course.isCompleted).length;
-    const inProgressCourses = enrolledCourses.filter(course => !course.isCompleted && course.progress > 0).length;
+    const completedCourses = enrolledCourses.filter(course => course.isCompleted || course.progress >= 90).length;
+    const inProgressCourses = enrolledCourses.filter(course => course.progress > 0 && !(course.isCompleted || course.progress >= 90)).length;
     const notStartedCourses = enrolledCourses.filter(course => course.progress === 0).length;
     const averageProgress = totalCourses > 0 
       ? Math.round(enrolledCourses.reduce((sum, course) => sum + course.progress, 0) / totalCourses)
@@ -181,7 +194,7 @@ const DashboardPage = () => {
       {/* Header */}
         <div className="mb-6 xxs:mb-8">
           <h1 className="text-2xl xxs:text-3xl font-bold text-gray-900 mb-2">
-            Welcome back, {userData?.name || 'Learner'}! 👋
+            Welcome back, {displayName}! 👋
           </h1>
           <p className="text-gray-600 text-sm xxs:text-base">
             Continue your learning journey where you left off
