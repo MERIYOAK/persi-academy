@@ -312,6 +312,11 @@
   "brand": {
     "name": "ፕሮፈሽናላዊ ኣካደሚ"
   },
+  "cookie": {
+    "banner_message": "ግልጋሎትኩም ንምምሕያሽ ኩኪስ እንተተጠቀምና። ትቕበሉ ዶ?",
+    "accept": "ይቕበል",
+    "decline": "ኣይቕበልን"
+  },
   "language": {
     "tigrinya": "ትግርኛ",
     "english": "English"

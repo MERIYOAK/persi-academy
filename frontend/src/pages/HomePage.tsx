@@ -225,7 +225,24 @@ const HomePage = () => {
     
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
-        {recent.map((c) => (
+        {recent.map((c) => {
+          const parseDuration = (value: any): number => {
+            if (typeof value === 'number') return value;
+            if (typeof value === 'string') {
+              const v = value.trim();
+              if (v.includes(':')) {
+                const parts = v.split(':').map(p => parseInt(p, 10) || 0);
+                if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2];
+                if (parts.length === 2) return parts[0] * 60 + parts[1];
+                if (parts.length === 1) return parts[0];
+              }
+              const n = parseInt(v, 10);
+              return isNaN(n) ? 0 : n;
+            }
+            return 0;
+          };
+          const totalSeconds = (c.videos || []).reduce((acc, v) => acc + parseDuration(v.duration), 0);
+          return (
           <CourseCard
             key={c._id}
             id={c._id}
@@ -233,13 +250,13 @@ const HomePage = () => {
             description={c.description}
             thumbnail={c.thumbnailURL || ''}
             price={c.price}
-                            duration={`${c.videos?.length || 0} ${t('course_card.lessons')}`}
+                            duration={`${totalSeconds}`}
             students={c.totalEnrollments || 0}
 
                             instructor={t('brand.name')}
             tags={c.tags || []}
           />
-        ))}
+        );})}
       </div>
     );
   }, [recent, loading]);

@@ -312,6 +312,11 @@
   "brand": {
     "name": "Professional Academy"
   },
+  "cookie": {
+    "banner_message": "We use cookies to enhance your experience. Do you accept?",
+    "accept": "Accept",
+    "decline": "Decline"
+  },
   "language": {
     "tigrinya": "ትግርኛ",
     "english": "English"

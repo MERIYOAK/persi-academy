@@ -40,6 +40,29 @@ const CourseCard: React.FC<CourseCardProps> = ({
   const [purchaseStatus, setPurchaseStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [errorMessage, setErrorMessage] = useState('');
 
+  const formattedDuration = useMemo(() => {
+    // Expecting numeric seconds; fallback parser included
+    let totalSeconds = 0;
+    if (typeof duration === 'number') {
+      totalSeconds = duration;
+    } else if (typeof duration === 'string') {
+      const value = duration.trim();
+      const numeric = parseInt(value, 10);
+      if (!isNaN(numeric)) {
+        totalSeconds = numeric;
+      } else if (value.includes(':')) {
+        const parts = value.split(':').map((p) => parseInt(p, 10) || 0);
+        if (parts.length === 3) totalSeconds = parts[0] * 3600 + parts[1] * 60 + parts[2];
+        else if (parts.length === 2) totalSeconds = parts[0] * 60 + parts[1];
+        else if (parts.length === 1) totalSeconds = parts[0];
+      }
+    }
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = Math.floor(totalSeconds % 60);
+    return `${hours}h ${minutes}m ${seconds}s`;
+  }, [duration]);
+
   console.log(`🖼️ CourseCard rendering for course: "${title}"`);
   console.log(`   - Course ID: ${id}`);
   console.log(`   - Price: $${price}`);
@@ -171,7 +194,7 @@ const CourseCard: React.FC<CourseCardProps> = ({
   };
 
   return (
-    <div className={`bg-white rounded-2xl shadow-2xl hover:shadow-3xl transition-all duration-500 transform hover:-translate-y-4 hover:rotate-1 overflow-hidden group flex flex-col ${className} shadow-gray-300/60 hover:shadow-gray-400/80 border border-gray-100/50`}>
+    <div className={`bg-white rounded-2xl shadow-2xl hover:shadow-3xl transition-all duration-500 transform hover:-translate-y-4 hover:rotate-1 overflow-hidden group flex flex-col ${className} shadow-gray-300/60 hover:shadow-gray-400/80 border border-gray-200 sm:border-gray-100/50 ring-1 ring-gray-200 sm:ring-0`}>
              <div className="relative overflow-hidden h-36 xxs:h-40 sm:h-48 shadow-inner">
         {imgLoading && (
           <div className="w-full h-full bg-gray-200 flex items-center justify-center">
@@ -209,7 +232,7 @@ const CourseCard: React.FC<CourseCardProps> = ({
          </div>
       </div>
 
-             <div className="p-4 xxs:p-6 flex flex-col flex-grow bg-gradient-to-b from-white to-gray-50/30">
+             <div className="p-4 xxs:p-6 flex flex-col flex-grow bg-white sm:bg-gradient-to-b sm:from-white sm:to-gray-50/30">
                  <div className="flex items-center justify-between mb-2">
            <div className="flex items-center space-x-1 text-gray-500 text-xs xxs:text-sm">
              <Users className="h-3 w-3 xxs:h-4 xxs:w-4" />
@@ -249,7 +272,7 @@ const CourseCard: React.FC<CourseCardProps> = ({
             <Clock className="h-3 w-3 xxs:h-4 xxs:w-4" />
             <span>{students.toLocaleString()} {t('course_card.lessons')}</span>
           </div>
-          <span className="text-xs xxs:text-sm text-gray-500">{t('brand.name')}</span>
+          <span className="text-xs xxs:text-sm text-gray-500">{formattedDuration}</span>
         </div>
 
         <div className="space-y-2 xxs:space-y-3">

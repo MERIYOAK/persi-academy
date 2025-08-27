@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Search, CheckCircle, XCircle, FileText, Calendar, User, BookOpen, Shield, Award, Sparkles } from 'lucide-react';
-import { useParams } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
+import { buildApiUrl } from '../config/environment';
 
 interface CertificateVerification {
   certificateId: string;
@@ -42,6 +43,18 @@ const CertificateVerificationPage = () => {
       return;
     }
 
+    // Client-side validation to avoid unnecessary 404 requests
+    const candidate = id.trim().toUpperCase();
+    if (!candidate.startsWith('CERT-')) {
+      setError('Certificate ID must start with "CERT-".');
+      return;
+    }
+    const pattern = /^CERT-[A-Z0-9]{5,}-[A-Z0-9]{5,}$/;
+    if (!pattern.test(candidate)) {
+      setError('Please enter a valid certificate ID (e.g., CERT-XXXXXX-XXXXXX).');
+      return;
+    }
+
     try {
       setLoading(true);
       setError(null);
@@ -49,8 +62,11 @@ const CertificateVerificationPage = () => {
       setVerification(null);
       setShowSuccess(false);
 
-              const response = await fetch(buildApiUrl(`/api/certificates/verify/${id.trim()}`));
+              const response = await fetch(buildApiUrl(`/api/certificates/verify/${candidate}`));
 
+      if (response.status === 404) {
+        throw new Error('Certificate not found. Please check the certificate ID and try again.');
+      }
       if (!response.ok) {
         // Try to parse error response as JSON first
         try {
@@ -58,9 +74,7 @@ const CertificateVerificationPage = () => {
           throw new Error(errorData.message || 'Failed to verify certificate');
         } catch (parseError) {
           // If JSON parsing fails, use status-based error messages
-          if (response.status === 404) {
-            throw new Error('Certificate not found. Please check the certificate ID and try again.');
-          } else if (response.status === 500) {
+          if (response.status === 500) {
             throw new Error('Server error occurred. Please try again later.');
           } else if (response.status === 0) {
             throw new Error('Unable to connect to server. Please check if the backend is running.');
@@ -71,12 +85,26 @@ const CertificateVerificationPage = () => {
       }
 
       const result = await response.json();
+      // Handle backend 200 with not-found gracefully
+      if (result?.data?.certificate === null) {
+        setCertificate(null);
+        setVerification(result.data.verification);
+        setError('Certificate not found. Please check the certificate ID and try again.');
+        setShowSuccess(false);
+        setLoading(false);
+        return;
+      }
+
       setCertificate(result.data.certificate);
       setVerification(result.data.verification);
       setShowSuccess(true);
       setLoading(false);
     } catch (error) {
-      setError(error instanceof Error ? error.message : 'Failed to verify certificate');
+      if (error instanceof TypeError) {
+        setError('Network error. Please check your connection and try again.');
+      } else {
+        setError(error instanceof Error ? error.message : 'Failed to verify certificate');
+      }
       setLoading(false);
     }
   };
@@ -143,7 +171,10 @@ const CertificateVerificationPage = () => {
                   id="certificateId"
                   type="text"
                   value={certificateId}
-                  onChange={(e) => setCertificateId(e.target.value)}
+                  onChange={(e) => {
+                    setCertificateId(e.target.value);
+                    if (error) setError(null);
+                  }}
                   placeholder="CERT-MEG68Y1E-SO5ZMU"
                   className="w-full px-4 xxs:px-6 py-3 xxs:py-4 text-base xxs:text-lg border-2 border-gray-300 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300 bg-white shadow-sm"
                   required
@@ -178,13 +209,46 @@ const CertificateVerificationPage = () => {
            <div className="bg-red-50 border border-red-200 rounded-xl p-4 xxs:p-6 mb-6 xxs:mb-8 transform animate-fade-in-up">
             <div className="flex items-start">
               <XCircle className="w-5 h-5 xxs:w-6 xxs:h-6 text-red-500 mr-2 xxs:mr-3 mt-0.5" />
-              <div>
-                <p className="text-sm xxs:text-base text-red-800 font-medium">{error}</p>
-                {error.includes('Certificate not found') && (
-                  <p className="text-xs xxs:text-sm text-red-600 mt-1">
-                    💡 Tip: Make sure you've entered the complete certificate ID correctly, including all characters and hyphens.
+              <div className="w-full">
+                <p className="text-sm xxs:text-base text-red-800 font-semibold">
+                  {error.includes('not found') ? "We couldn't find that certificate" : 'Verification failed'}
+                </p>
+                {certificateId && (
+                  <p className="mt-1 text-xs xxs:text-sm text-red-700">
+                    Searched ID: <span className="font-mono bg-red-100 text-red-800 px-1.5 py-0.5 rounded">{certificateId}</span>
                   </p>
                 )}
+                <div className="mt-2 text-xs xxs:text-sm text-red-700 space-y-1">
+                  {error.includes('not found') ? (
+                    <>
+                      <p>Please check for typos and try again.</p>
+                      <ul className="list-disc ml-5 space-y-1">
+                        <li>Include all letters, numbers, and hyphens.</li>
+                        <li>Common format looks like: <span className="font-mono">CERT-XXXXXX-XXXXXX</span></li>
+                      </ul>
+                    </>
+                  ) : (
+                    <p>{error}</p>
+                  )}
+                </div>
+                <div className="mt-3 flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const input = document.getElementById('certificateId') as HTMLInputElement | null;
+                      if (input) input.focus();
+                    }}
+                    className="text-xs xxs:text-sm px-3 py-1.5 rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors"
+                  >
+                    Try again
+                  </button>
+                  <Link
+                    to="/help-center"
+                    className="text-xs xxs:text-sm px-3 py-1.5 rounded-lg bg-white text-red-700 border border-red-300 hover:bg-red-100 transition-colors"
+                  >
+                    Get help
+                  </Link>
+                </div>
               </div>
             </div>
           </div>

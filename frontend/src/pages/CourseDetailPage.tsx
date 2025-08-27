@@ -97,6 +97,8 @@ const CourseDetailPage = () => {
   const [isRetrying, setIsRetrying] = useState(false);
   const [currentVideoPosition, setCurrentVideoPosition] = useState(0);
   const [currentVideoPercentage, setCurrentVideoPercentage] = useState(0);
+  const [totalCourseDurationSeconds, setTotalCourseDurationSeconds] = useState<number>(0);
+  const [durationById, setDurationById] = useState<Record<string, number>>({});
 
   // Check if user is authenticated
   useEffect(() => {
@@ -207,6 +209,8 @@ const CourseDetailPage = () => {
         const hasFreePreviews = videosWithAccess.some((video: any) => video.isFreePreview);
         
         // Transform videos to match VideoPlayerPage format
+        // Build duration map in seconds; server sends numeric seconds
+        const durationMap: Record<string, number> = {};
         const transformedVideos = videosWithAccess.map((video: any) => {
           // Use the backend's access control decision
           let isAccessible = video.hasAccess;
@@ -224,16 +228,19 @@ const CourseDetailPage = () => {
              hasVideoUrl: !!video.videoUrl
            });
 
+          const durationSeconds: number = typeof video.duration === 'number' ? video.duration : 0;
+          durationMap[video._id] = durationSeconds;
+
           return {
             id: video._id,
             title: video.title,
-            duration: video.duration ? `${Math.floor(video.duration / 60)}:${(video.duration % 60).toString().padStart(2, '0')}` : '00:00',
+            duration: formatDuration(durationSeconds),
             videoUrl: isAccessible ? (video.videoUrl || '') : '',
             completed: video.progress?.isCompleted || false,
             locked: isLocked,
             progress: video.progress || {
               watchedDuration: 0,
-              totalDuration: video.duration || 0,
+              totalDuration: durationSeconds || 0,
               watchedPercentage: 0,
               completionPercentage: 0,
               isCompleted: false
@@ -242,6 +249,11 @@ const CourseDetailPage = () => {
             requiresPurchase: isLocked
           };
         });
+
+        // Save duration map and total duration in seconds for accurate display
+        setDurationById(durationMap);
+        const totalSecs = Object.values(durationMap).reduce((a, b) => a + (b || 0), 0);
+        setTotalCourseDurationSeconds(totalSecs);
 
         const courseDataObj: CourseData = {
           title: course?.title || 'Course',
@@ -425,19 +437,26 @@ const CourseDetailPage = () => {
   };
 
   const formatDuration = (seconds?: number) => {
-    if (!seconds) return '0:00';
-    const hours = Math.floor(seconds / 3600);
-    const minutes = Math.floor((seconds % 3600) / 60);
+    if (seconds === undefined || seconds === null) return '0:00';
+    const total = Math.floor(seconds);
+    const hours = Math.floor(total / 3600);
+    const minutes = Math.floor((total % 3600) / 60);
+    const secs = Math.floor(total % 60);
     if (hours > 0) {
-      return `${hours}:${minutes.toString().padStart(2, '0')}:00`;
+      return `${hours}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
     }
-    return `${minutes}:00`;
+    return `${minutes}:${secs.toString().padStart(2, '0')}`;
   };
 
   const formatTotalDuration = (videos?: Array<{ duration?: number }>) => {
     if (!videos) return '0:00';
     const totalSeconds = videos.reduce((acc, video) => acc + (video.duration || 0), 0);
     return formatDuration(totalSeconds);
+  };
+
+  const getFormattedDurationById = (videoId: string, fallbackSeconds?: number) => {
+    const secs = durationById[videoId] ?? (fallbackSeconds || 0);
+    return formatDuration(secs);
   };
 
   if (loading) {
@@ -473,7 +492,9 @@ const CourseDetailPage = () => {
     );
   }
 
-  const totalDuration = formatTotalDuration(course.videos);
+  const totalDuration = totalCourseDurationSeconds > 0
+    ? formatDuration(totalCourseDurationSeconds)
+    : formatTotalDuration(course.videos);
   const totalVideos = course.videos?.length || 0;
   const currentVideo = courseData?.videos.find(v => v.id === currentVideoId);
 
@@ -789,9 +810,6 @@ const CourseDetailPage = () => {
                     {course.level}
                   </span>
                 )}
-                <span className="bg-green-500/20 backdrop-blur-sm text-green-200 px-4 py-2 rounded-full text-sm font-semibold border border-green-400/30">
-                  English
-                </span>
               </div>
               
               {/* Course Tags */}
@@ -940,7 +958,7 @@ const CourseDetailPage = () => {
                 <div className="text-center mb-8">
                   <div className="flex items-center justify-center space-x-2 text-gray-600 text-sm">
                     <CheckCircle className="h-4 w-4 text-green-500" />
-                    <span>30-day money-back guarantee</span>
+                    <span>5-day money-back guarantee</span>
                   </div>
                 </div>
                 
@@ -1007,7 +1025,7 @@ const CourseDetailPage = () => {
                         </div>
                         <div className="flex items-center space-x-2 text-sm text-gray-600">
                           <Clock className="h-4 w-4" />
-                          <span>{formatDuration(video.duration)}</span>
+                          <span>{getFormattedDurationById(video._id, video.duration)}</span>
                         </div>
                       </div>
                     ))}
@@ -1075,15 +1093,15 @@ const CourseDetailPage = () => {
                 </div>
                 <div className="flex items-center space-x-3">
                   <CheckCircle className="h-5 w-5 text-green-500" />
-                  <span className="text-gray-700">Downloadable resources</span>
+                  <span className="text-gray-700">Regular course updates</span>
                 </div>
                 <div className="flex items-center space-x-3">
                   <CheckCircle className="h-5 w-5 text-green-500" />
-                  <span className="text-gray-700">Mobile and TV access</span>
+                  <span className="text-gray-700">Community Q&A support</span>
                 </div>
                 <div className="flex items-center space-x-3">
                   <CheckCircle className="h-5 w-5 text-green-500" />
-                  <span className="text-gray-700">30-day money-back guarantee</span>
+                  <span className="text-gray-700">5-day money-back guarantee</span>
                 </div>
               </div>
             </section>

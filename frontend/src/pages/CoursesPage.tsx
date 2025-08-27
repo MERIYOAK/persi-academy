@@ -145,12 +145,13 @@ const CoursesPage: React.FC = () => {
         ));
 
       // Category filter
-      const categoryMapping = {
+      const categoryMapping: Record<string, string> = {
         'youtube mastering': 'youtube',
         'video editing': 'video',
         'camera': 'camera'
       };
-      const courseCategory = categoryMapping[course.category] || course.category;
+      const rawCategory = course.category ?? '';
+      const courseCategory = categoryMapping[rawCategory] || rawCategory;
       const matchesCategory = selectedCategory === '' || courseCategory === selectedCategory;
 
       // Level filter
@@ -205,7 +206,7 @@ const CoursesPage: React.FC = () => {
     const predefinedCategories = ['youtube', 'camera', 'photo', 'video', 'computer', 'english', 'other'];
     
     // Category mapping from old to new values
-    const categoryMapping = {
+    const categoryMapping: Record<string, string> = {
       'youtube mastering': 'youtube',
       'video editing': 'video',
       'camera': 'camera'
@@ -213,7 +214,7 @@ const CoursesPage: React.FC = () => {
     
     // Get categories from existing courses and map them to new values
     const existingCategories = [...new Set(courses.map(course => {
-      const category = course.category;
+      const category = course.category ?? '';
       return categoryMapping[category] || category;
     }).filter(Boolean))];
     
@@ -231,7 +232,13 @@ const CoursesPage: React.FC = () => {
   }, [courses]);
 
   const levels = useMemo(() => {
-    const uniqueLevels = [...new Set(courses.map(course => course.level).filter(Boolean))];
+    const uniqueLevels = [
+      ...new Set(
+        courses
+          .map(course => course.level)
+          .filter((level): level is string => typeof level === 'string' && level.length > 0)
+      )
+    ];
     return uniqueLevels.sort();
   }, [courses]);
 
@@ -296,7 +303,24 @@ const CoursesPage: React.FC = () => {
     
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 xxs:gap-6 sm:gap-8">
-        {filteredCourses.map((c) => (
+        {filteredCourses.map((c) => {
+          const parseDuration = (value: any): number => {
+            if (typeof value === 'number') return value;
+            if (typeof value === 'string') {
+              const v = value.trim();
+              if (v.includes(':')) {
+                const parts = v.split(':').map(p => parseInt(p, 10) || 0);
+                if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2];
+                if (parts.length === 2) return parts[0] * 60 + parts[1];
+                if (parts.length === 1) return parts[0];
+              }
+              const n = parseInt(v, 10);
+              return isNaN(n) ? 0 : n;
+            }
+            return 0;
+          };
+          const totalSeconds = (c.videos || []).reduce((acc, v) => acc + parseDuration(v.duration), 0);
+          return (
           <CourseCard
             key={c._id}
             id={c._id}
@@ -304,13 +328,13 @@ const CoursesPage: React.FC = () => {
             description={c.description}
             thumbnail={c.thumbnailURL || ''}
             price={c.price}
-            duration={`${c.videos?.length || 0} ${t('course_card.lessons')}`}
+            duration={`${totalSeconds}`}
             students={c.totalEnrollments || 0}
             instructor={t('brand.name')}
             tags={c.tags || []}
             onPurchaseSuccess={handlePurchaseSuccess}
           />
-        ))}
+        );})}
       </div>
     );
   }, [filteredCourses, loading, error, courses.length, handlePurchaseSuccess]);
@@ -354,7 +378,7 @@ const CoursesPage: React.FC = () => {
           {/* Advanced Filters */}
           <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
             {/* Filter Header */}
-            <div className="bg-gradient-to-r from-red-50 to-orange-50 px-2 sm:px-3 xxs:px-4 lg:px-6 py-1.5 sm:py-2 xxs:py-3 lg:py-4 border-b border-gray-100">
+            <div className="bg-gradient-to-r from-red-50 to-orange-50 px-2 sm:px-3 xxs:px-4 lg:px-6 py-1.5 sm:py-2 xxs:py-2 lg:py-4 border-b border-gray-100">
               <div className="flex flex-col xxs:flex-row xxs:items-center xxs:justify-between space-y-1.5 sm:space-y-2 xxs:space-y-3 lg:space-y-0">
                 <div className="flex items-center space-x-1 sm:space-x-2 xxs:space-x-3">
                   <Filter className="h-3 w-3 sm:h-4 sm:w-4 xxs:h-5 xxs:w-5 text-red-600" />
@@ -387,8 +411,8 @@ const CoursesPage: React.FC = () => {
 
             {/* Filter Options */}
             {showFilters && (
-              <div className="p-2 sm:p-3 xxs:p-4 lg:p-6">
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 sm:gap-3 xxs:gap-4 lg:gap-6">
+              <div className="p-2 sm:p-3 xxs:p-2 lg:p-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 sm:gap-3 xxs:gap-2 lg:gap-6">
                   {/* Category Filter */}
                   <div className="space-y-1 sm:space-y-2">
                     <label className="block text-xs xxs:text-sm font-semibold text-gray-700">
@@ -398,7 +422,7 @@ const CoursesPage: React.FC = () => {
                       <select
                         value={selectedCategory}
                         onChange={(e) => setSelectedCategory(e.target.value)}
-                        className="w-full px-1.5 sm:px-2 xxs:px-3 lg:px-4 py-1 sm:py-1.5 xxs:py-2 lg:py-3 border-2 border-gray-200 rounded-lg sm:rounded-xl focus:ring-4 focus:ring-red-100 focus:border-red-500 transition-all duration-200 appearance-none bg-white text-xs sm:text-sm xxs:text-base"
+                        className="w-full px-1.5 sm:px-2 xxs:px-3 lg:px-4 py-1 sm:py-1.5 xxs:py-1.5 lg:py-3 border-2 border-gray-200 rounded-lg sm:rounded-xl focus:ring-4 focus:ring-red-100 focus:border-red-500 transition-all duration-200 appearance-none bg-white text-xs sm:text-sm xxs:text-base"
                       >
                         <option value="">{t('courses.filter_all')}</option>
                         {categories.map(category => (
@@ -424,7 +448,7 @@ const CoursesPage: React.FC = () => {
                       <select
                         value={selectedLevel}
                         onChange={(e) => setSelectedLevel(e.target.value)}
-                        className="w-full px-1.5 sm:px-2 xxs:px-3 lg:px-4 py-1 sm:py-1.5 xxs:py-2 lg:py-3 border-2 border-gray-200 rounded-lg sm:rounded-xl focus:ring-4 focus:ring-red-100 focus:border-red-500 transition-all duration-200 appearance-none bg-white text-xs sm:text-sm xxs:text-base"
+                        className="w-full px-1.5 sm:px-2 xxs:px-3 lg:px-4 py-1 sm:py-1.5 xxs:py-1.5 lg:py-3 border-2 border-gray-200 rounded-lg sm:rounded-xl focus:ring-4 focus:ring-red-100 focus:border-red-500 transition-all duration-200 appearance-none bg-white text-xs sm:text-sm xxs:text-base"
                       >
                         <option value="">{t('courses.filter_all')}</option>
                         {levels.map(level => (
@@ -453,7 +477,7 @@ const CoursesPage: React.FC = () => {
                       <select
                         value={selectedTag}
                         onChange={(e) => setSelectedTag(e.target.value)}
-                        className="w-full px-1.5 sm:px-2 xxs:px-3 lg:px-4 py-1 sm:py-1.5 xxs:py-2 lg:py-3 border-2 border-gray-200 rounded-lg sm:rounded-xl focus:ring-4 focus:ring-red-100 focus:border-red-500 transition-all duration-200 appearance-none bg-white text-xs sm:text-sm xxs:text-base"
+                        className="w-full px-1.5 sm:px-2 xxs:px-3 lg:px-4 py-1 sm:py-1.5 xxs:py-1.5 lg:py-3 border-2 border-gray-200 rounded-lg sm:rounded-xl focus:ring-4 focus:ring-red-100 focus:border-red-500 transition-all duration-200 appearance-none bg-white text-xs sm:text-sm xxs:text-base"
                       >
                         <option value="">{t('courses.filter_all')}</option>
                         {tags.map(tag => (
@@ -479,7 +503,7 @@ const CoursesPage: React.FC = () => {
                       <select
                         value={priceRange}
                         onChange={(e) => setPriceRange(e.target.value)}
-                        className="w-full px-1.5 sm:px-2 xxs:px-3 lg:px-4 py-1 sm:py-1.5 xxs:py-2 lg:py-3 border-2 border-gray-200 rounded-lg sm:rounded-xl focus:ring-4 focus:ring-red-100 focus:border-red-500 transition-all duration-200 appearance-none bg-white text-xs sm:text-sm xxs:text-base"
+                        className="w-full px-1.5 sm:px-2 xxs:px-3 lg:px-4 py-1 sm:py-1.5 xxs:py-1.5 lg:py-3 border-2 border-gray-200 rounded-lg sm:rounded-xl focus:ring-4 focus:ring-red-100 focus:border-red-500 transition-all duration-200 appearance-none bg-white text-xs sm:text-sm xxs:text-base"
                       >
                         <option value="">{t('courses.price_all')}</option>
                         <option value="free">{t('courses.price_free')}</option>
