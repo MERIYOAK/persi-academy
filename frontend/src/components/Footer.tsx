@@ -5,9 +5,10 @@ import { BookOpen, Mail, Phone, MapPin, Youtube, Twitter, Instagram, Shield } fr
 
 interface FooterProps {
   className?: string;
+  openCookieSettingsRef?: React.MutableRefObject<(() => void) | null>;
 }
 
-const Footer: React.FC<FooterProps> = ({ className = '' }) => {
+const Footer: React.FC<FooterProps> = ({ className = '', openCookieSettingsRef }) => {
   const { t } = useTranslation();
   
   return (
@@ -142,6 +143,13 @@ const Footer: React.FC<FooterProps> = ({ className = '' }) => {
                 <Shield className="h-3 w-3" />
                 <span>{t('footer.verify_certificate')}</span>
               </Link>
+              <button
+                type="button"
+                onClick={() => openCookieSettingsRef?.current && openCookieSettingsRef.current()}
+                className="text-gray-400 hover:text-white text-sm transition-colors duration-200 underline"
+              >
+                Cookie Settings
+              </button>
             </div>
           </div>
         </div>

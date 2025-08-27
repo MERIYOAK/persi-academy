@@ -246,9 +246,16 @@ exports.verifyCertificate = async (req, res) => {
     const certificate = await Certificate.getByCertificateId(certificateId);
 
     if (!certificate) {
-      return res.status(404).json({
-        success: false,
-        message: 'Certificate not found'
+      return res.status(200).json({
+        success: true,
+        message: 'Certificate not found',
+        data: {
+          certificate: null,
+          verification: {
+            isValid: false,
+            verifiedAt: new Date().toISOString()
+          }
+        }
       });
     }
 
