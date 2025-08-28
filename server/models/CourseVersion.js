@@ -12,7 +12,7 @@ const courseVersionSchema = new mongoose.Schema({
   thumbnailS3Key: { type: String }, // Store S3 key for generating fresh signed URLs
   category: { 
     type: String, 
-    enum: ['youtube mastering', 'video editing', 'camera'],
+    enum: ['youtube', 'camera', 'photo', 'video', 'computer', 'english', 'other'],
     required: true 
   },
   level: { 

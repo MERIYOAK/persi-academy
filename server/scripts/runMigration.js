@@ -27,7 +27,7 @@ const runMigration = async () => {
       
       // Check if course needs category update
       if (!course.category || course.category === '') {
-        course.category = 'youtube mastering';
+        course.category = 'youtube';
         needsUpdate = true;
       }
       

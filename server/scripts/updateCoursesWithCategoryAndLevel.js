@@ -35,7 +35,7 @@ const updateCourses = async () => {
     }
     
     // Default values for existing courses
-    const defaultCategory = 'youtube mastering';
+    const defaultCategory = 'youtube';
     const defaultLevel = 'beginner';
     
     // Update each course
