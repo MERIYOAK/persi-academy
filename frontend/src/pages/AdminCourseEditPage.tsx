@@ -13,6 +13,7 @@ interface Video {
   status: string;
   uploadedBy: string;
   createdAt: string;
+  description?: string;
 }
 
 interface Course {
@@ -450,12 +451,7 @@ const AdminCourseEditPage: React.FC = () => {
     });
   };
 
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-    }).format(price);
-  };
+
 
   // Handle progress overlay OK button
   const handleProgressOverlayOk = () => {

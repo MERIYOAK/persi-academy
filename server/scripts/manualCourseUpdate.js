@@ -35,12 +35,12 @@ const updateSpecificCourses = async () => {
       // Example updates - replace with your actual course IDs and desired values
       // {
       //   courseId: 'your-course-id-here',
-      //   category: 'youtube mastering',
+      //   category: 'youtube',
       //   level: 'beginner'
       // },
       // {
       //   courseId: 'another-course-id',
-      //   category: 'video editing',
+      //   category: 'video',
       //   level: 'intermediate'
       // }
     ];
@@ -48,7 +48,7 @@ const updateSpecificCourses = async () => {
     if (courseUpdates.length === 0) {
       console.log('⚠️  No manual updates configured. Please edit this script to add course updates.');
       console.log('📝 Example format:');
-      console.log('   { courseId: "course-id", category: "youtube mastering", level: "beginner" }');
+      console.log('   { courseId: "course-id", category: "youtube", level: "beginner" }');
       return;
     }
     

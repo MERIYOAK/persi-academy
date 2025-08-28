@@ -31,11 +31,11 @@ const createCourse = async (req, res) => {
     }
 
     // Validate category
-    const validCategories = ['youtube mastering', 'video editing', 'camera'];
+    const validCategories = ['youtube', 'camera', 'photo', 'video', 'computer', 'english', 'other'];
     if (!validCategories.includes(category)) {
       return res.status(400).json({ 
         success: false, 
-        message: 'Category must be one of: youtube mastering, video editing, camera' 
+        message: 'Category must be one of: youtube, camera, photo, video, computer, english, other' 
       });
     }
 
@@ -420,11 +420,11 @@ const updateCourse = async (req, res) => {
     if (description) course.description = description;
     if (price) course.price = parseFloat(price);
     if (category) {
-      const validCategories = ['youtube mastering', 'video editing', 'camera'];
+      const validCategories = ['youtube', 'camera', 'photo', 'video', 'computer', 'english', 'other'];
       if (!validCategories.includes(category)) {
         return res.status(400).json({
           success: false,
-          message: 'Category must be one of: youtube mastering, video editing, camera'
+          message: 'Category must be one of: youtube, camera, photo, video, computer, english, other'
         });
       }
       course.category = category;
