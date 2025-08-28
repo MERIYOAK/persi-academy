@@ -1,4 +1,4 @@
-const { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand } = require('@aws-sdk/client-s3');
+const { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand, HeadBucketCommand } = require('@aws-sdk/client-s3');
 const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
 const crypto = require('crypto');
 
@@ -7,15 +7,19 @@ const hasAwsCredentials = !!(process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SE
 
 // Initialize S3 client only if credentials are available
 let s3Client = null;
+let bucketRegion = null;
+
 if (hasAwsCredentials) {
+  // Initialize with default region first
+  const defaultRegion = process.env.AWS_REGION || 'us-east-1';
   s3Client = new S3Client({
-    region: process.env.AWS_REGION || 'us-east-1',
+    region: defaultRegion,
     credentials: {
       accessKeyId: process.env.AWS_ACCESS_KEY_ID,
       secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
     },
   });
-  console.log('✅ S3 client initialized with AWS credentials');
+  console.log(`✅ S3 client initialized with region: ${defaultRegion}`);
 } else {
   console.log('⚠️  S3 client not initialized - missing AWS credentials');
   console.log('💡 Profile photo uploads will be disabled');
@@ -23,6 +27,41 @@ if (hasAwsCredentials) {
 
 const BUCKET_NAME = 'persi-edu-platform';
 const PROFILE_PHOTOS_FOLDER = 'persi-academy/profile-pictures/';
+
+// Function to detect bucket region
+async function detectBucketRegion() {
+  if (!hasAwsCredentials || !s3Client) {
+    throw new Error('S3 is not configured. Please set AWS credentials to enable profile photo uploads.');
+  }
+
+  try {
+    const command = new HeadBucketCommand({ Bucket: BUCKET_NAME });
+    await s3Client.send(command);
+    // If successful, bucket is in the current region
+    return s3Client.config.region();
+  } catch (error) {
+    if (error.name === 'PermanentRedirect' || error.$metadata?.httpStatusCode === 301) {
+      // Extract region from the error response
+      const region = error.$metadata?.extendedRequestId?.split('/')[1] || 
+                    error.$metadata?.cfId || 
+                    'us-east-1';
+      
+      console.log(`🔄 Detected bucket region: ${region}`);
+      
+      // Reinitialize S3 client with correct region
+      s3Client = new S3Client({
+        region: region,
+        credentials: {
+          accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+          secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+        },
+      });
+      
+      return region;
+    }
+    throw error;
+  }
+}
 
 class S3Service {
   /**
@@ -36,6 +75,11 @@ class S3Service {
     try {
       if (!hasAwsCredentials || !s3Client) {
         throw new Error('S3 is not configured. Please set AWS credentials to enable profile photo uploads.');
+      }
+
+      // Detect bucket region if not already detected
+      if (!bucketRegion) {
+        bucketRegion = await detectBucketRegion();
       }
 
       // Generate unique filename
@@ -62,6 +106,41 @@ class S3Service {
       return key;
     } catch (error) {
       console.error('❌ Error uploading profile photo to S3:', error);
+      
+      // Handle region-specific errors
+      if (error.name === 'PermanentRedirect' || error.$metadata?.httpStatusCode === 301) {
+        console.log('🔄 Retrying with correct region...');
+        try {
+          // Reset bucket region and retry
+          bucketRegion = null;
+          bucketRegion = await detectBucketRegion();
+          
+          // Retry the upload
+          const fileExtension = originalName.split('.').pop();
+          const uniqueFileName = `${userId}-${crypto.randomBytes(16).toString('hex')}.${fileExtension}`;
+          const key = `${PROFILE_PHOTOS_FOLDER}${uniqueFileName}`;
+
+          const uploadParams = {
+            Bucket: BUCKET_NAME,
+            Key: key,
+            Body: fileBuffer,
+            ContentType: this.getContentType(fileExtension),
+            ACL: 'private',
+            Metadata: {
+              'user-id': userId,
+              'upload-date': new Date().toISOString(),
+            },
+          };
+
+          await s3Client.send(new PutObjectCommand(uploadParams));
+          console.log(`✅ Profile photo uploaded successfully after region fix: ${key}`);
+          return key;
+        } catch (retryError) {
+          console.error('❌ Retry failed:', retryError);
+          throw new Error('Failed to upload profile photo after region detection');
+        }
+      }
+      
       throw new Error('Failed to upload profile photo');
     }
   }
@@ -82,6 +161,11 @@ class S3Service {
         throw new Error('Profile photo key is required');
       }
 
+      // Detect bucket region if not already detected
+      if (!bucketRegion) {
+        bucketRegion = await detectBucketRegion();
+      }
+
       const command = new GetObjectCommand({
         Bucket: BUCKET_NAME,
         Key: profilePhotoKey,
@@ -93,6 +177,29 @@ class S3Service {
       return signedUrl;
     } catch (error) {
       console.error('❌ Error generating signed URL:', error);
+      
+      // Handle region-specific errors
+      if (error.name === 'PermanentRedirect' || error.$metadata?.httpStatusCode === 301) {
+        console.log('🔄 Retrying signed URL generation with correct region...');
+        try {
+          // Reset bucket region and retry
+          bucketRegion = null;
+          bucketRegion = await detectBucketRegion();
+          
+          const command = new GetObjectCommand({
+            Bucket: BUCKET_NAME,
+            Key: profilePhotoKey,
+          });
+
+          const signedUrl = await getSignedUrl(s3Client, command, { expiresIn });
+          console.log(`✅ Generated signed URL after region fix: ${profilePhotoKey}`);
+          return signedUrl;
+        } catch (retryError) {
+          console.error('❌ Retry failed:', retryError);
+          throw new Error('Failed to generate profile photo URL after region detection');
+        }
+      }
+      
       throw new Error('Failed to generate profile photo URL');
     }
   }
@@ -114,6 +221,11 @@ class S3Service {
         return;
       }
 
+      // Detect bucket region if not already detected
+      if (!bucketRegion) {
+        bucketRegion = await detectBucketRegion();
+      }
+
       const deleteParams = {
         Bucket: BUCKET_NAME,
         Key: profilePhotoKey,
@@ -123,7 +235,29 @@ class S3Service {
       console.log(`✅ Profile photo deleted successfully: ${profilePhotoKey}`);
     } catch (error) {
       console.error('❌ Error deleting profile photo from S3:', error);
-      throw new Error('Failed to delete profile photo');
+      
+      // Handle region-specific errors
+      if (error.name === 'PermanentRedirect' || error.$metadata?.httpStatusCode === 301) {
+        console.log('🔄 Retrying deletion with correct region...');
+        try {
+          // Reset bucket region and retry
+          bucketRegion = null;
+          bucketRegion = await detectBucketRegion();
+          
+          const deleteParams = {
+            Bucket: BUCKET_NAME,
+            Key: profilePhotoKey,
+          };
+
+          await s3Client.send(new DeleteObjectCommand(deleteParams));
+          console.log(`✅ Profile photo deleted successfully after region fix: ${profilePhotoKey}`);
+        } catch (retryError) {
+          console.error('❌ Retry failed:', retryError);
+          throw new Error('Failed to delete profile photo after region detection');
+        }
+      } else {
+        throw new Error('Failed to delete profile photo');
+      }
     }
   }
 
@@ -138,6 +272,11 @@ class S3Service {
       if (!hasAwsCredentials || !s3Client) {
         console.log('⚠️  S3 not configured - skipping Google profile photo upload');
         return null;
+      }
+
+      // Detect bucket region if not already detected
+      if (!bucketRegion) {
+        bucketRegion = await detectBucketRegion();
       }
 
       // Download the image from Google
@@ -177,6 +316,53 @@ class S3Service {
       return key;
     } catch (error) {
       console.error('❌ Error uploading Google profile photo to S3:', error);
+      
+      // Handle region-specific errors
+      if (error.name === 'PermanentRedirect' || error.$metadata?.httpStatusCode === 301) {
+        console.log('🔄 Retrying Google profile photo upload with correct region...');
+        try {
+          // Reset bucket region and retry
+          bucketRegion = null;
+          bucketRegion = await detectBucketRegion();
+          
+          // Download the image from Google again
+          const response = await fetch(googlePhotoUrl);
+          if (!response.ok) {
+            throw new Error('Failed to download Google profile photo');
+          }
+
+          const imageBuffer = await response.arrayBuffer();
+          const buffer = Buffer.from(imageBuffer);
+
+          const contentType = response.headers.get('content-type');
+          const extension = this.getExtensionFromContentType(contentType);
+
+          const uniqueFileName = `${userId}-google-${crypto.randomBytes(16).toString('hex')}.${extension}`;
+          const key = `${PROFILE_PHOTOS_FOLDER}${uniqueFileName}`;
+
+          const uploadParams = {
+            Bucket: BUCKET_NAME,
+            Key: key,
+            Body: buffer,
+            ContentType: contentType,
+            ACL: 'private',
+            Metadata: {
+              'user-id': userId,
+              'source': 'google',
+              'upload-date': new Date().toISOString(),
+            },
+          };
+
+          await s3Client.send(new PutObjectCommand(uploadParams));
+          console.log(`✅ Google profile photo uploaded successfully after region fix: ${key}`);
+          return key;
+        } catch (retryError) {
+          console.error('❌ Retry failed:', retryError);
+          console.log('⚠️  Continuing without Google profile photo');
+          return null;
+        }
+      }
+      
       console.log('⚠️  Continuing without Google profile photo');
       return null;
     }
