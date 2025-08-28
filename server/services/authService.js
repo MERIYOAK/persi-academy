@@ -368,16 +368,23 @@ class AuthService {
             // Handle Google profile photo
             if (profile.photos && profile.photos[0]) {
               try {
+                console.log(`📸 Processing Google profile photo for linking user: ${user.email}`);
                 const profilePhotoKey = await s3Service.uploadGoogleProfilePhoto(
                   profile.photos[0].value,
                   user._id.toString()
                 );
                 if (profilePhotoKey) {
                   user.profilePhotoKey = profilePhotoKey;
+                  console.log(`✅ Google profile photo uploaded successfully: ${profilePhotoKey}`);
+                } else {
+                  console.log('⚠️  Google profile photo upload returned null');
                 }
               } catch (error) {
-                console.warn('Failed to upload Google profile photo:', error);
+                console.error('❌ Failed to upload Google profile photo:', error.message);
+                // Continue without profile photo - don't fail the entire linking
               }
+            } else {
+              console.log('ℹ️  No Google profile photo available for linking user');
             }
           } else {
             // User already exists with Google OAuth but different Google ID
@@ -389,16 +396,23 @@ class AuthService {
             // Handle Google profile photo
             if (profile.photos && profile.photos[0]) {
               try {
+                console.log(`📸 Processing Google profile photo for updating user: ${user.email}`);
                 const profilePhotoKey = await s3Service.uploadGoogleProfilePhoto(
                   profile.photos[0].value,
                   user._id.toString()
                 );
                 if (profilePhotoKey) {
                   user.profilePhotoKey = profilePhotoKey;
+                  console.log(`✅ Google profile photo uploaded successfully: ${profilePhotoKey}`);
+                } else {
+                  console.log('⚠️  Google profile photo upload returned null');
                 }
               } catch (error) {
-                console.warn('Failed to upload Google profile photo:', error);
+                console.error('❌ Failed to upload Google profile photo:', error.message);
+                // Continue without profile photo - don't fail the entire update
               }
+            } else {
+              console.log('ℹ️  No Google profile photo available for updating user');
             }
           }
         } else {
@@ -415,16 +429,23 @@ class AuthService {
           // Handle Google profile photo
           if (profile.photos && profile.photos[0]) {
             try {
+              console.log(`📸 Processing Google profile photo for user: ${user.email}`);
               const profilePhotoKey = await s3Service.uploadGoogleProfilePhoto(
                 profile.photos[0].value,
                 user._id.toString()
               );
               if (profilePhotoKey) {
                 user.profilePhotoKey = profilePhotoKey;
+                console.log(`✅ Google profile photo uploaded successfully: ${profilePhotoKey}`);
+              } else {
+                console.log('⚠️  Google profile photo upload returned null');
               }
             } catch (error) {
-              console.warn('Failed to upload Google profile photo:', error);
+              console.error('❌ Failed to upload Google profile photo:', error.message);
+              // Continue without profile photo - don't fail the entire registration
             }
+          } else {
+            console.log('ℹ️  No Google profile photo available for user');
           }
         }
 
@@ -512,10 +533,12 @@ class AuthService {
         console.log('🔧 [AuthService] Processing profile photo update:', {
           fileName: profilePhoto.originalname,
           fileSize: profilePhoto.size,
-          mimeType: profilePhoto.mimetype
+          mimeType: profilePhoto.mimetype,
+          userId: user._id.toString()
         });
 
         try {
+          // Validate the profile photo
           s3Service.validateProfilePhoto(profilePhoto);
           console.log('✅ [AuthService] Profile photo validation passed');
           
@@ -525,7 +548,13 @@ class AuthService {
             // Delete old profile photo if exists
             if (user.profilePhotoKey) {
               console.log('🗑️ [AuthService] Deleting old profile photo:', user.profilePhotoKey);
-              await s3Service.deleteProfilePhoto(user.profilePhotoKey);
+              try {
+                await s3Service.deleteProfilePhoto(user.profilePhotoKey);
+                console.log('✅ [AuthService] Old profile photo deleted successfully');
+              } catch (deleteError) {
+                console.warn('⚠️ [AuthService] Failed to delete old profile photo:', deleteError.message);
+                // Continue with upload even if deletion fails
+              }
             }
 
             // Upload new profile photo
@@ -535,15 +564,22 @@ class AuthService {
               profilePhoto.originalname,
               user._id.toString()
             );
-            user.profilePhotoKey = profilePhotoKey;
-            console.log('✅ [AuthService] Profile photo uploaded successfully:', profilePhotoKey);
+            
+            if (profilePhotoKey) {
+              user.profilePhotoKey = profilePhotoKey;
+              console.log('✅ [AuthService] Profile photo uploaded successfully:', profilePhotoKey);
+            } else {
+              console.error('❌ [AuthService] Profile photo upload returned null');
+              throw new Error('Profile photo upload failed - no key returned');
+            }
           } else {
             console.log('⚠️  S3 not configured - skipping profile photo update');
+            throw new Error('S3 is not configured for profile photo uploads');
           }
         } catch (error) {
-          console.warn('⚠️  Profile photo update failed:', error.message);
+          console.error('❌ [AuthService] Profile photo update failed:', error.message);
           console.error('❌ [AuthService] Profile photo error details:', error);
-          // Continue update without profile photo
+          // Continue update without profile photo - don't fail the entire profile update
         }
       }
 
@@ -652,6 +688,76 @@ class AuthService {
       };
     } catch (error) {
       console.error('❌ Send password reset email error:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Delete user profile photo
+   * @param {string} userId - User ID
+   * @returns {Object} - Success status and message
+   */
+  async deleteProfilePhoto(userId) {
+    try {
+      const user = await User.findById(userId);
+      if (!user) {
+        throw new Error('User not found');
+      }
+
+      if (!user.profilePhotoKey) {
+        console.log(`ℹ️  User ${user.email} has no profile photo to delete`);
+        return {
+          success: true,
+          message: 'No profile photo to delete'
+        };
+      }
+
+      console.log(`🗑️  [AuthService] Deleting profile photo for user: ${user.email}`);
+      console.log(`🗑️  [AuthService] Profile photo key: ${user.profilePhotoKey}`);
+
+      if (s3Service.isConfigured()) {
+        try {
+          await s3Service.deleteProfilePhoto(user.profilePhotoKey);
+          console.log('✅ [AuthService] Profile photo deleted from S3 successfully');
+        } catch (deleteError) {
+          console.error('❌ [AuthService] Failed to delete profile photo from S3:', deleteError.message);
+          // Continue with database update even if S3 deletion fails
+        }
+      } else {
+        console.log('⚠️  S3 not configured - skipping S3 deletion');
+      }
+
+      // Remove profile photo key from user
+      user.profilePhotoKey = null;
+      await user.save();
+
+      console.log(`✅ Profile photo deleted successfully for user: ${user.email}`);
+
+      return {
+        success: true,
+        message: 'Profile photo deleted successfully',
+        user: {
+          _id: user._id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          authProvider: user.authProvider,
+          profilePhotoKey: user.profilePhotoKey,
+          isVerified: user.isVerified,
+          createdAt: user.createdAt,
+          // Extended profile fields
+          firstName: user.firstName,
+          lastName: user.lastName,
+          age: user.age,
+          sex: user.sex,
+          address: user.address,
+          telephone: user.telephone,
+          country: user.country,
+          city: user.city
+        }
+      };
+    } catch (error) {
+      console.error('❌ Delete profile photo error:', error);
       throw error;
     }
   }

@@ -432,25 +432,14 @@ const getProfilePhoto = async (req, res) => {
  */
 const deleteProfilePhoto = async (req, res) => {
   try {
-    const user = await authService.getUserById(req.user.userId);
+    console.log(`🗑️  [AuthController] Delete profile photo requested for user: ${req.user.userId}`);
 
-    if (!user.profilePhotoKey) {
-      return res.status(404).json({
-        success: false,
-        message: 'No profile photo found'
-      });
-    }
-
-    // Delete from S3
-    await s3Service.deleteProfilePhoto(user.profilePhotoKey);
-
-    // Update user document
-    user.profilePhotoKey = null;
-    await user.save();
+    const result = await authService.deleteProfilePhoto(req.user.userId);
 
     res.json({
       success: true,
-      message: 'Profile photo deleted successfully'
+      message: result.message,
+      user: result.user
     });
 
   } catch (error) {
