@@ -412,6 +412,50 @@ const HomePage = () => {
         </div>
       </section>
 
+      {/* FAQ Section */}
+      <section className="py-12 sm:py-16 md:py-20 bg-gradient-to-br from-gray-50 to-red-50">
+        <div className="max-w-4xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
+          <div className="text-center mb-12 sm:mb-16">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-800 mb-3 sm:mb-4">
+              {t('home.faq.title')}
+            </h2>
+            <p className="text-sm sm:text-base md:text-lg text-gray-600 max-w-2xl mx-auto px-4">
+              {t('home.faq.subtitle')}
+            </p>
+          </div>
+          
+          <div className="space-y-6 sm:space-y-8">
+            {[
+              {
+                question: t('home.faq.questions.get_started.question'),
+                answer: t('home.faq.questions.get_started.answer')
+              },
+              {
+                question: t('home.faq.questions.refunds.question'),
+                answer: t('home.faq.questions.refunds.answer')
+              },
+              {
+                question: t('home.faq.questions.mobile.question'),
+                answer: t('home.faq.questions.mobile.answer')
+              }
+            ].map((faq, index) => (
+              <div 
+                key={index}
+                className="group bg-white p-6 sm:p-8 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 border border-gray-100"
+              >
+                <h3 className="text-lg sm:text-xl font-bold text-gray-800 mb-3 sm:mb-4 group-hover:text-red-600 transition-colors duration-300 flex items-center">
+                  <Star className="h-5 w-5 sm:h-6 sm:w-6 mr-3 text-red-500 group-hover:scale-110 transition-transform duration-300" />
+                  {faq.question}
+                </h3>
+                <p className="text-sm sm:text-base text-gray-600 leading-relaxed pl-8 sm:pl-9 group-hover:text-gray-700 transition-colors duration-300">
+                  {faq.answer}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* Testimonials */}
       <section className="py-12 sm:py-16 md:py-20 bg-white">
         <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8">

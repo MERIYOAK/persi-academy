@@ -1,7 +1,7 @@
 # 🔐 Google OAuth Setup Guide
 
 ## Overview
-This guide will help you set up Google OAuth authentication for your Persi Learning Platform.
+This guide will help you set up Google OAuth authentication for your QENDIEL Academy Platform.
 
 ## 📋 Prerequisites
 - A Google account
@@ -16,7 +16,7 @@ This guide will help you set up Google OAuth authentication for your Persi Learn
 ### Step 2: Create a New Project
 1. Click the project dropdown at the top of the page
 2. Click "New Project"
-3. Enter project name: `Persi Learning Platform`
+3. Enter project name: `QENDIEL Academy Platform`
 4. Click "Create"
 
 ### Step 3: Enable Required APIs
@@ -29,7 +29,7 @@ This guide will help you set up Google OAuth authentication for your Persi Learn
 1. Go to "APIs & Services" > "OAuth consent screen"
 2. Choose "External" user type
 3. Fill in the required information:
-   - **App name**: `Persi Learning Platform`
+   - **App name**: `QENDIEL Academy Platform`
    - **User support email**: Your email address
    - **Developer contact information**: Your email address
 4. Click "Save and Continue"
@@ -42,7 +42,7 @@ This guide will help you set up Google OAuth authentication for your Persi Learn
 2. Click "Create Credentials" > "OAuth client ID"
 3. Configure the OAuth client:
    - **Application type**: Web application
-   - **Name**: `Persi Learning Platform Web Client`
+   - **Name**: `QENDIEL Academy Platform Web Client`
    - **Authorized JavaScript origins**:
      ```
      http://localhost:5173

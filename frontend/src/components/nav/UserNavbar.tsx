@@ -103,11 +103,37 @@ const UserNavbar: React.FC = () => {
       <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
         <div className="flex justify-between h-14 sm:h-16">
           <div className="flex items-center">
-            <Link to="/" className="flex items-center space-x-2 transition-transform duration-200 hover:scale-105">
-              <div className="bg-red-600 p-1.5 sm:p-2 rounded-lg shadow-lg">
-                <BookOpen className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
+            <Link to="/" className="flex items-center space-x-3 transition-transform duration-200 hover:scale-105">
+              <div className="relative logo-container">
+                <img 
+                  src="/src/assets/images/LOGO.jpg" 
+                  alt="QENDIEL Academy Logo" 
+                  className="h-8 w-auto sm:h-10 sm:w-auto object-contain rounded-lg logo-3d animate-logo-bounce transition-all duration-500 hover:scale-110 hover:rotate-2"
+                  style={{
+                    filter: 'drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3))',
+                  }}
+                />
+                {/* Enhanced 3D Glow Effects */}
+                <div className="absolute inset-0 rounded-lg bg-gradient-to-br from-red-500/20 via-transparent to-blue-500/20 opacity-0 hover:opacity-100 transition-all duration-500 blur-md scale-110"></div>
+                <div className="absolute inset-0 rounded-lg bg-gradient-to-tl from-yellow-400/10 via-transparent to-purple-500/10 opacity-0 hover:opacity-100 transition-all duration-700 blur-lg scale-125"></div>
+                {/* Floating particles effect */}
+                <div className="absolute inset-0 opacity-0 hover:opacity-100 transition-opacity duration-1000">
+                  <div className="absolute top-1 left-1 w-1 h-1 bg-red-400 rounded-full animate-ping"></div>
+                  <div className="absolute top-2 right-2 w-1 h-1 bg-blue-400 rounded-full animate-ping" style={{animationDelay: '0.5s'}}></div>
+                  <div className="absolute bottom-2 left-3 w-1 h-1 bg-yellow-400 rounded-full animate-ping" style={{animationDelay: '1s'}}></div>
+                </div>
               </div>
-              <span className="hidden sm:block text-lg sm:text-xl md:text-2xl font-bold text-gray-800">{t('brand.name')}</span>
+              <span className="text-lg sm:text-xl md:text-2xl font-bold text-gray-800 relative">
+                <span className="sm:hidden animate-text-glow bg-gradient-to-r from-red-500 via-blue-600 to-purple-600 bg-clip-text text-transparent drop-shadow-lg filter">
+                  {t('brand.name').split(' ')[0]}
+                </span>
+                <span className="hidden sm:block animate-text-glow bg-gradient-to-r from-red-500 via-blue-600 to-purple-600 bg-clip-text text-transparent drop-shadow-lg filter">
+                  {t('brand.name')}
+                </span>
+                {/* Mesmerizing light effects */}
+                <div className="absolute inset-0 bg-gradient-to-r from-red-400/20 via-blue-400/20 to-purple-400/20 blur-sm animate-pulse"></div>
+                <div className="absolute inset-0 bg-gradient-to-l from-yellow-400/30 via-green-400/30 to-cyan-400/30 blur-md animate-pulse" style={{animationDelay: '1s'}}></div>
+              </span>
             </Link>
           </div>
 

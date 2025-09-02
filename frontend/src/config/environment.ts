@@ -7,14 +7,14 @@ export const config = {
   FRONTEND_URL: import.meta.env.VITE_FRONTEND_URL || 'http://localhost:5173',
   
   // App Configuration
-  APP_NAME: import.meta.env.VITE_APP_NAME || 'YT Academy',
-  APP_DESCRIPTION: import.meta.env.VITE_APP_DESCRIPTION || 'Master YouTube Success',
+          APP_NAME: import.meta.env.VITE_APP_NAME || 'QENDIEL Academy',
+  APP_DESCRIPTION: import.meta.env.VITE_APP_DESCRIPTION || 'Professional Skills Development',
   SUPPORT_EMAIL: import.meta.env.VITE_SUPPORT_EMAIL || 'philiweb123@gmail.com',
   SUPPORT_WHATSAPP: import.meta.env.VITE_SUPPORT_WHATSAPP || '+15551234567',
   
   // S3 Configuration
   S3_BUCKET_URL: import.meta.env.VITE_S3_BUCKET_URL || 'https://persi-edu-platform.s3.us-east-1.amazonaws.com',
-  S3_IMAGE_PATH: import.meta.env.VITE_S3_IMAGE_PATH || '/persi-academy/Ig-images/ig-image.jpeg',
+          S3_IMAGE_PATH: import.meta.env.VITE_S3_IMAGE_PATH || 'https://persi-educational-storage.s3.ca-central-1.amazonaws.com/persi-academy/Ig-images/ig-image.jpeg',
   S3_BUCKET_URL_DOMAIN: import.meta.env.VITE_S3_BUCKET_URL_DOMAIN || 'persi-edu-platform.s3.us-east-1.amazonaws.com',
   
   // Third Party Services

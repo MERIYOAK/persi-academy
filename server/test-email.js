@@ -43,11 +43,11 @@ async function testEmailConfiguration() {
     const mailOptions = {
       from: process.env.FROM_EMAIL || process.env.SMTP_USER,
       to: testEmail,
-      subject: 'Test Email - Persi Learning Platform',
+              subject: 'Test Email - QENDIEL Academy',
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
           <div style="background-color: #dc2626; color: white; padding: 20px; text-align: center;">
-            <h1 style="margin: 0;">Persi Learning Platform</h1>
+            <h1 style="margin: 0;">QENDIEL Academy</h1>
           </div>
           
           <div style="padding: 30px; background-color: #f9fafb;">
@@ -72,12 +72,12 @@ async function testEmailConfiguration() {
           </div>
           
           <div style="background-color: #f3f4f6; padding: 20px; text-align: center; color: #6b7280; font-size: 12px;">
-            <p style="margin: 0;">© 2024 Persi Learning Platform. All rights reserved.</p>
+                          <p style="margin: 0;">© 2024 QENDIEL Academy. All rights reserved.</p>
           </div>
         </div>
       `,
       text: `
-        Email Configuration Test - Persi Learning Platform
+        Email Configuration Test - QENDIEL Academy
         
         This is a test email to verify that your SMTP configuration is working correctly.
         If you received this email, your email verification system is ready to use!
@@ -91,7 +91,7 @@ async function testEmailConfiguration() {
         Your email verification system is now configured and ready to send verification emails to new users.
         
         Best regards,
-        The Persi Learning Platform Team
+                  The QENDIEL Academy Team
       `
     };
 

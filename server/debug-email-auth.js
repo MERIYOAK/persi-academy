@@ -106,12 +106,12 @@ async function testSMTPConnection() {
     const mailOptions = {
       from: process.env.SMTP_FROM || process.env.SMTP_USER,
       to: testEmail,
-      subject: 'Test Email - Persi Learning Platform',
+              subject: 'Test Email - QENDIEL Academy',
       text: 'This is a test email to verify SMTP configuration.',
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
           <div style="background-color: #dc2626; color: white; padding: 20px; text-align: center;">
-            <h1 style="margin: 0;">Persi Learning Platform</h1>
+            <h1 style="margin: 0;">QENDIEL Academy</h1>
           </div>
           <div style="padding: 30px; background-color: #f9fafb;">
             <h2 style="color: #374151; margin-bottom: 20px;">SMTP Test Successful!</h2>

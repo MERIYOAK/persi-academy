@@ -77,10 +77,10 @@ const AdminSettingsPage: React.FC = () => {
 
   // Platform Settings
   const [platformSettings, setPlatformSettings] = useState<PlatformSettings>({
-    siteName: 'Persi Learning Platform',
-    siteDescription: 'Advanced online learning platform',
-    contactEmail: 'contact@persi.com',
-    supportEmail: 'support@persi.com',
+            siteName: 'QENDIEL Academy',
+    siteDescription: 'Professional Skills Development Platform',
+                contactEmail: 'contact@qendiel.com',
+    supportEmail: 'support@qendiel.com',
     maxFileSize: 500,
     allowedFileTypes: ['mp4', 'avi', 'mov', 'mkv', 'webm'],
     maintenanceMode: false,
@@ -107,8 +107,8 @@ const AdminSettingsPage: React.FC = () => {
     smtpPort: 587,
     smtpUser: '',
     smtpPassword: '',
-    fromEmail: 'noreply@persi.com',
-    fromName: 'Persi Learning Platform',
+            fromEmail: 'noreply@qendiel.com',
+            fromName: 'QENDIEL Academy',
     emailEnabled: false
   });
 

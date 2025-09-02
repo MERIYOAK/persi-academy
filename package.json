@@ -1,7 +1,7 @@
 {
-  "name": "persi-academy-backend",
+  "name": "qendiel-academy-backend",
   "version": "1.0.0",
-  "description": "Backend for Persi Academy - Course Management System with Versioning and S3 Integration",
+  "description": "Backend for QENDIEL Academy - Course Management System with Versioning and S3 Integration",
   "main": "server/server.js",
   "scripts": {
     "start": "node server/server.js",
@@ -25,7 +25,7 @@
     "education",
     "elearning"
   ],
-  "author": "Persi Academy",
+  "author": "QENDIEL Academy",
   "license": "MIT",
   "dependencies": {
     "@aws-sdk/client-s3": "^3.450.0",

@@ -427,7 +427,7 @@ async function generateCertificatePDF(certificate) {
     });
 
     // Add subtle watermark in background
-    page.drawText('YT Academy', {
+    page.drawText('QENDIEL Academy', {
       x: centerX - 80,
       y: centerY + 50,
       size: 100,
@@ -446,7 +446,7 @@ async function generateCertificatePDF(certificate) {
     });
 
     // Platform logo/name in top left
-    page.drawText('YT Academy', {
+    page.drawText('QENDIEL Academy', {
       x: 60,
       y: height - 80,
       size: 24,
@@ -585,7 +585,7 @@ async function generateCertificatePDF(certificate) {
       color: navy
     });
     
-    page.drawText('YT Academy Learning Platform', {
+    page.drawText('QENDIEL Academy Learning Platform', {
       x: width - 200,
       y: currentY - 20,
       size: 14,

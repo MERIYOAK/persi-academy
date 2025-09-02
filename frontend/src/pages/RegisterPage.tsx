@@ -109,7 +109,7 @@ const RegisterPage = () => {
 
   return (
     <AuthForm
-      title="Join YT Academy"
+              title="Join QENDIEL Academy"
       subtitle="Create your account to start your YouTube journey"
       fields={fields}
       submitText="Create Account"

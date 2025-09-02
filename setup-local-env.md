@@ -24,8 +24,8 @@ Create `frontend/.env.local` (this file is gitignored):
 # Frontend Environment Variables for Local Development
 VITE_API_BASE_URL=http://localhost:5000
 VITE_FRONTEND_URL=http://localhost:5173
-VITE_APP_NAME=YT Academy
-VITE_APP_DESCRIPTION=Master YouTube Success
+VITE_APP_NAME=QENDIEL Academy
+VITE_APP_DESCRIPTION=Professional Skills Development
 VITE_S3_BUCKET_URL=https://persi-edu-platform.s3.us-east-1.amazonaws.com
 VITE_S3_IMAGE_PATH=/persi-academy/Ig-images/ig-image.jpeg
 VITE_S3_BUCKET_URL_DOMAIN=persi-edu-platform.s3.us-east-1.amazonaws.com
@@ -48,8 +48,8 @@ STRIPE_WEBHOOK_SECRET=whsec_your_webhook_secret
 CLIENT_URL=http://localhost:5173
 FRONTEND_URL=http://localhost:5173
 API_BASE_URL=http://localhost:5000
-APP_NAME=YT Academy
-APP_DESCRIPTION=Master YouTube Success
+APP_NAME=QENDIEL Academy
+APP_DESCRIPTION=Professional Skills Development
 APP_VERSION=1.0.0
 S3_BUCKET_URL=https://persi-edu-platform.s3.us-east-1.amazonaws.com
 S3_IMAGE_PATH=/persi-academy/Ig-images/ig-image.jpeg

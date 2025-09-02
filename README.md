@@ -1,4 +1,4 @@
-# Persi Academy - Enhanced Course Management System
+# QENDIEL Academy - Enhanced Course Management System
 
 A comprehensive MERN stack application for managing online courses with advanced features including versioning, soft deletes, S3 integration, and automated archiving.
 
@@ -54,7 +54,7 @@ server/
 1. **Clone the repository**
    ```bash
    git clone <repository-url>
-   cd persi-academy-backend
+   cd qendiel-academy-backend
    ```
 
 2. **Install dependencies**
@@ -66,7 +66,7 @@ server/
    Create a `.env` file in the server directory:
    ```env
    # Database
-   MONGODB_URI=mongodb://localhost:27017/persi-academy
+   MONGODB_URI=mongodb://localhost:27017/qendiel-academy
    
    # JWT
    JWT_SECRET=your-super-secret-jwt-key
@@ -76,7 +76,7 @@ server/
    AWS_SECRET_ACCESS_KEY=your-aws-secret-key
    AWS_S3_BUCKET=your-s3-bucket-name
    AWS_REGION=us-east-1
-   S3_ROOT_PREFIX=persi-academy
+   S3_ROOT_PREFIX=qendiel-academy
    
    # Server
    PORT=5000
@@ -127,7 +127,7 @@ server/
 ## 🔧 S3 File Organization
 
 ```
-persi-academy/
+qendiel-academy/
 ├── profile-pics/
 │   └── [timestamp]_[filename]
 ├── courses/
@@ -280,4 +280,4 @@ For support and questions:
 
 ---
 
-**Built with ❤️ for Persi Academy** 
+**Built with ❤️ for QENDIEL Academy** 

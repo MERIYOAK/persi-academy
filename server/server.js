@@ -37,7 +37,8 @@ const app = express();
 const allowedOrigins = [
   process.env.FRONTEND_URL || 'http://localhost:5173',
   process.env.CLIENT_URL || 'http://localhost:5173',
-  'https://youtubeacademy.vercel.app', // Vercel production domain
+      'https://www.qendiel.com', // Production domain
+  'https://qendiel.com', // Production domain (without www)
   'https://persi-academy.vercel.app', // Your current Vercel domain
   'http://localhost:3000',
   'http://localhost:4173',
