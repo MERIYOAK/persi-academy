@@ -102,14 +102,14 @@ const UserNavbar: React.FC = () => {
       }}
     >
       <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
-        <div className="flex justify-between h-14 sm:h-16">
+        <div className="flex justify-between h-12 sm:h-14">
           <div className="flex items-center">
             <Link to="/" className="flex items-center space-x-3 transition-transform duration-200 hover:scale-105">
               <div className="relative logo-container">
                 <img 
                   src="/LOGO.jpg" 
                   alt="QENDIEL Academy Logo" 
-                  className="h-8 w-auto sm:h-10 sm:w-auto object-contain rounded-lg logo-3d animate-logo-bounce transition-all duration-500 hover:scale-110 hover:rotate-2"
+                  className="h-6 w-auto sm:h-8 sm:w-auto object-contain rounded-lg logo-3d animate-logo-bounce transition-all duration-500 hover:scale-110 hover:rotate-2"
                   style={{
                     filter: 'drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3))',
                   }}
