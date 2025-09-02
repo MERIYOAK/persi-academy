@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { useAdminAuth } from '../../contexts/AdminAuthContext';
 import AvatarMenu from './AvatarMenu';
 import { useNavbarAutoHide } from '../../hooks/useNavbarAutoHide';
-import logoImage from '../../assets/images/LOGO.jpg';
+
 
 const AdminNavbar: React.FC = () => {
   const { t } = useTranslation();
@@ -55,7 +55,7 @@ const AdminNavbar: React.FC = () => {
             <Link to="/admin/dashboard" className="flex items-center space-x-3 transition-transform duration-200 hover:scale-105">
               <div className="relative logo-container">
                 <img 
-                  src={logoImage} 
+                  src="/LOGO.jpg" 
                   alt="QENDIEL Academy Logo" 
                   className="h-8 w-auto sm:h-10 sm:w-auto object-contain rounded-lg logo-3d animate-logo-bounce transition-all duration-500 hover:scale-110 hover:rotate-2"
                   style={{
