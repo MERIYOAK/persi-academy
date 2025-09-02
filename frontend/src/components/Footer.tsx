@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { BookOpen, Mail, Phone, MapPin, Youtube, Twitter, Instagram, Shield } from 'lucide-react';
+import logoImage from '../assets/images/LOGO.jpg';
 
 interface FooterProps {
   className?: string;
@@ -19,7 +20,7 @@ const Footer: React.FC<FooterProps> = ({ className = '', openCookieSettingsRef }
           <div className="space-y-4">
                         <Link to="/" className="flex items-center space-x-3">
               <img 
-                src="/src/assets/images/LOGO.jpg" 
+                src={logoImage} 
                                   alt="QENDIEL Academy Logo" 
                 className="h-12 w-auto object-contain"
               />

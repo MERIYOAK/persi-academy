@@ -1,11 +1,14 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, ShieldAlert, BookOpen } from 'lucide-react';
+import { Menu, X, ShieldAlert } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { useAdminAuth } from '../../contexts/AdminAuthContext';
 import AvatarMenu from './AvatarMenu';
 import { useNavbarAutoHide } from '../../hooks/useNavbarAutoHide';
+import logoImage from '../../assets/images/LOGO.jpg';
 
 const AdminNavbar: React.FC = () => {
+  const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const { isVisible } = useNavbarAutoHide(100);
   const location = useLocation();
@@ -52,7 +55,7 @@ const AdminNavbar: React.FC = () => {
             <Link to="/admin/dashboard" className="flex items-center space-x-3 transition-transform duration-200 hover:scale-105">
               <div className="relative logo-container">
                 <img 
-                  src="/src/assets/images/LOGO.jpg" 
+                  src={logoImage} 
                   alt="QENDIEL Academy Logo" 
                   className="h-8 w-auto sm:h-10 sm:w-auto object-contain rounded-lg logo-3d animate-logo-bounce transition-all duration-500 hover:scale-110 hover:rotate-2"
                   style={{
