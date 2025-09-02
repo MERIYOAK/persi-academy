@@ -101,7 +101,7 @@ This document summarizes all the changes made to update the company branding fro
 ## Logo Implementation
 
 ### New Logo File
-- **Path**: `frontend/src/assets/images/LOGO.jpg`
+- **Path**: `frontend/public/LOGO.jpg` (copied from `frontend/src/assets/images/LOGO.jpg`)
 - **Format**: JPEG image
 - **Usage**: All navbar, footer, and favicon implementations
 - **Special Effects**: 3D depth, hover animations, and infinite bouncing animation in navbar
