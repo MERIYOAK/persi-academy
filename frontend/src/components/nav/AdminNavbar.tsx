@@ -49,11 +49,37 @@ const AdminNavbar: React.FC = () => {
       <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
         <div className="flex justify-between h-14 sm:h-16">
           <div className="flex items-center space-x-2 sm:space-x-3">
-            <Link to="/admin/dashboard" className="flex items-center space-x-2 transition-transform duration-200 hover:scale-105">
-              <div className="bg-white/20 p-1.5 sm:p-2 rounded-lg shadow-lg backdrop-blur-sm">
-                <BookOpen className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
+            <Link to="/admin/dashboard" className="flex items-center space-x-3 transition-transform duration-200 hover:scale-105">
+              <div className="relative logo-container">
+                <img 
+                  src="/src/assets/images/LOGO.jpg" 
+                  alt="QENDIEL Academy Logo" 
+                  className="h-8 w-auto sm:h-10 sm:w-auto object-contain rounded-lg logo-3d animate-logo-bounce transition-all duration-500 hover:scale-110 hover:rotate-2"
+                  style={{
+                    filter: 'drop-shadow(0 4px 8px rgba(255, 255, 255, 0.3))',
+                  }}
+                />
+                {/* Enhanced 3D Glow Effects */}
+                <div className="absolute inset-0 rounded-lg bg-gradient-to-br from-white/40 via-transparent to-red-500/30 opacity-0 hover:opacity-100 transition-all duration-500 blur-md scale-110"></div>
+                <div className="absolute inset-0 rounded-lg bg-gradient-to-tl from-yellow-400/30 via-transparent to-purple-500/20 opacity-0 hover:opacity-100 transition-all duration-700 blur-lg scale-125"></div>
+                {/* Floating particles effect */}
+                <div className="absolute inset-0 opacity-0 hover:opacity-100 transition-opacity duration-1000">
+                  <div className="absolute top-1 left-1 w-1 h-1 bg-white rounded-full animate-ping"></div>
+                  <div className="absolute top-2 right-2 w-1 h-1 bg-red-300 rounded-full animate-ping" style={{animationDelay: '0.5s'}}></div>
+                  <div className="absolute bottom-2 left-3 w-1 h-1 bg-yellow-300 rounded-full animate-ping" style={{animationDelay: '1s'}}></div>
+                </div>
               </div>
-              <span className="text-lg sm:text-xl md:text-2xl font-bold text-white">YT Academy</span>
+              <span className="text-lg sm:text-xl md:text-2xl font-bold text-white relative">
+                <span className="sm:hidden animate-text-glow bg-gradient-to-r from-white via-red-300 to-blue-300 bg-clip-text text-transparent drop-shadow-lg filter">
+                  {t('brand.name').split(' ')[0]}
+                </span>
+                <span className="hidden sm:block animate-text-glow bg-gradient-to-r from-white via-red-300 to-blue-300 bg-clip-text text-transparent drop-shadow-lg filter">
+                  {t('brand.name')}
+                </span>
+                {/* Mesmerizing light effects */}
+                <div className="absolute inset-0 bg-gradient-to-r from-white/30 via-red-400/20 to-blue-400/20 blur-sm animate-pulse"></div>
+                <div className="absolute inset-0 bg-gradient-to-l from-yellow-300/40 via-green-300/30 to-cyan-300/30 blur-md animate-pulse" style={{animationDelay: '1s'}}></div>
+              </span>
             </Link>
             <span className="inline-flex items-center text-xs font-semibold px-2 py-1 rounded-full bg-white/20 text-white backdrop-blur-sm border border-white/20">Admin</span>
           </div>

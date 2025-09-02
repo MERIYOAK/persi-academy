@@ -53,18 +53,18 @@ class EmailService {
       const mailOptions = {
         from: process.env.FROM_EMAIL || process.env.SMTP_USER,
         to: email,
-        subject: 'Verify Your Email - Persi Learning Platform',
+        subject: 'Verify Your Email - QENDIEL Academy',
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
             <div style="background-color: #dc2626; color: white; padding: 20px; text-align: center;">
-              <h1 style="margin: 0;">Persi Learning Platform</h1>
+              <h1 style="margin: 0;">QENDIEL Academy</h1>
             </div>
             
             <div style="padding: 30px; background-color: #f9fafb;">
               <h2 style="color: #374151; margin-bottom: 20px;">Welcome, ${name}!</h2>
               
               <p style="color: #6b7280; line-height: 1.6; margin-bottom: 25px;">
-                Thank you for registering with Persi Learning Platform. To complete your registration, 
+                Thank you for registering with QENDIEL Academy. To complete your registration, 
                 please verify your email address by clicking the button below.
               </p>
               
@@ -93,16 +93,16 @@ class EmailService {
             </div>
             
             <div style="background-color: #f3f4f6; padding: 20px; text-align: center; color: #6b7280; font-size: 12px;">
-              <p style="margin: 0;">© 2024 Persi Learning Platform. All rights reserved.</p>
+              <p style="margin: 0;">© 2024 QENDIEL Academy. All rights reserved.</p>
             </div>
           </div>
         `,
         text: `
-          Welcome to Persi Learning Platform!
+          Welcome to QENDIEL Academy!
           
           Hi ${name},
           
-          Thank you for registering with Persi Learning Platform. To complete your registration, 
+          Thank you for registering with QENDIEL Academy. To complete your registration, 
           please verify your email address by clicking the link below:
           
           ${verificationUrl}
@@ -112,7 +112,7 @@ class EmailService {
           If you didn't create an account, you can safely ignore this email.
           
           Best regards,
-          The Persi Learning Platform Team
+          The QENDIEL Academy Team
         `
       };
 
@@ -145,11 +145,11 @@ class EmailService {
       const mailOptions = {
         from: process.env.FROM_EMAIL || process.env.SMTP_USER,
         to: email,
-        subject: 'Reset Your Password - Persi Learning Platform',
+        subject: 'Reset Your Password - QENDIEL Academy',
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
             <div style="background-color: #dc2626; color: white; padding: 20px; text-align: center;">
-              <h1 style="margin: 0;">Persi Learning Platform</h1>
+              <h1 style="margin: 0;">QENDIEL Academy</h1>
             </div>
             
             <div style="padding: 30px; background-color: #f9fafb;">
@@ -185,12 +185,12 @@ class EmailService {
             </div>
             
             <div style="background-color: #f3f4f6; padding: 20px; text-align: center; color: #6b7280; font-size: 12px;">
-              <p style="margin: 0;">© 2024 Persi Learning Platform. All rights reserved.</p>
+              <p style="margin: 0;">© 2024 QENDIEL Academy. All rights reserved.</p>
             </div>
           </div>
         `,
         text: `
-          Password Reset Request - Persi Learning Platform
+          Password Reset Request - QENDIEL Academy
           
           Hi ${name},
           
@@ -203,7 +203,7 @@ class EmailService {
           If you didn't request a password reset, you can safely ignore this email.
           
           Best regards,
-          The Persi Learning Platform Team
+          The QENDIEL Academy Team
         `
       };
 
@@ -233,18 +233,18 @@ class EmailService {
       const mailOptions = {
         from: process.env.FROM_EMAIL || process.env.SMTP_USER,
         to: email,
-        subject: 'Welcome to Persi Learning Platform!',
+        subject: 'Welcome to QENDIEL Academy!',
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
             <div style="background-color: #dc2626; color: white; padding: 20px; text-align: center;">
-              <h1 style="margin: 0;">Persi Learning Platform</h1>
+              <h1 style="margin: 0;">QENDIEL Academy</h1>
             </div>
             
             <div style="padding: 30px; background-color: #f9fafb;">
-              <h2 style="color: #374151; margin-bottom: 20px;">Welcome to Persi Learning Platform!</h2>
+              <h2 style="color: #374151; margin-bottom: 20px;">Welcome to QENDIEL Academy!</h2>
               
               <p style="color: #6b7280; line-height: 1.6; margin-bottom: 25px;">
-                Hi ${name}, welcome to Persi Learning Platform! Your account has been successfully 
+                Hi ${name}, welcome to QENDIEL Academy! Your account has been successfully 
                 created and verified. You can now start exploring our courses and learning resources.
               </p>
               
@@ -263,16 +263,16 @@ class EmailService {
             </div>
             
             <div style="background-color: #f3f4f6; padding: 20px; text-align: center; color: #6b7280; font-size: 12px;">
-              <p style="margin: 0;">© 2024 Persi Learning Platform. All rights reserved.</p>
+              <p style="margin: 0;">© 2024 QENDIEL Academy. All rights reserved.</p>
             </div>
           </div>
         `,
         text: `
-          Welcome to Persi Learning Platform!
+          Welcome to QENDIEL Academy!
           
           Hi ${name},
           
-          Welcome to Persi Learning Platform! Your account has been successfully created and verified. 
+          Welcome to QENDIEL Academy! Your account has been successfully created and verified. 
           You can now start exploring our courses and learning resources.
           
           Visit our platform: ${process.env.FRONTEND_URL || 'http://localhost:5173'}/courses
@@ -280,7 +280,7 @@ class EmailService {
           If you have any questions or need assistance, feel free to contact our support team.
           
           Best regards,
-          The Persi Learning Platform Team
+          The QENDIEL Academy Team
         `
       };
 

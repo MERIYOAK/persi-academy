@@ -135,7 +135,7 @@ class S3Service {
       // Generate unique filename
       const fileExtension = originalName.split('.').pop();
       const uniqueFileName = `${userId}-${crypto.randomBytes(16).toString('hex')}.${fileExtension}`;
-      const key = `profile-pictures/${uniqueFileName}`;
+      const key = `persi-academy/profile-pictures/${uniqueFileName}`;
 
       // Upload to S3
       const uploadParams = {

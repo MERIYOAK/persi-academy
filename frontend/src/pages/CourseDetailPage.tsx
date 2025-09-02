@@ -862,7 +862,7 @@ const CourseDetailPage = () => {
                 </div>
                 <div>
                   <p className="text-red-200 text-sm font-medium">Created by</p>
-                  <p className="font-bold text-xl text-white">{course.instructor || 'YT Academy'}</p>
+                  <p className="font-bold text-xl text-white">{course.instructor || 'QENDIEL Academy'}</p>
                   <p className="text-red-200 text-sm">
                     Last updated {course.updatedAt ? new Date(course.updatedAt).toLocaleDateString('en-US', { 
                       year: 'numeric', 

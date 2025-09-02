@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document describes the comprehensive user registration and authentication system implemented for the Persi Learning Platform. The system supports both local authentication (email/password) and Google OAuth authentication, with secure profile photo handling using AWS S3.
+This document describes the comprehensive user registration and authentication system implemented for the QENDIEL Academy Platform. The system supports both local authentication (email/password) and Google OAuth authentication, with secure profile photo handling using AWS S3.
 
 ## 🏗️ Architecture
 

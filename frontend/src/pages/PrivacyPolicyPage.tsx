@@ -59,7 +59,7 @@ const PrivacyPolicyPage = () => {
             <h2 className="text-2xl font-bold text-gray-900 mb-4">Introduction</h2>
             <div className="prose prose-gray max-w-none">
               <p className="text-gray-600 mb-4">
-                At YT Academy ("we," "our," or "us"), we respect your privacy and are committed to protecting your personal information. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you visit our website and use our services.
+                At QENDIEL Academy ("we," "our," or "us"), we respect your privacy and are committed to protecting your personal information. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you visit our website and use our services.
               </p>
               <p className="text-gray-600 mb-4">
                 By using our platform, you consent to the data practices described in this policy. If you do not agree with our policies and practices, please do not use our services.
@@ -309,13 +309,13 @@ const PrivacyPolicyPage = () => {
               </p>
               <div className="bg-gray-50 rounded-lg p-4">
                 <p className="text-gray-600">
-                  <strong>Email:</strong> privacy@ytacademy.com<br />
-                  <strong>Address:</strong> YT Academy, 123 Learning Street, New York, NY 10001<br />
+                  <strong>Email:</strong> privacy@qendiel.com<br />
+                  <strong>Address:</strong> QENDIEL Academy, 123 Learning Street, New York, NY 10001<br />
                   <strong>Phone:</strong> +1 (555) 123-4567
                 </p>
               </div>
               <p className="text-gray-600 mt-4">
-                For data protection inquiries, you may also contact our Data Protection Officer at dpo@ytacademy.com.
+                For data protection inquiries, you may also contact our Data Protection Officer at dpo@qendiel.com.
               </p>
             </div>
           </section>
@@ -335,7 +335,7 @@ const PrivacyPolicyPage = () => {
               Contact Us
             </Link>
             <a
-              href="mailto:privacy@ytacademy.com"
+                              href="mailto:privacy@qendiel.com"
               className="border border-gray-300 text-gray-700 hover:bg-gray-50 px-6 py-3 rounded-lg font-semibold transition-colors duration-200"
             >
               Email Privacy Team

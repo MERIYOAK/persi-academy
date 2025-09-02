@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document describes the enhanced user authentication system for the Persi Learning Platform, featuring email verification for manual registration while maintaining seamless Google OAuth integration.
+This document describes the enhanced user authentication system for the QENDIEL Academy Platform, featuring email verification for manual registration while maintaining seamless Google OAuth integration.
 
 ## 🆕 New Features
 
@@ -14,7 +14,7 @@ This document describes the enhanced user authentication system for the Persi Le
 - ✅ **Automatic Login** after successful verification
 
 ### Enhanced Security
-- ✅ **Profile Photo Storage** in private S3 bucket (`persi-academy/profile-pictures/` folder)
+- ✅ **Profile Photo Storage** in private S3 bucket (`persi-educational-storage/persi-academy/profile-pictures/` folder)
 - ✅ **Signed URLs** for secure photo access
 - ✅ **JWT Tokens** for both verification and authentication
 - ✅ **Password Hashing** with bcrypt
@@ -26,7 +26,7 @@ This document describes the enhanced user authentication system for the Persi Le
 #### Manual Registration (Email/Password)
 ```
 1. User submits registration form with profile photo
-2. System validates input and uploads photo to S3 (persi-academy/profile-pictures/ folder)
+2. System validates input and uploads photo to S3 (persi-educational-storage/persi-academy/profile-pictures/ folder)
 3. User record created with isVerified: false
 4. Verification token generated (1-hour expiry)
 5. Verification email sent to user
@@ -40,7 +40,7 @@ This document describes the enhanced user authentication system for the Persi Le
 1. User clicks "Sign in with Google"
 2. Google OAuth flow completed
 3. User record created/updated with isVerified: true
-4. Google profile photo downloaded and stored in S3 (persi-academy/profile-pictures/ folder)
+4. Google profile photo downloaded and stored in S3 (persi-educational-storage/persi-academy/profile-pictures/ folder)
 5. User automatically logged in with auth token
 ```
 
@@ -251,7 +251,7 @@ SESSION_SECRET=your-session-secret-key
   email: { type: String, unique: true }, // Required, unique
   password: String,                // Required for local auth only
   authProvider: { type: String, enum: ['google', 'local'] }, // Default: 'local'
-  profilePhotoKey: String,         // S3 object key (persi-academy/profile-pictures/ folder)
+  profilePhotoKey: String,         // S3 object key (persi-educational-storage/persi-academy/profile-pictures/ folder)
   isVerified: { type: Boolean, default: false }, // New field
   role: { type: String, enum: ['user', 'admin'] }, // Default: 'user'
   status: { type: String, enum: ['active', 'inactive', 'suspended'] }, // Default: 'active'

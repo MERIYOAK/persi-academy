@@ -41,7 +41,7 @@ const ContactPage = () => {
     {
       icon: Mail,
       title: t('contact.contact_details.email.title'),
-      details: ['support@ytacademy.com', 'info@ytacademy.com'],
+              details: ['support@qendiel.com', 'info@qendiel.com'],
       color: 'from-blue-500 to-blue-600'
     },
     {

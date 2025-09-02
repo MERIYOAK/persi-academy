@@ -17,11 +17,13 @@ const Footer: React.FC<FooterProps> = ({ className = '', openCookieSettingsRef }
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {/* Brand Section */}
           <div className="space-y-4">
-            <Link to="/" className="flex items-center space-x-2">
-              <div className="bg-red-600 p-2 rounded-lg">
-                <BookOpen className="h-6 w-6 text-white" />
-              </div>
-                              <span className="text-2xl font-bold">{t('brand.name')}</span>
+                        <Link to="/" className="flex items-center space-x-3">
+              <img 
+                src="/src/assets/images/LOGO.jpg" 
+                                  alt="QENDIEL Academy Logo" 
+                className="h-12 w-auto object-contain"
+              />
+              <span className="text-2xl font-bold">{t('brand.name')}</span>
             </Link>
             <p className="text-gray-400 leading-relaxed">
               {t('footer.contact_info')}

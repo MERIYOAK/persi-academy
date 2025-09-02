@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * Security Scanner for Persi Academy
+ * Security Scanner for QENDIEL Academy
  * Scans the codebase for potential security vulnerabilities
  */
 

@@ -90,6 +90,24 @@
     },
     "success_stories_title": "Success Stories",
     "success_stories_subtitle": "Hear from professionals who transformed their careers with our courses",
+    "faq": {
+      "title": "Frequently Asked Questions",
+      "subtitle": "Find quick answers to the most common questions about our courses and platform",
+      "questions": {
+        "get_started": {
+          "question": "How do I get started with a course?",
+          "answer": "Simply enroll in any course and you'll get immediate access to all the content and resources."
+        },
+        "refunds": {
+          "question": "Do you offer refunds?",
+          "answer": "Yes! We offer a 5-day money-back guarantee on all our courses."
+        },
+        "mobile": {
+          "question": "Can I access courses on mobile?",
+          "answer": "Absolutely! All our courses are optimized for mobile devices and tablets."
+        }
+      }
+    },
     "testimonials": {
       "jessica": {
         "name": "Jessica Thompson",
@@ -251,6 +269,7 @@
     },
     "faq": {
       "title": "Frequently Asked Questions",
+      "subtitle": "Find quick answers to the most common questions about our courses and platform",
       "questions": {
         "get_started": {
           "question": "How do I get started with a course?",
@@ -312,7 +331,7 @@
     "by_instructor": "by our academy"
   },
   "brand": {
-    "name": "Professional Academy"
+    "name": "QENDIEL Academy"
   },
   "cookie": {
     "banner_message": "We use cookies to enhance your experience. Do you accept?",
