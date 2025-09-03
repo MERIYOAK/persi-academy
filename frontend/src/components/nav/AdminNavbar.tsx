@@ -74,7 +74,7 @@ const AdminNavbar: React.FC = () => {
               </div>
               <span className="text-lg sm:text-xl md:text-2xl font-bold text-white relative">
                 <span className="sm:hidden animate-text-glow bg-gradient-to-r from-white via-red-300 to-blue-300 bg-clip-text text-transparent drop-shadow-lg filter">
-                  {t('brand.name').split(' ')[0]}
+                  {t('brand.name')}
                 </span>
                 <span className="hidden sm:block animate-text-glow bg-gradient-to-r from-white via-red-300 to-blue-300 bg-clip-text text-transparent drop-shadow-lg filter">
                   {t('brand.name')}
