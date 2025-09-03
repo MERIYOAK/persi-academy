@@ -62,7 +62,7 @@
 
 /* Animation Classes */
 .animate-logo-bounce {
-  animation: logo-bounce 6s cubic-bezier(0.68, -0.55, 0.265, 1.55) infinite;
+  animation: logo-bounce 12s cubic-bezier(0.68, -0.55, 0.265, 1.55) infinite;
 }
 
 .animate-logo-glow {
@@ -76,7 +76,7 @@
 /* Responsive Animation Adjustments */
 @media (max-width: 500px) {
   .animate-logo-bounce {
-    animation: logo-bounce-mobile 4s cubic-bezier(0.68, -0.55, 0.265, 1.55) infinite;
+    animation: logo-bounce-mobile 8s cubic-bezier(0.68, -0.55, 0.265, 1.55) infinite;
   }
 }
 

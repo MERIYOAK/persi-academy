@@ -330,6 +330,7 @@ const CoursesPage: React.FC = () => {
             price={c.price}
             duration={`${totalSeconds}`}
             students={c.totalEnrollments || 0}
+            lessons={(c.videos || []).length}
             instructor={t('brand.name')}
             tags={c.tags || []}
             onPurchaseSuccess={handlePurchaseSuccess}
