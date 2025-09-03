@@ -250,10 +250,10 @@ const HomePage = () => {
             description={c.description}
             thumbnail={c.thumbnailURL || ''}
             price={c.price}
-                            duration={`${totalSeconds}`}
+            duration={`${totalSeconds}`}
             students={c.totalEnrollments || 0}
-
-                            instructor={t('brand.name')}
+            lessons={(c.videos || []).length}
+            instructor={t('brand.name')}
             tags={c.tags || []}
           />
         );})}

@@ -13,7 +13,7 @@ interface CourseCardProps {
   price: number;
   duration: string;
   students: number;
-
+  lessons: number; // Add lessons prop
   instructor: string;
   tags?: string[];
   className?: string;
@@ -28,6 +28,7 @@ const CourseCard: React.FC<CourseCardProps> = ({
   price,
   duration,
   students,
+  lessons,
 
   instructor,
   tags = [],
@@ -236,7 +237,7 @@ const CourseCard: React.FC<CourseCardProps> = ({
                  <div className="flex items-center justify-between mb-2">
            <div className="flex items-center space-x-1 text-gray-500 text-xs xxs:text-sm">
              <Users className="h-3 w-3 xxs:h-4 xxs:w-4" />
-             <span>{students.toLocaleString()}</span>
+             <span>{students.toLocaleString()} {t('course_card.students')}</span>
            </div>
          </div>
 
@@ -270,7 +271,7 @@ const CourseCard: React.FC<CourseCardProps> = ({
         <div className="flex items-center justify-between mb-3 xxs:mb-4">
           <div className="flex items-center space-x-1 text-gray-500 text-xs xxs:text-sm">
             <Clock className="h-3 w-3 xxs:h-4 xxs:w-4" />
-            <span>{students.toLocaleString()} {t('course_card.lessons')}</span>
+            <span>{lessons} {t('course_card.lessons')}</span>
           </div>
           <span className="text-xs xxs:text-sm text-gray-500">{formattedDuration}</span>
         </div>
