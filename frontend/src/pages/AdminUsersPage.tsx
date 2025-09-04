@@ -17,7 +17,8 @@ import {
   X,
   ChevronLeft,
   ChevronRight,
-  MoreHorizontal
+  MoreHorizontal,
+  Phone
 } from 'lucide-react';
 import DeleteConfirmationModal from '../components/DeleteConfirmationModal';
 import Toast from '../components/Toast';
@@ -32,6 +33,7 @@ interface User {
   purchasedCourses: string[];
   createdAt: string;
   updatedAt: string;
+  phoneNumber?: string;
 }
 
 interface Pagination {
@@ -451,6 +453,9 @@ const AdminUsersPage: React.FC = () => {
                         Status
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Phone
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Courses
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -497,6 +502,11 @@ const AdminUsersPage: React.FC = () => {
                           <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(user.status)}`}>
                             {user.status}
                           </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          <div className="max-w-32 truncate" title={user.phoneNumber || 'N/A'}>
+                            {user.phoneNumber || 'N/A'}
+                          </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                           {user.purchasedCourses?.length || 0} courses
@@ -579,6 +589,10 @@ const AdminUsersPage: React.FC = () => {
                         <div className="text-xs xxs:text-sm text-gray-500 flex items-center mb-2">
                           <Mail className="h-3 w-3 mr-1" />
                           <span className="truncate">{user.email}</span>
+                        </div>
+                        <div className="text-xs xxs:text-sm text-gray-500 flex items-center mb-2">
+                          <Phone className="h-3 w-3 mr-1" />
+                          <span className="truncate">{user.phoneNumber || 'N/A'}</span>
                         </div>
                         <div className="flex flex-wrap items-center gap-2 xxs:gap-3">
                           <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getRoleColor(user.role)}`}>

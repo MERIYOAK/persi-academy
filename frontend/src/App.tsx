@@ -40,6 +40,7 @@ import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
 import RefundPolicyPage from './pages/RefundPolicyPage';
 import GoogleCallbackPage from './pages/GoogleCallbackPage';
 import UserCourseDetailPage from './pages/UserCourseDetailPage';
+import CompleteGoogleRegistrationPage from './pages/CompleteGoogleRegistrationPage';
 
 function App() {
   return (
@@ -74,6 +75,7 @@ function App() {
 
         {/* Google OAuth Callback Route - Outside UserLayout to avoid navbar */}
         <Route path="/auth/google-callback" element={<GoogleCallbackPage />} />
+        <Route path="/complete-google-registration" element={<CompleteGoogleRegistrationPage />} />
 
         <Route path="/admin" element={
           <AdminAuthProvider>

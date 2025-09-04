@@ -165,6 +165,13 @@ router.get('/google/callback', (req, res, next) => {
   passport.authenticate('google', { session: false })(req, res, next);
 }, authController.googleCallback);
 
+/**
+ * Complete Google OAuth registration with phone number
+ * POST /api/auth/complete-google-registration
+ * Body: { userId, phoneNumber }
+ */
+router.post('/complete-google-registration', authController.completeGoogleRegistration);
+
 // ========================================
 // PROFILE PHOTO ROUTES
 // ========================================

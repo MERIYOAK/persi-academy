@@ -17,7 +17,12 @@ const userSchema = new mongoose.Schema({
   age: { type: Number, min: 1, max: 120, default: null },
   sex: { type: String, enum: ['male', 'female', 'other', 'prefer-not-to-say'], default: null },
   address: { type: String, default: null },
-  telephone: { type: String, default: null },
+  phoneNumber: { 
+    type: String, 
+    required: function() { 
+      return this.authProvider === 'local'; 
+    } 
+  }, // Required only for local auth, Google OAuth users provide it later
   country: { type: String, default: null },
   city: { type: String, default: null },
   // Google OAuth specific fields

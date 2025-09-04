@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Eye, EyeOff, Upload, X } from 'lucide-react';
+import { Eye, EyeOff, Upload, X, Phone } from 'lucide-react';
 import { buildApiUrl } from '../config/environment';
 
 interface Field {
@@ -164,11 +164,18 @@ const AuthForm: React.FC<AuthFormProps> = ({
                       name={field.name}
                       type={field.type === 'password' && !showPassword ? 'password' : 'text'}
                       required={field.required}
-                      className="appearance-none relative block w-full px-4 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 focus:z-10 transition-all duration-200"
+                      className={`appearance-none relative block w-full ${
+                        field.type === 'tel' ? 'pl-12' : 'px-4'
+                      } py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 focus:z-10 transition-all duration-200`}
                       placeholder={field.placeholder}
                       value={formData[field.name] as string || ''}
                       onChange={(e) => handleChange(field.name, e.target.value)}
                     />
+                    {field.type === 'tel' && (
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <Phone className="h-5 w-5 text-gray-400" />
+                      </div>
+                    )}
                     {field.type === 'password' && (
                       <button
                         type="button"

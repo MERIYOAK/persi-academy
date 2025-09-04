@@ -24,7 +24,7 @@ interface UserData {
   age?: number;
   sex?: string;
   address?: string;
-  telephone?: string;
+  phoneNumber?: string;
   country?: string;
   city?: string;
 }
@@ -35,17 +35,16 @@ interface FormData {
   age: string;
   sex: string;
   address: string;
-  telephone: string;
+  phoneNumber: string;
   country: string;
   city: string;
-  email: string;
 }
 
 interface ValidationErrors {
   firstName?: string;
   lastName?: string;
   age?: string;
-  telephone?: string;
+  phoneNumber?: string;
   address?: string;
   country?: string;
   city?: string;
@@ -71,10 +70,9 @@ const ProfilePage = () => {
     age: '',
     sex: '',
     address: '',
-    telephone: '',
+    phoneNumber: '',
     country: '',
-    city: '',
-    email: ''
+    city: ''
   });
   
   const [validationErrors, setValidationErrors] = useState<ValidationErrors>({});
@@ -127,10 +125,9 @@ const ProfilePage = () => {
           age: result.data.age?.toString() || '',
           sex: result.data.sex || '',
           address: result.data.address || '',
-          telephone: result.data.telephone || '',
+          phoneNumber: result.data.phoneNumber || '',
           country: result.data.country || '',
-          city: result.data.city || '',
-          email: result.data.email
+          city: result.data.city || ''
         });
 
         // Fetch profile image if available
@@ -179,12 +176,14 @@ const ProfilePage = () => {
   const validateForm = (): boolean => {
     const errors: ValidationErrors = {};
 
-    if (!formData.firstName.trim()) {
-      errors.firstName = 'First name is required';
+    // Make firstName and lastName optional for profile updates
+    // Users can clear these fields if they want to remove the information
+    if (formData.firstName && formData.firstName.trim() && formData.firstName.trim().length < 2) {
+      errors.firstName = 'First name must be at least 2 characters if provided';
     }
 
-    if (!formData.lastName.trim()) {
-      errors.lastName = 'Last name is required';
+    if (formData.lastName && formData.lastName.trim() && formData.lastName.trim().length < 2) {
+      errors.lastName = 'Last name must be at least 2 characters if provided';
     }
 
     if (formData.age) {
@@ -194,11 +193,16 @@ const ProfilePage = () => {
       }
     }
 
-    if (formData.telephone) {
-      const phoneRegex = /^[\+]?[1-9][\d]{0,15}$/;
-      if (!phoneRegex.test(formData.telephone.replace(/\s/g, ''))) {
-        errors.telephone = 'Please enter a valid phone number';
+    if (formData.phoneNumber) {
+      const phoneRegex = /^\+[1-9]\d{1,14}$/;
+      if (!phoneRegex.test(formData.phoneNumber.replace(/\s/g, ''))) {
+        errors.phoneNumber = 'Please enter a valid international phone number (e.g., +1234567890)';
       }
+    }
+    
+    // Phone number is required for local users
+    if (userData && userData.authProvider === 'local' && (!formData.phoneNumber || !formData.phoneNumber.trim())) {
+      errors.phoneNumber = 'Phone number is required for email accounts';
     }
 
     if (formData.address && formData.address.length < 5) {
@@ -279,14 +283,16 @@ const ProfilePage = () => {
       console.log('🔧 [ProfilePage] Preparing form data for upload');
       // Prepare form data for multipart upload
       const formDataToSend = new FormData();
-      formDataToSend.append('firstName', formData.firstName);
-      formDataToSend.append('lastName', formData.lastName);
-      formDataToSend.append('age', formData.age);
-      formDataToSend.append('sex', formData.sex);
-      formDataToSend.append('address', formData.address);
-      formDataToSend.append('telephone', formData.telephone);
-      formDataToSend.append('country', formData.country);
-      formDataToSend.append('city', formData.city);
+      
+      // Send all fields, including empty ones, so backend can handle clearing fields
+      formDataToSend.append('firstName', formData.firstName || '');
+      formDataToSend.append('lastName', formData.lastName || '');
+      formDataToSend.append('age', formData.age || '');
+      formDataToSend.append('sex', formData.sex || '');
+      formDataToSend.append('address', formData.address || '');
+      formDataToSend.append('phoneNumber', formData.phoneNumber || '');
+      formDataToSend.append('country', formData.country || '');
+      formDataToSend.append('city', formData.city || '');
       
       if (profileImageFile) {
         console.log('🔧 [ProfilePage] Adding profile photo to form data:', profileImageFile.name);
@@ -412,10 +418,9 @@ const ProfilePage = () => {
         age: userData.age?.toString() || '',
         sex: userData.sex || '',
         address: userData.address || '',
-        telephone: userData.telephone || '',
+        phoneNumber: userData.phoneNumber || '',
         country: userData.country || '',
-        city: userData.city || '',
-        email: userData.email
+        city: userData.city || ''
       });
     }
   };
@@ -761,7 +766,7 @@ const ProfilePage = () => {
                   </label>
                   <div className="flex items-center space-x-3 px-4 py-3 bg-gray-50 rounded-xl border border-gray-200">
                     <Mail className="h-5 w-5 text-gray-400" />
-                      <span className="text-gray-700 font-medium">{formData.email}</span>
+                      <span className="text-gray-700 font-medium">{userData.email}</span>
                     <span className="ml-auto text-xs bg-gray-200 text-gray-600 px-2 py-1 rounded-full">
                       Not Editable
                     </span>
@@ -783,36 +788,43 @@ const ProfilePage = () => {
               
               <div className="p-3 xxs:p-4 sm:p-6 lg:p-8">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 xxs:gap-4 sm:gap-6">
-                  {/* Telephone */}
+                  {/* Phone Number */}
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-3">
-                      Telephone
+                      Phone Number{userData && userData.authProvider === 'local' && <span className="text-red-500 ml-1">*</span>}
                     </label>
                     {isEditing ? (
                       <div className="relative">
                         <input
                           type="tel"
-                          value={formData.telephone}
-                          onChange={(e) => handleFieldChange('telephone', e.target.value)}
-                          onFocus={() => setActiveField('telephone')}
+                          value={formData.phoneNumber}
+                          onChange={(e) => handleFieldChange('phoneNumber', e.target.value)}
+                          onFocus={() => setActiveField('phoneNumber')}
                           onBlur={() => setActiveField(null)}
                           className={`w-full px-4 py-3 border rounded-xl transition-all duration-200 ${
-                            activeField === 'telephone' 
+                            activeField === 'phoneNumber' 
                               ? 'border-red-500 ring-2 ring-red-500/20' 
-                              : validationErrors.telephone 
+                              : validationErrors.phoneNumber 
                                 ? 'border-red-500' 
                                 : 'border-gray-300 focus:border-red-500 focus:ring-2 focus:ring-red-500/20'
                           }`}
                           placeholder="Enter your phone number"
                         />
-                        {validationErrors.telephone && (
-                          <p className="text-red-500 text-sm mt-1">{validationErrors.telephone}</p>
+                        {validationErrors.phoneNumber && (
+                          <p className="text-red-500 text-sm mt-1">{validationErrors.phoneNumber}</p>
+                        )}
+                        {!validationErrors.phoneNumber && (
+                          <p className="text-xs text-gray-500 mt-1">
+                            {userData && userData.authProvider === 'local' 
+                              ? 'Required for email accounts. Use international format (e.g., +1234567890)' 
+                              : 'Use international format (e.g., +1234567890)'}
+                          </p>
                         )}
                       </div>
                     ) : (
                       <div className="flex items-center space-x-3 px-4 py-3 bg-gray-50 rounded-xl border border-gray-200">
                         <Phone className="h-5 w-5 text-gray-400" />
-                        <span className="text-gray-700 font-medium">{formData.telephone || 'Not set'}</span>
+                        <span className="text-gray-700 font-medium">{formData.phoneNumber || 'Not set'}</span>
                       </div>
                     )}
                   </div>
