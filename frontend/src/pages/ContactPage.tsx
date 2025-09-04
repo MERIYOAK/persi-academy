@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Mail, Phone, MapPin, Clock, Send, MessageCircle, Users, Star } from 'lucide-react';
+import { config } from '../config/environment';
 
 const ContactPage = () => {
   const { t } = useTranslation();
@@ -41,28 +42,28 @@ const ContactPage = () => {
     {
       icon: Mail,
       title: t('contact.contact_details.email.title'),
-              details: ['support@qendiel.com', 'info@qendiel.com'],
+      details: [config.SUPPORT_EMAIL, config.INFO_EMAIL],
       color: 'from-blue-500 to-blue-600'
     },
     {
       icon: Phone,
       title: t('contact.contact_details.phone.title'),
-      details: ['+1 (555) 123-4567', t('contact.contact_details.phone.details.1')],
+      details: [config.SUPPORT_PHONE, config.BUSINESS_HOURS_PHONE],
       color: 'from-green-500 to-green-600'
     },
     {
       icon: MapPin,
       title: t('contact.contact_details.office.title'),
-      details: ['123 Creator Street', 'New York, NY 10001'],
+      details: [config.SUPPORT_ADDRESS.split(', ')[0], config.SUPPORT_ADDRESS.split(', ').slice(1).join(', ')],
       color: 'from-purple-500 to-purple-600'
     },
     {
       icon: Clock,
       title: t('contact.contact_details.business_hours.title'),
       details: [
-        t('contact.contact_details.business_hours.details.0'),
-        t('contact.contact_details.business_hours.details.1'),
-        t('contact.contact_details.business_hours.details.2')
+        config.BUSINESS_HOURS_WEEKDAY,
+        config.BUSINESS_HOURS_SATURDAY,
+        config.BUSINESS_HOURS_SUNDAY
       ],
       color: 'from-orange-500 to-orange-600'
     }

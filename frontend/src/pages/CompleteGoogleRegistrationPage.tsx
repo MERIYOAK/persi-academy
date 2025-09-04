@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Phone, CheckCircle, XCircle, Loader } from 'lucide-react';
-import { buildApiUrl } from '../config/environment';
+import { config } from '../config/environment';
 import ScrollToTop from '../components/ScrollToTop';
 
 const CompleteGoogleRegistrationPage: React.FC = () => {
@@ -44,7 +44,7 @@ const CompleteGoogleRegistrationPage: React.FC = () => {
     setError('');
 
     try {
-      const response = await fetch(buildApiUrl('/api/auth/complete-google-registration'), {
+      const response = await fetch(config.API_BASE_URL + '/api/auth/complete-google-registration', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -131,7 +131,7 @@ const CompleteGoogleRegistrationPage: React.FC = () => {
                     type="tel"
                     required
                     className="appearance-none relative block w-full pl-12 pr-4 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 focus:z-10 transition-all duration-200"
-                    placeholder="+1 (555) 123-4567"
+                    placeholder={config.SUPPORT_PHONE}
                     value={phoneNumber}
                     onChange={(e) => setPhoneNumber(e.target.value)}
                   />

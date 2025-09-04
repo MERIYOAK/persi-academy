@@ -12,9 +12,9 @@
   },
   "footer": {
     "contact_info": "Contact Us",
-    "address": "Address: Ontario, Canada",
-    "phone": "Phone: +001 1 123456",
-    "email": "Email: info@example.com",
+    "address": "Address",
+    "phone": "Phone",
+    "email": "Email",
     "social_links": "Pages",
     "follow_us": "Additional Pages",
     "copyright": "All Rights Reserved.",
@@ -252,7 +252,7 @@
       "phone": {
         "title": "Phone",
         "details": {
-          "1": "Mon-Fri: 9AM-6PM EST"
+          "1": "Business Hours"
         }
       },
       "office": {
@@ -261,9 +261,9 @@
       "business_hours": {
         "title": "Business Hours",
         "details": {
-          "0": "Monday - Friday: 9AM - 6PM EST",
-          "1": "Saturday: 10AM - 4PM EST",
-          "2": "Sunday: Closed"
+          "0": "Weekday Hours",
+          "1": "Saturday Hours",
+          "2": "Sunday Hours"
         }
       }
     },

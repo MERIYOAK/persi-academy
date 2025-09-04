@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { CreditCard, Clock, CheckCircle, XCircle, AlertTriangle, Mail, Phone, MessageCircle } from 'lucide-react';
 import { config } from '../config/environment';
@@ -252,8 +252,8 @@ const RefundPolicyPage = () => {
                     <h3 className="font-semibold text-gray-900">Phone Support</h3>
                   </div>
                   <p className="text-gray-600 text-sm mb-2">Speak with our support team</p>
-                  <a href={`tel:${config.SUPPORT_WHATSAPP}`} className="text-red-600 hover:text-red-700 text-sm font-medium">
-                    {config.SUPPORT_WHATSAPP}
+                  <a href={`tel:${config.SUPPORT_PHONE}`} className="text-red-600 hover:text-red-700 text-sm font-medium">
+                    {config.SUPPORT_PHONE}
                   </a>
                 </div>
               </div>

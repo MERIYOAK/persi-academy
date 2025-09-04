@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, AlertCircle, CheckCircle, Phone } from 'lucide-react';
 import AuthForm from '../components/AuthForm';
 import { buildApiUrl } from '../config/environment';
+import { config } from '../config/environment';
 
 const RegisterPage = () => {
   const navigate = useNavigate();
@@ -33,7 +34,7 @@ const RegisterPage = () => {
       name: 'phoneNumber',
       label: 'Phone Number',
       type: 'tel',
-      placeholder: '+1 (555) 123-4567',
+      placeholder: config.SUPPORT_PHONE,
       required: true
     },
     {

@@ -1,8 +1,23 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Shield, Eye, Lock, Database, Users, Bell, Globe, Mail } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import { config } from '../config/environment';
 
 const PrivacyPolicyPage = () => {
+  const { t } = useTranslation();
+  const [lastUpdated, setLastUpdated] = useState('');
+
+  useEffect(() => {
+    const updateLastUpdated = () => {
+      const date = new Date();
+      setLastUpdated(date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }));
+    };
+    updateLastUpdated();
+    const interval = setInterval(updateLastUpdated, 1000 * 60 * 60 * 24); // Update daily
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <div className="min-h-screen bg-gray-50 pt-16">
       {/* Hero Section */}
@@ -14,7 +29,7 @@ const PrivacyPolicyPage = () => {
               We are committed to protecting your privacy and ensuring the security of your personal information. This policy explains how we collect, use, and safeguard your data.
             </p>
             <p className="text-sm text-red-200 mt-4">
-              Last updated: {new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+              Last updated: {lastUpdated}
             </p>
           </div>
         </div>
@@ -309,13 +324,13 @@ const PrivacyPolicyPage = () => {
               </p>
               <div className="bg-gray-50 rounded-lg p-4">
                 <p className="text-gray-600">
-                  <strong>Email:</strong> privacy@qendiel.com<br />
-                  <strong>Address:</strong> QENDIEL Academy, 123 Learning Street, New York, NY 10001<br />
-                  <strong>Phone:</strong> +1 (555) 123-4567
+                  <strong>Email:</strong> {config.PRIVACY_EMAIL}<br />
+                  <strong>Address:</strong> {config.SUPPORT_ADDRESS}<br />
+                  <strong>Phone:</strong> {config.SUPPORT_PHONE}
                 </p>
               </div>
               <p className="text-gray-600 mt-4">
-                For data protection inquiries, you may also contact our Data Protection Officer at dpo@qendiel.com.
+                For data protection inquiries, you may also contact our Data Protection Officer at {config.DPO_EMAIL}.
               </p>
             </div>
           </section>
@@ -335,7 +350,7 @@ const PrivacyPolicyPage = () => {
               Contact Us
             </Link>
             <a
-                              href="mailto:privacy@qendiel.com"
+              href={`mailto:${config.PRIVACY_EMAIL}`}
               className="border border-gray-300 text-gray-700 hover:bg-gray-50 px-6 py-3 rounded-lg font-semibold transition-colors duration-200"
             >
               Email Privacy Team

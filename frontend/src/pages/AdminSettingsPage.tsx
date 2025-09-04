@@ -25,6 +25,7 @@ import {
   Download,
   Upload
 } from 'lucide-react';
+import { config } from '../config/environment';
 
 interface PlatformSettings {
   siteName: string;
@@ -77,10 +78,10 @@ const AdminSettingsPage: React.FC = () => {
 
   // Platform Settings
   const [platformSettings, setPlatformSettings] = useState<PlatformSettings>({
-            siteName: 'QENDIEL Academy',
+    siteName: 'QENDIEL Academy',
     siteDescription: 'Professional Skills Development Platform',
-                contactEmail: 'contact@qendiel.com',
-    supportEmail: 'support@qendiel.com',
+    contactEmail: config.INFO_EMAIL,
+    supportEmail: config.SUPPORT_EMAIL,
     maxFileSize: 500,
     allowedFileTypes: ['mp4', 'avi', 'mov', 'mkv', 'webm'],
     maintenanceMode: false,
@@ -107,8 +108,8 @@ const AdminSettingsPage: React.FC = () => {
     smtpPort: 587,
     smtpUser: '',
     smtpPassword: '',
-            fromEmail: 'noreply@qendiel.com',
-            fromName: 'QENDIEL Academy',
+    fromEmail: config.SUPPORT_EMAIL,
+    fromName: 'QENDIEL Academy',
     emailEnabled: false
   });
 

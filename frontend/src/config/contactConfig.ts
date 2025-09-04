@@ -1,3 +1,5 @@
+import { config } from './environment';
+
 export interface ContactOption {
   id: string;
   icon: string;
@@ -13,7 +15,7 @@ export const contactConfig: ContactOption[] = [
     id: 'phone',
     icon: '📞',
     label: 'Call',
-    url: 'tel:+1234567890',
+    url: `tel:${config.SUPPORT_PHONE}`,
     color: 'bg-green-500',
     hoverColor: 'hover:bg-green-600',
     iconComponent: 'phone'
@@ -22,7 +24,7 @@ export const contactConfig: ContactOption[] = [
     id: 'whatsapp',
     icon: '📱',
     label: 'WhatsApp',
-    url: 'https://wa.me/1234567890',
+    url: `https://wa.me/${config.SUPPORT_WHATSAPP.replace(/[^\d]/g, '')}`,
     color: 'bg-green-600',
     hoverColor: 'hover:bg-green-700',
     iconComponent: 'whatsapp'
@@ -31,7 +33,7 @@ export const contactConfig: ContactOption[] = [
     id: 'telegram',
     icon: '✈️',
     label: 'Telegram',
-    url: 'https://t.me/username',
+    url: `https://t.me/${config.SUPPORT_TELEGRAM}`,
     color: 'bg-blue-500',
     hoverColor: 'hover:bg-blue-600',
     iconComponent: 'telegram'
@@ -40,7 +42,7 @@ export const contactConfig: ContactOption[] = [
     id: 'messenger',
     icon: '💬',
     label: 'Messenger',
-    url: 'https://m.me/username',
+    url: `https://m.me/${config.SUPPORT_MESSENGER}`,
     color: 'bg-blue-600',
     hoverColor: 'hover:bg-blue-700',
     iconComponent: 'messenger'
