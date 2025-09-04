@@ -86,6 +86,7 @@ class AuthService {
         name: userData.name,
         email: userData.email,
         password: userData.password,
+        phoneNumber: userData.phoneNumber,
         authProvider: 'local',
         isVerified: false, // Email verification required
       });
@@ -386,6 +387,8 @@ class AuthService {
             } else {
               console.log('ℹ️  No Google profile photo available for linking user');
             }
+            
+            await user.save();
           } else {
             // User already exists with Google OAuth but different Google ID
             console.log(`🔄 Updating Google OAuth account: ${user.email}`);
@@ -414,6 +417,8 @@ class AuthService {
             } else {
               console.log('ℹ️  No Google profile photo available for updating user');
             }
+            
+            await user.save();
           }
         } else {
           // Create new Google OAuth user
@@ -447,13 +452,29 @@ class AuthService {
           } else {
             console.log('ℹ️  No Google profile photo available for user');
           }
-        }
 
-        await user.save();
-        console.log(`✅ Google user created/updated: ${user.email}`);
+          await user.save();
+          
+          // Return special status indicating phone number is required
+          return {
+            user: {
+              _id: user._id,
+              name: user.name,
+              email: user.email,
+              role: user.role,
+              authProvider: user.authProvider,
+              profilePhotoKey: user.profilePhotoKey,
+              isVerified: user.isVerified,
+              phoneNumber: user.phoneNumber,
+              createdAt: user.createdAt,
+            },
+            phoneNumberRequired: true,
+            message: 'Phone number required to complete registration'
+          };
+        }
       }
 
-      // Generate token
+      // Generate token for existing/updated users
       const token = this.generateToken(user);
 
       return {
@@ -524,9 +545,14 @@ class AuthService {
       if (updateData.age !== undefined) user.age = updateData.age;
       if (updateData.sex !== undefined) user.sex = updateData.sex;
       if (updateData.address !== undefined) user.address = updateData.address;
-      if (updateData.telephone !== undefined) user.telephone = updateData.telephone;
+      if (updateData.phoneNumber !== undefined) user.phoneNumber = updateData.phoneNumber;
       if (updateData.country !== undefined) user.country = updateData.country;
       if (updateData.city !== undefined) user.city = updateData.city;
+
+      // Ensure phone number is not removed (required field)
+      if (!user.phoneNumber) {
+        throw new Error('Phone number is required and cannot be removed');
+      }
 
       // Handle profile photo update
       if (profilePhoto) {
@@ -602,7 +628,7 @@ class AuthService {
         age: user.age,
         sex: user.sex,
         address: user.address,
-        telephone: user.telephone,
+        phoneNumber: user.phoneNumber,
         country: user.country,
         city: user.city
       };
@@ -751,7 +777,7 @@ class AuthService {
           age: user.age,
           sex: user.sex,
           address: user.address,
-          telephone: user.telephone,
+          phoneNumber: user.phoneNumber,
           country: user.country,
           city: user.city
         }
@@ -807,6 +833,58 @@ class AuthService {
         throw new Error('Invalid password reset link.');
       }
       
+      throw error;
+    }
+  }
+
+  /**
+   * Complete Google OAuth registration with phone number
+   * @param {string} userId - User ID
+   * @param {string} phoneNumber - Phone number
+   * @returns {Object} - User object and auth token
+   */
+  async completeGoogleRegistration(userId, phoneNumber) {
+    try {
+      const user = await User.findById(userId);
+      
+      if (!user) {
+        throw new Error('User not found');
+      }
+
+      if (user.authProvider !== 'google') {
+        throw new Error('This endpoint is only for Google OAuth users');
+      }
+
+      if (user.phoneNumber) {
+        throw new Error('User already has a phone number');
+      }
+
+      // Update user with phone number
+      user.phoneNumber = phoneNumber;
+      await user.save();
+
+      // Generate auth token
+      const token = this.generateToken(user);
+
+      console.log(`✅ Google OAuth registration completed for user: ${user.email}`);
+
+      return {
+        user: {
+          _id: user._id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          authProvider: user.authProvider,
+          profilePhotoKey: user.profilePhotoKey,
+          isVerified: user.isVerified,
+          phoneNumber: user.phoneNumber,
+          createdAt: user.createdAt,
+        },
+        token,
+        message: 'Registration completed successfully!'
+      };
+    } catch (error) {
+      console.error('❌ Complete Google registration error:', error);
       throw error;
     }
   }

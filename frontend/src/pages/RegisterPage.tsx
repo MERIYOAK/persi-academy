@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Eye, EyeOff, AlertCircle, CheckCircle } from 'lucide-react';
+import { Eye, EyeOff, AlertCircle, CheckCircle, Phone } from 'lucide-react';
 import AuthForm from '../components/AuthForm';
 import { buildApiUrl } from '../config/environment';
 
@@ -27,6 +27,13 @@ const RegisterPage = () => {
       label: 'Email Address',
       type: 'email',
       placeholder: 'Enter your email',
+      required: true
+    },
+    {
+      name: 'phoneNumber',
+      label: 'Phone Number',
+      type: 'tel',
+      placeholder: '+1 (555) 123-4567',
       required: true
     },
     {
@@ -67,12 +74,27 @@ const RegisterPage = () => {
       alert('Passwords do not match');
       return;
     }
+
+    // Phone number validation
+    const phoneNumber = data.phoneNumber as string;
+    if (!phoneNumber) {
+      alert('Phone number is required');
+      return;
+    }
+
+    // Basic phone number format validation (international format)
+    const phoneRegex = /^\+[1-9]\d{1,14}$/;
+    if (!phoneRegex.test(phoneNumber)) {
+      alert('Please enter a valid international phone number (e.g., +1234567890)');
+      return;
+    }
     
     try {
       // Create FormData for file upload
       const formData = new FormData();
       formData.append('name', `${data.firstName} ${data.lastName}`);
       formData.append('email', data.email as string);
+      formData.append('phoneNumber', phoneNumber);
       formData.append('password', data.password as string);
       
       // Add profile photo if selected

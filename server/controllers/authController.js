@@ -7,14 +7,14 @@ const s3Service = require('../services/s3Service');
  */
 const register = async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, password, phoneNumber } = req.body;
     const profilePhoto = req.file;
 
     // Validate required fields
-    if (!name || !email || !password) {
+    if (!name || !email || !password || !phoneNumber) {
       return res.status(400).json({
         success: false,
-        message: 'Name, email, and password are required'
+        message: 'Name, email, password, and phone number are required'
       });
     }
 
@@ -27,6 +27,15 @@ const register = async (req, res) => {
       });
     }
 
+    // Validate phone number format (international format)
+    const phoneRegex = /^\+[1-9]\d{1,14}$/;
+    if (!phoneRegex.test(phoneNumber)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please provide a valid international phone number (e.g., +1234567890)'
+      });
+    }
+
     // Validate password strength
     if (password.length < 6) {
       return res.status(400).json({
@@ -36,7 +45,7 @@ const register = async (req, res) => {
     }
 
     const result = await authService.registerLocal(
-      { name, email, password },
+      { name, email, password, phoneNumber },
       profilePhoto
     );
 
@@ -269,7 +278,7 @@ const getCurrentUser = async (req, res) => {
         age: user.age,
         sex: user.sex,
         address: user.address,
-        telephone: user.telephone,
+        phoneNumber: user.phoneNumber,
         country: user.country,
         city: user.city
       }
@@ -291,7 +300,7 @@ const getCurrentUser = async (req, res) => {
 const updateProfile = async (req, res) => {
   try {
     const { 
-      firstName, lastName, age, sex, address, telephone, country, city 
+      firstName, lastName, age, sex, address, phoneNumber, country, city 
     } = req.body;
     const profilePhoto = req.file;
 
@@ -299,26 +308,45 @@ const updateProfile = async (req, res) => {
       hasProfilePhoto: !!profilePhoto,
       profilePhotoName: profilePhoto?.originalname,
       profilePhotoSize: profilePhoto?.size,
-      fields: { firstName, lastName, age, sex, address, telephone, country, city }
+      fields: { firstName, lastName, age, sex, address, phoneNumber, country, city }
     });
 
     // Validate at least one field to update
-    if (!firstName && !lastName && !age && !sex && !address && !telephone && !country && !city && !profilePhoto) {
+    if (!firstName && !lastName && !age && !sex && !address && !phoneNumber && !country && !city && !profilePhoto) {
       return res.status(400).json({
         success: false,
         message: 'At least one field must be provided for update'
       });
     }
 
+    // Validate phone number format if provided
+    if (phoneNumber !== undefined) {
+      const phoneRegex = /^\+[1-9]\d{1,14}$/;
+      if (!phoneRegex.test(phoneNumber)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Please provide a valid international phone number (e.g., +1234567890)'
+        });
+      }
+      
+      // For local users, phone number cannot be empty since it's required
+      if (!phoneNumber || phoneNumber.trim() === '') {
+        return res.status(400).json({
+          success: false,
+          message: 'Phone number is required and cannot be empty'
+        });
+      }
+    }
+
     const updateData = {};
-    if (firstName !== undefined) updateData.firstName = firstName;
-    if (lastName !== undefined) updateData.lastName = lastName;
-    if (age !== undefined) updateData.age = age ? parseInt(age) : null;
-    if (sex !== undefined) updateData.sex = sex;
-    if (address !== undefined) updateData.address = address;
-    if (telephone !== undefined) updateData.telephone = telephone;
-    if (country !== undefined) updateData.country = country;
-    if (city !== undefined) updateData.city = city;
+    if (req.body.firstName !== undefined) updateData.firstName = req.body.firstName || null;
+    if (req.body.lastName !== undefined) updateData.lastName = req.body.lastName || null;
+    if (req.body.age !== undefined) updateData.age = req.body.age ? parseInt(req.body.age) : null;
+    if (req.body.sex !== undefined) updateData.sex = req.body.sex || null;
+    if (req.body.address !== undefined) updateData.address = req.body.address || null;
+    if (req.body.phoneNumber !== undefined) updateData.phoneNumber = req.body.phoneNumber;
+    if (req.body.country !== undefined) updateData.country = req.body.country || null;
+    if (req.body.city !== undefined) updateData.city = req.body.city || null;
 
     console.log('🔧 [Profile Update] Calling authService.updateProfile with:', {
       userId: req.user.userId,
@@ -459,7 +487,15 @@ const googleCallback = async (req, res) => {
   try {
     const result = await authService.handleGoogleAuth(req.user);
 
-    // Redirect to frontend with token
+    // Check if phone number is required
+    if (result.phoneNumberRequired) {
+      // Redirect to phone number collection page
+      const redirectUrl = `${process.env.FRONTEND_URL}/complete-google-registration?userId=${result.user._id}&email=${encodeURIComponent(result.user.email)}&name=${encodeURIComponent(result.user.name)}`;
+      res.redirect(redirectUrl);
+      return;
+    }
+
+    // Redirect to frontend with token for successful authentication
     const redirectUrl = `${process.env.FRONTEND_URL}/auth/google-callback?token=${result.token}`;
     res.redirect(redirectUrl);
 
@@ -467,6 +503,50 @@ const googleCallback = async (req, res) => {
     console.error('❌ Google callback error:', error);
     const errorUrl = `${process.env.FRONTEND_URL}/auth/google-callback?error=${encodeURIComponent(error.message)}`;
     res.redirect(errorUrl);
+  }
+};
+
+/**
+ * Complete Google OAuth registration with phone number
+ * POST /api/auth/complete-google-registration
+ */
+const completeGoogleRegistration = async (req, res) => {
+  try {
+    const { userId, phoneNumber } = req.body;
+
+    if (!userId || !phoneNumber) {
+      return res.status(400).json({
+        success: false,
+        message: 'User ID and phone number are required'
+      });
+    }
+
+    // Validate phone number format (international format)
+    const phoneRegex = /^\+[1-9]\d{1,14}$/;
+    if (!phoneRegex.test(phoneNumber)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please provide a valid international phone number (e.g., +1234567890)'
+      });
+    }
+
+    const result = await authService.completeGoogleRegistration(userId, phoneNumber);
+
+    res.json({
+      success: true,
+      message: result.message,
+      data: {
+        user: result.user,
+        token: result.token
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ Complete Google registration error:', error);
+    res.status(400).json({
+      success: false,
+      message: error.message || 'Failed to complete registration'
+    });
   }
 };
 
@@ -627,6 +707,7 @@ module.exports = {
   getProfilePhoto,
   deleteProfilePhoto,
   googleCallback,
+  completeGoogleRegistration,
   logout,
   checkEmailAvailability,
   forgotPassword,
