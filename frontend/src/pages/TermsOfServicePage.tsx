@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Shield, Users, CreditCard, Eye, Lock, AlertTriangle } from 'lucide-react';
+import { Shield, FileText, CheckCircle, XCircle, AlertTriangle, Users, Lock, Globe, Clock, Mail } from 'lucide-react';
 import { config } from '../config/environment';
 
 const TermsOfServicePage = () => {
@@ -39,11 +39,11 @@ const TermsOfServicePage = () => {
               User Accounts
             </a>
             <a href="#payments" className="flex items-center text-red-600 hover:text-red-700">
-              <CreditCard className="h-4 w-4 mr-2" />
+              <FileText className="h-4 w-4 mr-2" />
               Payment Terms
             </a>
             <a href="#intellectual-property" className="flex items-center text-red-600 hover:text-red-700">
-              <Eye className="h-4 w-4 mr-2" />
+              <Shield className="h-4 w-4 mr-2" />
               Intellectual Property
             </a>
             <a href="#privacy" className="flex items-center text-red-600 hover:text-red-700">

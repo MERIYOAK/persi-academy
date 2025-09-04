@@ -1,7 +1,8 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { BookOpen, Mail, Phone, MapPin, Youtube, Twitter, Instagram, Shield } from 'lucide-react';
+import { BookOpen, Mail, Phone, MapPin, Youtube, Facebook, Instagram, Shield } from 'lucide-react';
+import { config } from '../config/environment';
 
 
 interface FooterProps {
@@ -30,13 +31,31 @@ const Footer: React.FC<FooterProps> = ({ className = '', openCookieSettingsRef }
               {t('footer.contact_info')}
             </p>
             <div className="flex space-x-4">
-              <a href="#" className="text-gray-400 hover:text-red-500 transition-colors duration-200">
+              <a 
+                href={`https://youtube.com/@${config.SOCIAL_YOUTUBE}`} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-gray-400 hover:text-red-500 transition-colors duration-200"
+                aria-label="YouTube"
+              >
                 <Youtube className="h-6 w-6" />
               </a>
-              <a href="#" className="text-gray-400 hover:text-red-500 transition-colors duration-200">
-                <Twitter className="h-6 w-6" />
+              <a 
+                href={`https://facebook.com/${config.SOCIAL_FACEBOOK}`} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-gray-400 hover:text-blue-500 transition-colors duration-200"
+                aria-label="Facebook"
+              >
+                <Facebook className="h-6 w-6" />
               </a>
-              <a href="#" className="text-gray-400 hover:text-red-500 transition-colors duration-200">
+              <a 
+                href={`https://instagram.com/${config.SOCIAL_INSTAGRAM}`} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-gray-400 hover:text-pink-500 transition-colors duration-200"
+                aria-label="Instagram"
+              >
                 <Instagram className="h-6 w-6" />
               </a>
             </div>
@@ -104,35 +123,43 @@ const Footer: React.FC<FooterProps> = ({ className = '', openCookieSettingsRef }
                   {t('footer.refund_policy')}
                 </Link>
               </li>
-              <li>
-                <button
-                  type="button"
-                  onClick={() => openCookieSettingsRef?.current && openCookieSettingsRef.current()}
-                  className="text-gray-400 hover:text-white transition-colors duration-200"
-                >
-                  {t('footer.cookie_settings')}
-                </button>
-              </li>
             </ul>
           </div>
 
-          {/* Contact Info */}
+          {/* Contact Information */}
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-white">{t('footer.contact_info')}</h3>
-            <div className="space-y-3">
-              <div className="flex items-center space-x-3">
-                <Mail className="h-5 w-5 text-red-500" />
-                <span className="text-gray-400">{t('footer.email')}</span>
-              </div>
-              <div className="flex items-center space-x-3">
-                <Phone className="h-5 w-5 text-red-500" />
-                <span className="text-gray-400">{t('footer.phone')}</span>
-              </div>
-              <div className="flex items-center space-x-3">
-                <MapPin className="h-5 w-5 text-red-500" />
-                <span className="text-gray-400">{t('footer.address')}</span>
-              </div>
-            </div>
+            <ul className="space-y-2">
+              <li>
+                <a 
+                  href={`mailto:${config.SUPPORT_EMAIL}`} 
+                  className="text-gray-400 hover:text-white transition-colors duration-200 flex items-center space-x-2"
+                >
+                  <Mail className="h-4 w-4" />
+                  <span>Email</span>
+                </a>
+              </li>
+              <li>
+                <a 
+                  href={`tel:${config.SUPPORT_PHONE}`} 
+                  className="text-gray-400 hover:text-white transition-colors duration-200 flex items-center space-x-2"
+                >
+                  <Phone className="h-4 w-4" />
+                  <span>Phone</span>
+                </a>
+              </li>
+              <li>
+                <a 
+                  href={`https://maps.google.com/?q=${encodeURIComponent(config.SUPPORT_ADDRESS)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-gray-400 hover:text-white transition-colors duration-200 flex items-center space-x-2"
+                >
+                  <MapPin className="h-4 w-4" />
+                  <span>{config.SUPPORT_ADDRESS_SHORT}</span>
+                </a>
+              </li>
+            </ul>
           </div>
         </div>
 

@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { buildApiUrl } from '../config/environment';
-
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { 
   User, Mail, Calendar, Shield, Camera, Save, ArrowLeft, Edit3, X, 
   CheckCircle, AlertCircle, Eye, EyeOff, Phone, MapPin, Globe, 
   UserCheck, Upload, Trash2, RotateCcw, Plus, Minus
 } from 'lucide-react';
+import { config } from '../config/environment';
 
 interface UserData {
   _id: string;
@@ -196,7 +197,7 @@ const ProfilePage = () => {
     if (formData.phoneNumber) {
       const phoneRegex = /^\+[1-9]\d{1,14}$/;
       if (!phoneRegex.test(formData.phoneNumber.replace(/\s/g, ''))) {
-        errors.phoneNumber = 'Please enter a valid international phone number (e.g., +1234567890)';
+        errors.phoneNumber = 'Please enter a valid international phone number (e.g., ' + config.SUPPORT_PHONE + ')';
       }
     }
     
@@ -816,8 +817,8 @@ const ProfilePage = () => {
                         {!validationErrors.phoneNumber && (
                           <p className="text-xs text-gray-500 mt-1">
                             {userData && userData.authProvider === 'local' 
-                              ? 'Required for email accounts. Use international format (e.g., +1234567890)' 
-                              : 'Use international format (e.g., +1234567890)'}
+                              ? 'Required for email accounts. Use international format (e.g., ' + config.SUPPORT_PHONE + ')' 
+                              : 'Use international format (e.g., ' + config.SUPPORT_PHONE + ')'}
                           </p>
                         )}
                       </div>

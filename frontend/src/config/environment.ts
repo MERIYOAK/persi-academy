@@ -7,14 +7,35 @@ export const config = {
   FRONTEND_URL: import.meta.env.VITE_FRONTEND_URL || 'http://localhost:5173',
   
   // App Configuration
-          APP_NAME: import.meta.env.VITE_APP_NAME || 'QENDIEL Academy',
+  APP_NAME: import.meta.env.VITE_APP_NAME || 'QENDIEL Academy',
   APP_DESCRIPTION: import.meta.env.VITE_APP_DESCRIPTION || 'Professional Skills Development',
+  
+  // Contact Information
   SUPPORT_EMAIL: import.meta.env.VITE_SUPPORT_EMAIL || 'philiweb123@gmail.com',
   SUPPORT_WHATSAPP: import.meta.env.VITE_SUPPORT_WHATSAPP || '+15551234567',
+  SUPPORT_PHONE: import.meta.env.VITE_SUPPORT_PHONE || '+1 (555) 123-4567',
+  SUPPORT_TELEGRAM: import.meta.env.VITE_SUPPORT_TELEGRAM || 'username',
+  SUPPORT_MESSENGER: import.meta.env.VITE_SUPPORT_MESSENGER || 'username',
+  SUPPORT_ADDRESS: import.meta.env.VITE_SUPPORT_ADDRESS || '123 Creator Street, New York, NY 10001',
+  SUPPORT_ADDRESS_SHORT: import.meta.env.VITE_SUPPORT_ADDRESS_SHORT || 'Ontario, Canada',
+  BUSINESS_HOURS_WEEKDAY: import.meta.env.VITE_BUSINESS_HOURS_WEEKDAY || 'Monday - Friday: 9AM - 6PM EST',
+  BUSINESS_HOURS_SATURDAY: import.meta.env.VITE_BUSINESS_HOURS_SATURDAY || 'Saturday: 10AM - 4PM EST',
+  BUSINESS_HOURS_SUNDAY: import.meta.env.VITE_BUSINESS_HOURS_SUNDAY || 'Sunday: Closed',
+  BUSINESS_HOURS_PHONE: import.meta.env.VITE_BUSINESS_HOURS_PHONE || 'Mon-Fri: 9AM-6PM EST',
+  INFO_EMAIL: import.meta.env.VITE_INFO_EMAIL || 'info@qendiel.com',
+  PRIVACY_EMAIL: import.meta.env.VITE_PRIVACY_EMAIL || 'privacy@qendiel.com',
+  DPO_EMAIL: import.meta.env.VITE_DPO_EMAIL || 'dpo@qendiel.com',
+  
+  // Social Media
+  SOCIAL_FACEBOOK: import.meta.env.VITE_SOCIAL_FACEBOOK || 'qendielacademy',
+  SOCIAL_YOUTUBE: import.meta.env.VITE_SOCIAL_YOUTUBE || 'qendielacademy',
+  SOCIAL_INSTAGRAM: import.meta.env.VITE_SOCIAL_INSTAGRAM || 'qendielacademy',
+  SOCIAL_LINKEDIN: import.meta.env.VITE_SOCIAL_LINKEDIN || 'company/qendiel-academy',
+  SOCIAL_TWITTER: import.meta.env.VITE_SOCIAL_TWITTER || 'qendielacademy',
   
   // S3 Configuration
   S3_BUCKET_URL: import.meta.env.VITE_S3_BUCKET_URL || 'https://persi-edu-platform.s3.us-east-1.amazonaws.com',
-          S3_IMAGE_PATH: import.meta.env.VITE_S3_IMAGE_PATH || 'https://persi-educational-storage.s3.ca-central-1.amazonaws.com/persi-academy/Ig-images/ig-image.jpeg',
+  S3_IMAGE_PATH: import.meta.env.VITE_S3_IMAGE_PATH || 'https://persi-educational-storage.s3.ca-central-1.amazonaws.com/persi-academy/Ig-images/ig-image.jpeg',
   S3_BUCKET_URL_DOMAIN: import.meta.env.VITE_S3_BUCKET_URL_DOMAIN || 'persi-edu-platform.s3.us-east-1.amazonaws.com',
   
   // Third Party Services

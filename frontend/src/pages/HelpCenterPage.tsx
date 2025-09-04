@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ChevronDown, ChevronUp, Mail, MessageCircle, BookOpen, Video, Award, CreditCard, Shield, Clock } from 'lucide-react';
+import { ChevronDown, ChevronUp, MessageCircle, Mail, Clock, BookOpen, Shield, CreditCard, Users, Globe, Zap, Star, HelpCircle, Phone, MapPin } from 'lucide-react';
 import { config } from '../config/environment';
 
 interface FAQItem {
@@ -93,10 +93,10 @@ const HelpCenterPage = () => {
 
   const categories = [
     { id: 'all', name: 'All Questions', icon: BookOpen },
-    { id: 'getting-started', name: 'Getting Started', icon: Video },
-    { id: 'course-access', name: 'Course Access', icon: Award },
-    { id: 'technical', name: 'Technical Issues', icon: Shield },
-    { id: 'certificates', name: 'Certificates', icon: Award },
+    { id: 'getting-started', name: 'Getting Started', icon: Users },
+    { id: 'course-access', name: 'Course Access', icon: Zap },
+    { id: 'technical', name: 'Technical Issues', icon: HelpCircle },
+    { id: 'certificates', name: 'Certificates', icon: Star },
     { id: 'payments', name: 'Payments & Refunds', icon: CreditCard }
   ];
 

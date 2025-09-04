@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { buildApiUrl } from '../config/environment';
-
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { 
   ArrowLeft, 
   Search, 
@@ -18,7 +18,15 @@ import {
   ChevronLeft,
   ChevronRight,
   MoreHorizontal,
-  Phone
+  Phone,
+  CheckCircle,
+  XCircle,
+  ChevronDown,
+  ChevronUp,
+  SortAsc,
+  SortDesc,
+  Download,
+  Upload
 } from 'lucide-react';
 import DeleteConfirmationModal from '../components/DeleteConfirmationModal';
 import Toast from '../components/Toast';
