@@ -123,6 +123,14 @@ const Footer: React.FC<FooterProps> = ({ className = '', openCookieSettingsRef }
                   {t('footer.refund_policy')}
                 </Link>
               </li>
+              <li>
+                <button
+                  onClick={() => openCookieSettingsRef?.current && openCookieSettingsRef.current()}
+                  className="text-gray-400 hover:text-white transition-colors duration-200 text-left"
+                >
+                  {t('footer.cookie_settings')}
+                </button>
+              </li>
             </ul>
           </div>
 
@@ -136,7 +144,7 @@ const Footer: React.FC<FooterProps> = ({ className = '', openCookieSettingsRef }
                   className="text-gray-400 hover:text-white transition-colors duration-200 flex items-center space-x-2"
                 >
                   <Mail className="h-4 w-4" />
-                  <span>Email</span>
+                  <span>{t('footer.email')}</span>
                 </a>
               </li>
               <li>
@@ -145,7 +153,7 @@ const Footer: React.FC<FooterProps> = ({ className = '', openCookieSettingsRef }
                   className="text-gray-400 hover:text-white transition-colors duration-200 flex items-center space-x-2"
                 >
                   <Phone className="h-4 w-4" />
-                  <span>Phone</span>
+                  <span>{t('footer.phone')}</span>
                 </a>
               </li>
               <li>
@@ -156,7 +164,7 @@ const Footer: React.FC<FooterProps> = ({ className = '', openCookieSettingsRef }
                   className="text-gray-400 hover:text-white transition-colors duration-200 flex items-center space-x-2"
                 >
                   <MapPin className="h-4 w-4" />
-                  <span>{config.SUPPORT_ADDRESS_SHORT}</span>
+                  <span>{t('footer.address')}</span>
                 </a>
               </li>
             </ul>
