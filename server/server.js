@@ -75,7 +75,7 @@ app.use((req, res, next) => {
     // Skip JSON parsing for webhook route - let the route handle raw body
     next();
   } else {
-    express.json({ limit: '50mb' })(req, res, next);
+    express.json({ limit: '10mb' })(req, res, next);
   }
 });
 
@@ -85,7 +85,7 @@ app.use((req, res, next) => {
     // Skip URL parsing for webhook route
     next();
   } else {
-    express.urlencoded({ extended: true, limit: '50mb' })(req, res, next);
+    express.urlencoded({ extended: true, limit: '10mb' })(req, res, next);
   }
 });
 

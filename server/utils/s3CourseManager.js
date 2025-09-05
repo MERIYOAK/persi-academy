@@ -82,7 +82,7 @@ const uploadCourseFile = async (file, fileType, courseName, version = 1) => {
     const uploadParams = {
       Bucket: process.env.AWS_S3_BUCKET,
       Key: s3Key,
-      Body: file.buffer,
+      Body: file.path ? require('fs').createReadStream(file.path) : file.buffer,
       ContentType: file.mimetype,
       Metadata: {
         originalName: file.originalname,
