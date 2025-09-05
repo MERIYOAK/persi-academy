@@ -78,7 +78,7 @@ const AdminSettingsPage: React.FC = () => {
 
   // Platform Settings
   const [platformSettings, setPlatformSettings] = useState<PlatformSettings>({
-    siteName: 'QENDIEL Academy',
+            siteName: 'QENDIEL Academy',
     siteDescription: 'Professional Skills Development Platform',
     contactEmail: config.INFO_EMAIL,
     supportEmail: config.SUPPORT_EMAIL,
@@ -109,7 +109,7 @@ const AdminSettingsPage: React.FC = () => {
     smtpUser: '',
     smtpPassword: '',
     fromEmail: config.SUPPORT_EMAIL,
-    fromName: 'QENDIEL Academy',
+            fromName: 'QENDIEL Academy',
     emailEnabled: false
   });
 

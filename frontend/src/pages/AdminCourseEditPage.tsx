@@ -34,6 +34,8 @@ interface Course {
   lastModifiedBy: string;
   createdAt: string;
   updatedAt: string;
+  hasWhatsappGroup?: boolean;
+  whatsappGroupLink?: string;
 }
 
 const AdminCourseEditPage: React.FC = () => {
@@ -64,6 +66,8 @@ const AdminCourseEditPage: React.FC = () => {
     category: '',
     level: '',
     tags: [] as string[],
+    hasWhatsappGroup: false,
+    whatsappGroupLink: '',
   });
 
   // Tags input state
@@ -109,6 +113,8 @@ const AdminCourseEditPage: React.FC = () => {
         category: courseData.category || '',
         level: courseData.level || '',
         tags: courseData.tags || [],
+        hasWhatsappGroup: Boolean(courseData.hasWhatsappGroup),
+        whatsappGroupLink: courseData.whatsappGroupLink || '',
       });
       
       // Initialize tags input
@@ -416,10 +422,11 @@ const AdminCourseEditPage: React.FC = () => {
   }, [courseId]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
+    const { name, value, type } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: name === 'price' ? parseFloat(value) || 0 : value,
+      [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : 
+              name === 'price' ? parseFloat(value) || 0 : value,
     }));
     setError(null); // Clear error when user starts typing
   };
@@ -732,6 +739,72 @@ const AdminCourseEditPage: React.FC = () => {
                         ))}
                       </div>
                     )}
+                  </div>
+
+                  {/* WhatsApp Group Settings */}
+                  <div className="border-t pt-6">
+                    <h3 className="text-lg font-medium text-gray-900 mb-4">WhatsApp Group Settings</h3>
+                    
+                    <div className="space-y-4">
+                      {/* Enable WhatsApp Group */}
+                      <div className="flex items-center">
+                        <input
+                          type="checkbox"
+                          id="hasWhatsappGroup"
+                          name="hasWhatsappGroup"
+                          checked={formData.hasWhatsappGroup || false}
+                          onChange={handleInputChange}
+                          className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                        />
+                        <label htmlFor="hasWhatsappGroup" className="ml-2 block text-sm text-gray-900">
+                          Enable WhatsApp Group for this course
+                        </label>
+                      </div>
+
+                      {/* WhatsApp Group Link */}
+                      {formData.hasWhatsappGroup && (
+                        <div>
+                          <label htmlFor="whatsappGroupLink" className="block text-sm font-medium text-gray-700 mb-2">
+                            WhatsApp Group Link *
+                          </label>
+                          <input
+                            type="url"
+                            id="whatsappGroupLink"
+                            name="whatsappGroupLink"
+                            value={formData.whatsappGroupLink || ''}
+                            onChange={handleInputChange}
+                            required={formData.hasWhatsappGroup}
+                            className="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                            placeholder="https://chat.whatsapp.com/your-group-link"
+                          />
+                          <p className="mt-1 text-sm text-gray-500">
+                            Enter the WhatsApp group invite link. Students will get secure, temporary access to join.
+                          </p>
+                          <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                            <div className="flex">
+                              <div className="flex-shrink-0">
+                                <svg className="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
+                                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                                </svg>
+                              </div>
+                              <div className="ml-3">
+                                <h3 className="text-sm font-medium text-blue-800">
+                                  Security Features
+                                </h3>
+                                <div className="mt-1 text-sm text-blue-700">
+                                  <ul className="list-disc list-inside space-y-1">
+                                    <li>Links expire in 30 minutes</li>
+                                    <li>One-time use only</li>
+                                    <li>Only enrolled students can access</li>
+                                    <li>Links cannot be shared after use</li>
+                                  </ul>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </form>
               </div>

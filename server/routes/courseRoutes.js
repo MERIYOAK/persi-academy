@@ -18,4 +18,8 @@ router.post('/', auth, adminAuthMiddleware, courseController.createCourse);
 router.put('/:id', auth, adminAuthMiddleware, courseController.updateCourse);
 router.delete('/:id', auth, adminAuthMiddleware, courseController.deleteCourse);
 
+// WhatsApp group access routes
+router.get('/:courseId/group-token', auth, courseController.generateGroupToken);
+router.get('/:courseId/join', courseController.joinGroup);
+
 module.exports = router; 

@@ -1,5 +1,8 @@
+const mongoose = require('mongoose');
 const Course = require('../models/Course');
 const Video = require('../models/Video');
+const GroupAccessToken = require('../models/GroupAccessToken');
+const Payment = require('../models/Payment');
 const { uploadToS3, deleteFromS3, uploadFileWithOrganization, deleteFileFromS3, getPublicUrl } = require('../utils/s3');
 const { getThumbnailPublicUrl } = require('../utils/s3Enhanced');
 
@@ -242,4 +245,198 @@ exports.updateThumbnail = async (req, res) => {
     console.error('Thumbnail update failed:', err?.message || err);
     res.status(500).json({ message: 'Thumbnail update failed', error: err.message });
   }
+};
+
+// Generate WhatsApp group access token for enrolled users
+const generateGroupToken = async (req, res) => {
+  try {
+    const { courseId } = req.params;
+    const userId = req.user?.userId || req.user?.id;
+
+    // Validate userId
+    if (!userId) {
+      return res.status(401).json({ message: 'User not authenticated' });
+    }
+
+    // Validate courseId format
+    if (!mongoose.Types.ObjectId.isValid(courseId)) {
+      return res.status(400).json({ message: 'Invalid course ID format' });
+    }
+
+    // Check if course exists and has a WhatsApp group
+    const course = await Course.findById(courseId);
+    if (!course) {
+      return res.status(404).json({ message: 'Course not found' });
+    }
+
+    if (!course.hasWhatsappGroup || !course.whatsappGroupLink) {
+      return res.status(404).json({ message: 'This course does not have a WhatsApp group' });
+    }
+
+    // Check if user is enrolled in the course
+    const enrollment = course.getStudentEnrollment(userId);
+    if (!enrollment) {
+      return res.status(403).json({ message: 'You must be enrolled in this course to access the WhatsApp group' });
+    }
+
+    // Check if user has completed payment (for paid courses)
+    if (course.price > 0) {
+      const payment = await Payment.findOne({
+        userId,
+        courseId,
+        status: 'completed'
+      });
+
+      if (!payment) {
+        return res.status(403).json({ message: 'You must complete payment to access the WhatsApp group' });
+      }
+    }
+
+    // Generate temporary WhatsApp group link (expires in 5 minutes)
+    const tempLinkData = await GroupAccessToken.generateTemporaryGroupLink(courseId, userId);
+    
+    console.log('🔍 [WhatsApp] Generated token data:', {
+      courseId,
+      userId,
+      tempToken: tempLinkData.tempToken,
+      expiresAt: tempLinkData.expiresAt,
+      joinUrl: `/api/courses/${courseId}/join?token=${tempLinkData.tempToken}`
+    });
+    
+    res.json({
+      success: true,
+      temporaryLink: tempLinkData.temporaryLink,
+      expiresAt: tempLinkData.expiresAt,
+      tempToken: tempLinkData.tempToken,
+      joinUrl: `/api/courses/${courseId}/join?token=${tempLinkData.tempToken}`
+    });
+
+  } catch (error) {
+    console.error('Error generating group token:', error);
+    res.status(500).json({ message: 'Failed to generate group access token', error: error.message });
+  }
+};
+
+// Join WhatsApp group with token validation
+const joinGroup = async (req, res) => {
+  try {
+    const { courseId } = req.params;
+    const { token } = req.query || {};
+
+    if (!token) {
+      return res.status(400).json({ message: 'Access token is required' });
+    }
+
+    // Validate and consume the token
+    const validation = await GroupAccessToken.validateAndConsume(
+      token, 
+      req.ip, 
+      req.get('User-Agent')
+    );
+
+    console.log('🔍 [WhatsApp] Token validation result:', {
+      valid: validation.valid,
+      courseId: validation.courseId,
+      courseIdType: typeof validation.courseId,
+      requestedCourseId: courseId,
+      error: validation.error
+    });
+
+    if (!validation.valid) {
+      return res.status(403).json({ 
+        message: 'Invalid or expired access token',
+        error: validation.error 
+      });
+    }
+
+    // Verify the course ID matches (handle both ObjectId and string)
+    const validationCourseId = validation.courseId._id ? validation.courseId._id.toString() : validation.courseId.toString();
+    if (validationCourseId !== courseId) {
+      console.log('❌ [WhatsApp] Course ID mismatch:', {
+        validationCourseId,
+        requestedCourseId: courseId
+      });
+      return res.status(403).json({ message: 'Token is not valid for this course' });
+    }
+
+    // Get the course to retrieve WhatsApp group link
+    const course = await Course.findById(courseId);
+    if (!course || !course.whatsappGroupLink) {
+      return res.status(404).json({ message: 'WhatsApp group not found for this course' });
+    }
+
+    // For temporary links, immediately expire the token after use
+    const tokenDoc = await GroupAccessToken.findOne({ token });
+    if (tokenDoc && tokenDoc.isTemporaryLink) {
+      // Mark as used and set immediate expiration
+      tokenDoc.used = true;
+      tokenDoc.usedAt = new Date();
+      tokenDoc.expiresAt = new Date(); // Immediate expiration
+      await tokenDoc.save();
+    }
+
+    // Redirect to WhatsApp group (without the temporary token)
+    res.redirect(course.whatsappGroupLink);
+
+  } catch (error) {
+    console.error('Error joining group:', error);
+    res.status(500).json({ message: 'Failed to join WhatsApp group', error: error.message });
+  }
+};
+
+// Import the enhanced course controller functions
+const enhancedController = require('./courseControllerEnhanced');
+
+// Basic course functions (using enhanced controller)
+const getCourses = enhancedController.getAllCourses;
+const getCourse = enhancedController.getCourseById;
+const createCourse = enhancedController.createCourse;
+const updateCourse = enhancedController.updateCourse;
+const deleteCourse = enhancedController.deleteCourse;
+const uploadThumbnail = enhancedController.uploadThumbnail;
+
+// Thumbnail functions (basic implementations)
+const deleteThumbnail = async (req, res) => {
+  try {
+    const { courseId } = req.params;
+    const course = await Course.findById(courseId);
+    
+    if (!course) {
+      return res.status(404).json({ message: 'Course not found' });
+    }
+
+    // Clear thumbnail fields
+    course.thumbnailURL = null;
+    course.thumbnailS3Key = null;
+    await course.save();
+
+    res.json({ message: 'Thumbnail deleted successfully' });
+  } catch (error) {
+    console.error('Thumbnail delete failed:', error);
+    res.status(500).json({ message: 'Thumbnail delete failed', error: error.message });
+  }
+};
+
+const updateThumbnail = async (req, res) => {
+  try {
+    // For now, just use the upload thumbnail function
+    // This could be enhanced to handle updates specifically
+    return uploadThumbnail(req, res);
+  } catch (error) {
+    console.error('Thumbnail update failed:', error);
+    res.status(500).json({ message: 'Thumbnail update failed', error: error.message });
+  }
+};
+
+module.exports = {
+  getCourses,
+  getCourse,
+  createCourse,
+  updateCourse,
+  deleteCourse,
+  uploadThumbnail,
+  deleteThumbnail,
+  updateThumbnail,
+  generateGroupToken,
+  joinGroup
 }; 

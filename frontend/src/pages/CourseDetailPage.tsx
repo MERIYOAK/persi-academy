@@ -47,6 +47,7 @@ interface Course {
   category?: string;
   level?: string;
   tags?: string[];
+  hasWhatsappGroup?: boolean;
   videos?: Array<{
     _id: string;
     title: string;
@@ -83,7 +84,7 @@ const CourseDetailPage = () => {
   const [currentVideoId, setCurrentVideoId] = useState<string>('');
   const [isPlaying, setIsPlaying] = useState(false);
   const [playbackRate, setPlaybackRate] = useState(1);
-  const [showPlaylist, setShowPlaylist] = useState(true);
+  const [showPlaylist, setShowPlaylist] = useState(false);
   const [playerReady, setPlayerReady] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -542,8 +543,8 @@ const CourseDetailPage = () => {
             {/* Video Player Section */}
             <div className="flex-1 flex flex-col">
               {/* Enhanced Video Player */}
-              <div className="flex-1">
-                <div className="aspect-video bg-black">
+              <div className="flex-1" style={{ minHeight: '200px', height: '50vh' }}>
+                <div className="w-full h-full bg-black">
                   {currentVideo?.videoUrl && 
                    currentVideo.videoUrl.trim() !== '' && 
                    currentVideo.videoUrl !== window.location.href &&
@@ -638,22 +639,22 @@ const CourseDetailPage = () => {
                         <div className="text-center">
                           {courseData.videos.every(v => v.locked) && !userToken ? (
                             // All videos are locked for public user
-                            <div className="space-y-4">
-                              <Lock className="w-16 h-16 mx-auto text-gray-400" />
-                              <p className="text-lg font-semibold text-gray-300">Course Preview</p>
-                              <p className="text-sm text-gray-500 mb-4">
+                            <div className="space-y-4 px-4 sm:px-6">
+                              <Lock className="w-12 h-12 sm:w-16 sm:h-16 mx-auto text-gray-400" />
+                              <p className="text-base sm:text-lg font-semibold text-gray-300 text-center">Course Preview</p>
+                              <p className="text-xs sm:text-sm text-gray-500 mb-4 text-center px-2">
                                 This course doesn't have free preview lessons. Sign in or purchase to access all videos.
                               </p>
-                              <div className="space-y-2">
+                              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 justify-center">
                                 <button
                                   onClick={() => navigate('/login')}
-                                  className="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg transition-colors duration-200 font-semibold mr-2"
+                                  className="bg-red-600 hover:bg-red-700 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg transition-colors duration-200 font-semibold text-sm sm:text-base"
                                 >
                                   Sign In
                                 </button>
                                 <button
                                   onClick={handlePurchase}
-                                  className="bg-gray-600 hover:bg-gray-700 text-white px-6 py-3 rounded-lg transition-colors duration-200 font-semibold"
+                                  className="bg-gray-600 hover:bg-gray-700 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg transition-colors duration-200 font-semibold text-sm sm:text-base"
                                 >
                                   Purchase Course
                                 </button>
@@ -680,8 +681,8 @@ const CourseDetailPage = () => {
               </div>
 
               {/* Video Info Section */}
-              <div className="bg-gray-800 px-4 py-4">
-                <h2 className="text-white font-semibold text-lg mb-2">
+              <div className="bg-gray-800 px-3 sm:px-4 py-3 sm:py-4">
+                <h2 className="text-white font-semibold text-sm sm:text-lg mb-2 line-clamp-2">
                   {currentVideo?.title || 'Select a video'}
                   {currentVideo?.isFreePreview && !currentVideo?.locked && (
                     <span className="ml-2 inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-green-600 text-white">
@@ -689,11 +690,11 @@ const CourseDetailPage = () => {
                     </span>
                   )}
                 </h2>
-                <div className="flex items-center justify-between text-gray-400 text-sm">
-                  <div className="flex items-center space-x-4">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between text-gray-400 text-xs sm:text-sm space-y-1 sm:space-y-0">
+                  <div className="flex items-center space-x-2 sm:space-x-4">
                     <span>Duration: {currentVideo?.duration || '00:00'}</span>
-                    <span>•</span>
-                    <span>Current Position: {currentVideoPercentage}%</span>
+                    <span className="hidden sm:inline">•</span>
+                    <span>Position: {currentVideoPercentage}%</span>
                   </div>
                   <div className="flex items-center space-x-2">
                     {currentVideo?.completed && (
@@ -1105,6 +1106,56 @@ const CourseDetailPage = () => {
                 </div>
               </div>
             </section>
+
+            {/* Community Section - Only show if course has WhatsApp group */}
+            {course?.hasWhatsappGroup && (
+              <section className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg shadow-lg p-6 border border-green-200">
+                <div className="flex items-center space-x-3 mb-4">
+                  <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center">
+                    <Users className="h-5 w-5 text-white" />
+                  </div>
+                  <h3 className="text-xl font-bold text-gray-800">Join Our Exclusive Community</h3>
+                </div>
+                <div className="space-y-4">
+                  <p className="text-gray-700 leading-relaxed">
+                    🎉 <strong>Bonus:</strong> Get instant access to our private WhatsApp community when you enroll!
+                  </p>
+                  <div className="bg-white rounded-lg p-4 border border-green-200">
+                    <h4 className="font-semibold text-gray-800 mb-3 flex items-center">
+                      <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
+                      What you'll get in our community:
+                    </h4>
+                    <ul className="space-y-2 text-sm text-gray-700">
+                      <li className="flex items-start space-x-2">
+                        <span className="text-green-500 mt-1">•</span>
+                        <span><strong>Direct access to instructors</strong> - Ask questions and get personalized help</span>
+                      </li>
+                      <li className="flex items-start space-x-2">
+                        <span className="text-green-500 mt-1">•</span>
+                        <span><strong>Connect with fellow students</strong> - Network and learn together</span>
+                      </li>
+                      <li className="flex items-start space-x-2">
+                        <span className="text-green-500 mt-1">•</span>
+                        <span><strong>Exclusive tips and updates</strong> - Get the latest industry insights</span>
+                      </li>
+                      <li className="flex items-start space-x-2">
+                        <span className="text-green-500 mt-1">•</span>
+                        <span><strong>Project feedback and reviews</strong> - Share your work and get constructive feedback</span>
+                      </li>
+                      <li className="flex items-start space-x-2">
+                        <span className="text-green-500 mt-1">•</span>
+                        <span><strong>Job opportunities and referrals</strong> - Access to exclusive career opportunities</span>
+                      </li>
+                    </ul>
+                  </div>
+                  <div className="bg-green-100 rounded-lg p-4 border border-green-300">
+                    <p className="text-green-800 font-medium text-sm">
+                      💡 <strong>Pro Tip:</strong> Students who join our community complete courses 3x faster and have 90% higher success rates!
+                    </p>
+                  </div>
+                </div>
+              </section>
+            )}
           </div>
         </div>
       </div>

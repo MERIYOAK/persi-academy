@@ -351,4 +351,20 @@ router.get('/admin/statistics', adminAuthMiddleware, async (req, res) => {
   }
 });
 
+// ========================================
+// WHATSAPP GROUP ROUTES (Require user authentication)
+// ========================================
+
+/**
+ * Generate WhatsApp group access token
+ * GET /api/courses/:courseId/group-token
+ */
+router.get('/:courseId/group-token', authMiddleware, require('../controllers/courseController').generateGroupToken);
+
+/**
+ * Join WhatsApp group with token
+ * GET /api/courses/:courseId/join?token=...
+ */
+router.get('/:courseId/join', require('../controllers/courseController').joinGroup);
+
 module.exports = router; 

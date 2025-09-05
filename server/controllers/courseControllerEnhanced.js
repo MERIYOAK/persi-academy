@@ -19,7 +19,7 @@ const {
  */
 const createCourse = async (req, res) => {
   try {
-    const { title, description, price, category, tags, level, isPublic = true, maxEnrollments } = req.body;
+    const { title, description, price, category, tags, level, isPublic = true, maxEnrollments, hasWhatsappGroup, whatsappGroupLink } = req.body;
     const adminEmail = req.admin?.email || req.user?.email || 'admin';
 
     // Validate required fields
@@ -58,6 +58,8 @@ const createCourse = async (req, res) => {
       tags: tags ? (Array.isArray(tags) ? tags : tags.split(',').map(tag => tag.trim()).filter(tag => tag)) : [],
       isPublic,
       maxEnrollments: maxEnrollments ? parseInt(maxEnrollments) : null,
+      hasWhatsappGroup: Boolean(hasWhatsappGroup),
+      whatsappGroupLink: whatsappGroupLink || '',
       createdBy: adminEmail,
       lastModifiedBy: adminEmail,
       version: 1,
@@ -404,7 +406,7 @@ const createNewVersion = async (req, res) => {
 const updateCourse = async (req, res) => {
   try {
     const { id } = req.params;
-    const { title, description, price, category, tags, level, status, isPublic, maxEnrollments } = req.body;
+    const { title, description, price, category, tags, level, status, isPublic, maxEnrollments, hasWhatsappGroup, whatsappGroupLink } = req.body;
     const adminEmail = req.admin?.email || req.user?.email || 'admin';
 
     const course = await Course.findById(id);
@@ -452,6 +454,14 @@ const updateCourse = async (req, res) => {
     }
     if (typeof isPublic === 'boolean') course.isPublic = isPublic;
     if (maxEnrollments !== undefined) course.maxEnrollments = maxEnrollments ? parseInt(maxEnrollments) : null;
+    
+    // Handle WhatsApp group fields
+    if (typeof hasWhatsappGroup === 'boolean') {
+      course.hasWhatsappGroup = hasWhatsappGroup;
+    }
+    if (whatsappGroupLink !== undefined) {
+      course.whatsappGroupLink = whatsappGroupLink;
+    }
 
     course.lastModifiedBy = adminEmail;
     await course.save();

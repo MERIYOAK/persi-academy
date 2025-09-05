@@ -21,6 +21,8 @@ interface Course {
   tags: string[];
   thumbnail?: File;
   videos: Video[];
+  hasWhatsappGroup: boolean;
+  whatsappGroupLink: string;
 }
 
 // Small helper to timeout fetches to avoid infinite pending state
@@ -79,7 +81,9 @@ const AdminUploadPage = () => {
     category: '',
     level: '',
     tags: [],
-    videos: []
+    videos: [],
+    hasWhatsappGroup: false,
+    whatsappGroupLink: ''
   });
   
   const [isLoading, setIsLoading] = useState(false);
@@ -179,7 +183,7 @@ const AdminUploadPage = () => {
       // Update progress - validation
       setProgressOverlay(prev => ({
         ...prev,
-        progress: 5,
+        progress: 0,
         message: 'Validating course information...'
       }));
 
@@ -234,7 +238,7 @@ const AdminUploadPage = () => {
       // Update progress - preparing upload
       setProgressOverlay(prev => ({
         ...prev,
-        progress: 10,
+        progress: 0,
         message: 'Preparing course data for upload...'
       }));
 
@@ -252,7 +256,9 @@ const AdminUploadPage = () => {
         price: course.price,
         category: course.category,
         level: course.level,
-        tags: course.tags
+        tags: course.tags,
+        hasWhatsappGroup: course.hasWhatsappGroup,
+        whatsappGroupLink: course.whatsappGroupLink
       };
 
       console.debug('[UI] sending course data:', coursePayload);
@@ -260,7 +266,7 @@ const AdminUploadPage = () => {
       // Update progress - creating course
       setProgressOverlay(prev => ({
         ...prev,
-        progress: 15,
+        progress: 0,
         message: 'Creating course in database...'
       }));
 
@@ -296,7 +302,7 @@ const AdminUploadPage = () => {
       if (course.thumbnail) {
         setProgressOverlay(prev => ({
           ...prev,
-          progress: 20,
+          progress: Math.round((uploadedBytesCompleted / totalBytesToUpload) * 100),
           message: `Uploading thumbnail: ${course.thumbnail.name}...`
         }));
         
@@ -314,14 +320,13 @@ const AdminUploadPage = () => {
           onProgress: (loaded, total) => {
             if (totalBytesToUpload > 0) {
               const currentPercent = Math.round(((uploadedBytesCompleted + loaded) / totalBytesToUpload) * 100);
-              const progressPercent = Math.min(20 + (currentPercent * 0.3), 50); // Thumbnail takes 20-50% of progress
               setProgressOverlay(prev => ({
                 ...prev,
-                progress: progressPercent,
+                progress: currentPercent,
                 message: `Uploading thumbnail: ${Math.round((loaded / total) * 100)}%`
               }));
             }
-            console.debug('[UI] thumb progress:', { loaded, total });
+            console.debug('[UI] thumb progress:', { loaded, total, currentPercent: Math.round(((uploadedBytesCompleted + loaded) / totalBytesToUpload) * 100) });
           }
         });
         console.debug('[UI] upload thumbnail done');
@@ -332,11 +337,9 @@ const AdminUploadPage = () => {
       for (let i = 0; i < course.videos.length; i++) {
         const video = course.videos[i];
         if (video.file && video.title) {
-          const videoProgressStart = 50 + (i * (40 / course.videos.length)); // Videos take 50-90% of progress
-          
           setProgressOverlay(prev => ({
             ...prev,
-            progress: videoProgressStart,
+            progress: Math.round((uploadedBytesCompleted / totalBytesToUpload) * 100),
             message: `Uploading video ${i + 1}/${course.videos.length}: ${video.file.name}...`
           }));
           
@@ -355,17 +358,16 @@ const AdminUploadPage = () => {
             formData: videoFormData,
             headers: { 'Authorization': `Bearer ${adminToken}` },
             timeoutMs: 15 * 60 * 1000,
-            onProgress: (loaded) => {
+            onProgress: (loaded, total) => {
               if (totalBytesToUpload > 0) {
                 const currentPercent = Math.round(((uploadedBytesCompleted + loaded) / totalBytesToUpload) * 100);
-                const videoProgressPercent = videoProgressStart + (currentPercent * (40 / course.videos.length) * 0.3);
                 setProgressOverlay(prev => ({
                   ...prev,
-                  progress: Math.min(videoProgressPercent, 90),
-                  message: `Uploading video ${i + 1}/${course.videos.length}: ${Math.round((loaded / (video.file?.size || 1)) * 100)}%`
+                  progress: currentPercent,
+                  message: `Uploading video ${i + 1}/${course.videos.length}: ${Math.round((loaded / total) * 100)}%`
                 }));
               }
-              console.debug('[UI] video progress:', { index: i, loaded });
+              console.debug('[UI] video progress:', { index: i, loaded, total, currentPercent: Math.round(((uploadedBytesCompleted + loaded) / totalBytesToUpload) * 100) });
             }
           });
           console.debug('[UI] upload video done:', video.file.name);
@@ -376,7 +378,7 @@ const AdminUploadPage = () => {
       // Update progress - finalizing
       setProgressOverlay(prev => ({
         ...prev,
-        progress: 95,
+        progress: Math.round((uploadedBytesCompleted / totalBytesToUpload) * 100),
         message: 'Finalizing course upload...'
       }));
 
@@ -601,6 +603,70 @@ const AdminUploadPage = () => {
                       ))}
                     </div>
                   )}
+                </div>
+
+                {/* WhatsApp Group Settings */}
+                <div className="border-t pt-6">
+                  <h3 className="text-lg font-medium text-gray-900 mb-4">WhatsApp Group Settings</h3>
+                  
+                  <div className="space-y-4">
+                    {/* Enable WhatsApp Group */}
+                    <div className="flex items-center">
+                      <input
+                        type="checkbox"
+                        id="hasWhatsappGroup"
+                        checked={course.hasWhatsappGroup || false}
+                        onChange={(e) => setCourse(prev => ({ ...prev, hasWhatsappGroup: e.target.checked }))}
+                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                      />
+                      <label htmlFor="hasWhatsappGroup" className="ml-2 block text-sm text-gray-900">
+                        Enable WhatsApp Group for this course
+                      </label>
+                    </div>
+
+                    {/* WhatsApp Group Link */}
+                    {course.hasWhatsappGroup && (
+                      <div>
+                        <label htmlFor="whatsappGroupLink" className="block text-sm font-medium text-gray-700 mb-2">
+                          WhatsApp Group Link *
+                        </label>
+                        <input
+                          type="url"
+                          id="whatsappGroupLink"
+                          value={course.whatsappGroupLink || ''}
+                          onChange={(e) => setCourse(prev => ({ ...prev, whatsappGroupLink: e.target.value }))}
+                          required={course.hasWhatsappGroup}
+                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors duration-200"
+                          placeholder="https://chat.whatsapp.com/your-group-link"
+                        />
+                        <p className="mt-1 text-sm text-gray-500">
+                          Enter the WhatsApp group invite link. Students will get secure, temporary access to join.
+                        </p>
+                        <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                          <div className="flex">
+                            <div className="flex-shrink-0">
+                              <svg className="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
+                                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                              </svg>
+                            </div>
+                            <div className="ml-3">
+                              <h3 className="text-sm font-medium text-blue-800">
+                                Security Features
+                              </h3>
+                              <div className="mt-1 text-sm text-blue-700">
+                                <ul className="list-disc list-inside space-y-1">
+                                  <li>Links expire in 30 minutes</li>
+                                  <li>One-time use only</li>
+                                  <li>Only enrolled students can access</li>
+                                  <li>Links cannot be shared after use</li>
+                                </ul>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 <div>

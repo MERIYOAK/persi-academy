@@ -728,7 +728,7 @@ function generateReceiptHTML(payment) {
 <body>
     <div class="receipt">
         <div class="header">
-            <div class="logo">Persi Academy</div>
+            <div class="logo">QENDIEL Academy</div>
             <div class="receipt-title">Payment Receipt</div>
             <div class="order-id">Order #${orderId}</div>
         </div>
@@ -766,7 +766,7 @@ function generateReceiptHTML(payment) {
         <div class="footer">
             <p>Thank you for your purchase!</p>
             <p>This receipt serves as proof of payment for your course purchase.</p>
-            <p>For support, contact us at support@persiacademy.com</p>
+            <p>For support, contact us at ${process.env.SUPPORT_EMAIL || 'support@qendiel.com'}</p>
         </div>
     </div>
 </body>

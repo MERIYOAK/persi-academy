@@ -4,6 +4,7 @@ import { ChevronLeft, BookOpen, CheckCircle } from 'lucide-react';
 import VideoPlaylist from '../components/VideoPlaylist';
 import VideoProgressBar from '../components/VideoProgressBar';
 import EnhancedVideoPlayer from '../components/EnhancedVideoPlayer';
+import WhatsAppGroupButton from '../components/WhatsAppGroupButton';
 import { buildApiUrl } from '../config/environment';
 
 interface Video {
@@ -37,6 +38,7 @@ interface CourseData {
     lastWatchedPosition: number;
   };
   userHasPurchased?: boolean;
+  hasWhatsappGroup?: boolean;
 }
 
 const VideoPlayerPage = () => {
@@ -735,13 +737,15 @@ const VideoPlayerPage = () => {
           title: courseTitle,
           videos: transformedVideos,
           overallProgress,
-          userHasPurchased
+          userHasPurchased,
+          hasWhatsappGroup: courseData?.hasWhatsappGroup || false
         };
         
         console.log('🔍 [VideoPlayer] Final courseData object:', {
           title: finalCourseData.title,
           totalVideos: finalCourseData.videos.length,
-          userHasPurchased: finalCourseData.userHasPurchased
+          userHasPurchased: finalCourseData.userHasPurchased,
+          hasWhatsappGroup: finalCourseData.hasWhatsappGroup
         });
         
         setCourseData(finalCourseData);
@@ -1389,19 +1393,9 @@ const VideoPlayerPage = () => {
       {/* Header */}
       <div className="bg-gray-800 border-b border-gray-700 px-3 xxs:px-4 py-3">
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-2 xxs:space-x-4">
-            <Link
-              to={`/course/${id}`}
-              className="flex items-center space-x-1 xxs:space-x-2 text-gray-300 hover:text-white transition-colors duration-200"
-            >
-              <ChevronLeft className="h-4 w-4 xxs:h-5 xxs:w-5" />
-              <span className="text-sm xxs:text-base">Back to Course</span>
-            </Link>
-            <div className="hidden md:block h-6 w-px bg-gray-600" />
-            <h1 className="hidden md:block text-white font-semibold truncate">
-              {courseData.title}
-            </h1>
-          </div>
+          <h1 className="text-white font-semibold truncate">
+            {courseData.title}
+          </h1>
           
           <button
             onClick={() => setShowPlaylist(!showPlaylist)}
@@ -1542,58 +1536,33 @@ const VideoPlayerPage = () => {
 
           {/* Video Info */}
           <div className="bg-gray-800 px-3 xxs:px-4 py-3 xxs:py-4">
-            <h2 className="text-white font-semibold text-base xxs:text-lg mb-2 line-clamp-2">{currentVideo.title}</h2>
-            <div className="flex flex-col xxs:flex-row xxs:items-center xxs:justify-between text-gray-400 text-xs xxs:text-sm space-y-1 xxs:space-y-0">
-              <div className="flex items-center space-x-2 xxs:space-x-4">
-                <span>Duration: {currentVideo.duration}</span>
-                <span className="hidden xxs:inline">•</span>
-                <span>Position: {currentVideoPercentage}%</span>
-                    </div>
-              <div className="flex items-center space-x-2">
-                    {currentVideo.completed && (
-                      <div className="flex items-center space-x-1 text-green-400">
-                    <CheckCircle className="h-3 w-3 xxs:h-4 xxs:w-4" />
-                    <span className="text-xs xxs:text-sm">Completed</span>
-                      </div>
-                    )}
-              </div>
-                  </div>
+            <div className="flex items-center justify-between">
+              <h2 className="text-white font-semibold text-base xxs:text-lg line-clamp-2">{currentVideo.title}</h2>
+              {currentVideo.completed && (
+                <div className="flex items-center space-x-1 text-green-400">
+                  <CheckCircle className="h-3 w-3 xxs:h-4 xxs:w-4" />
+                  <span className="text-xs xxs:text-sm">Completed</span>
                 </div>
-
-          {/* Video Progress Bar Section - Below Video Player */}
-          <div className="bg-gray-900 px-3 xxs:px-4 py-4 xxs:py-6">
-            <div className="max-w-4xl mx-auto">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 xxs:gap-6">
-                {/* Video Progress Bar */}
-                <VideoProgressBar
-                  watchedPercentage={currentVideoPercentage}
-                  completionPercentage={currentVideo?.progress?.completionPercentage || 0}
-                  isCompleted={currentVideo?.progress?.isCompleted || false}
-                />
-                
-                {/* Course Progress Summary */}
-                {courseData.overallProgress && (
-                  <div className="bg-gray-800 rounded-lg p-3 xxs:p-4">
-                    <h3 className="text-white font-semibold text-xs xxs:text-sm mb-2 xxs:mb-3">Course Overview</h3>
-                    <div className="space-y-1 xxs:space-y-2 text-xs xxs:text-sm">
-                      <div className="flex justify-between text-gray-300">
-                        <span>Total Videos:</span>
-                        <span>{courseData.overallProgress.totalVideos}</span>
-                  </div>
-                      <div className="flex justify-between text-gray-300">
-                        <span>Completed:</span>
-                        <span className="text-green-400">{courseData.overallProgress.completedVideos}</span>
-                </div>
-                      <div className="flex justify-between text-gray-300">
-                        <span>Course Progress:</span>
-                        <span className="text-blue-400">{courseData.overallProgress.totalProgress}%</span>
-              </div>
-                    </div>
-                  </div>
-                )}
-              </div>
+              )}
             </div>
           </div>
+
+
+          {/* WhatsApp Group Button Section */}
+          {courseData.hasWhatsappGroup && (
+            <div className="bg-gray-800 px-3 xxs:px-4 py-4 xxs:py-6">
+              <div className="max-w-4xl mx-auto">
+                <WhatsAppGroupButton
+                  courseId={id || ''}
+                  isEnrolled={!!courseData.userHasPurchased}
+                  hasPaid={!!courseData.userHasPurchased}
+                  hasWhatsappGroup={!!courseData.hasWhatsappGroup}
+                  className="max-w-md mx-auto"
+                />
+              </div>
+            </div>
+          )}
+          
         </div>
 
         {/* Playlist Sidebar */}
