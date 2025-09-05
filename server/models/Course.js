@@ -68,6 +68,10 @@ const courseSchema = new mongoose.Schema({
   requiresApproval: { type: Boolean, default: false },
   maxEnrollments: { type: Number }, // null for unlimited
   
+  // WhatsApp group settings
+  whatsappGroupLink: { type: String }, // WhatsApp group invite link
+  hasWhatsappGroup: { type: Boolean, default: false }, // Whether this course has a WhatsApp group
+  
 }, { 
   timestamps: true,
   toJSON: { virtuals: true },
@@ -186,7 +190,7 @@ courseSchema.methods.enrollStudent = function(userId) {
   
   // Check if already enrolled
   const existingEnrollment = this.enrolledStudents.find(
-    enrollment => enrollment.userId.toString() === userId.toString()
+    enrollment => enrollment.userId && enrollment.userId.toString() === userId.toString()
   );
   
   if (existingEnrollment) {
@@ -238,7 +242,7 @@ courseSchema.methods.createNewVersion = function() {
 // Instance method to update student progress
 courseSchema.methods.updateStudentProgress = function(userId, progress, completedVideos = []) {
   const enrollment = this.enrolledStudents.find(
-    enrollment => enrollment.userId.toString() === userId.toString()
+    enrollment => enrollment.userId && enrollment.userId.toString() === userId.toString()
   );
   
   if (!enrollment) {
@@ -254,9 +258,16 @@ courseSchema.methods.updateStudentProgress = function(userId, progress, complete
 
 // Instance method to get student enrollment
 courseSchema.methods.getStudentEnrollment = function(userId) {
-  return this.enrolledStudents.find(
-    enrollment => enrollment.userId.toString() === userId.toString()
-  );
+  if (!userId) return null;
+  
+  try {
+    return this.enrolledStudents.find(
+      enrollment => enrollment.userId && enrollment.userId.toString() === userId.toString()
+    );
+  } catch (error) {
+    console.error('❌ [getStudentEnrollment] Error:', error.message);
+    return null;
+  }
 };
 
 // Instance method to check if student has access to specific version

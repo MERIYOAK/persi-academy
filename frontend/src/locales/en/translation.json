@@ -351,5 +351,13 @@
     "computer": "Basic Computer Learning",
     "english": "English",
     "other": "Other"
+  },
+  "whatsapp": {
+    "join_group": "Join WhatsApp Group",
+    "generating_token": "Generating Access...",
+    "error_title": "Unable to Join Group",
+    "access_info": "Secure access for enrolled students only",
+    "expiry_warning": "This link expires in 30 minutes and can only be used once. Continue?",
+    "link_expired": "This link has expired. Please generate a new one."
   }
 }

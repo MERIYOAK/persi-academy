@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Clock, BookOpen, CheckCircle, Users, ArrowLeft, Award } from 'lucide-react';
+import WhatsAppGroupButton from '../components/WhatsAppGroupButton';
 import { buildApiUrl } from '../config/environment';
 
 interface Course {
@@ -14,6 +15,8 @@ interface Course {
   tags?: string[];
   totalEnrollments?: number;
   videos?: Array<{ _id: string; title: string; duration?: number; description?: string }>;
+  hasWhatsappGroup?: boolean;
+  userHasPurchased?: boolean;
 }
 
 const UserCourseDetailPage: React.FC = () => {
@@ -37,13 +40,37 @@ const UserCourseDetailPage: React.FC = () => {
       try {
         setLoading(true);
         setError(null);
-        const res = await fetch(buildApiUrl(`/api/courses/${id}`));
-        if (!res.ok) {
+        
+        const token = localStorage.getItem('token');
+        const headers: HeadersInit = {};
+        if (token) {
+          headers['Authorization'] = `Bearer ${token}`;
+        }
+        
+        // Fetch course data
+        const courseRes = await fetch(buildApiUrl(`/api/courses/${id}`), { headers });
+        if (!courseRes.ok) {
           throw new Error('Failed to load course');
         }
-        const data = await res.json();
-        const courseData = data?.data?.course || data;
-        setCourse(courseData);
+        const courseData = await courseRes.json();
+        const course = courseData?.data?.course || courseData;
+        
+        // Fetch videos data to get userHasPurchased status (same as VideoPlayerPage)
+        const videosRes = await fetch(buildApiUrl(`/api/videos/course/${id}/version/1`), { headers });
+        let userHasPurchased = false;
+        if (videosRes.ok) {
+          const videosData = await videosRes.json();
+          userHasPurchased = videosData.data?.userHasPurchased || false;
+        }
+        
+        // Combine course data with purchase status
+        const combinedCourseData = {
+          ...course,
+          userHasPurchased
+        };
+        
+        
+        setCourse(combinedCourseData);
       } catch (e) {
         setError(e instanceof Error ? e.message : 'Unknown error');
       } finally {
@@ -192,6 +219,19 @@ const UserCourseDetailPage: React.FC = () => {
                 <li className="flex items-center gap-2"><BookOpen className="h-5 w-5 text-green-600" /> Regular course updates</li>
               </ul>
             </section>
+
+            {/* WhatsApp Group Button */}
+            {course.hasWhatsappGroup && (
+              <section className="bg-white rounded-xl shadow p-6">
+                <h3 className="text-lg font-bold text-gray-900 mb-4">Community</h3>
+                <WhatsAppGroupButton
+                  courseId={id || ''}
+                  isEnrolled={!!course.userHasPurchased}
+                  hasPaid={!!course.userHasPurchased}
+                  hasWhatsappGroup={!!course.hasWhatsappGroup}
+                />
+              </section>
+            )}
           </div>
         </div>
       </div>

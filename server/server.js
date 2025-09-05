@@ -216,7 +216,7 @@ app.get(['/certificate-preview/:certificateId', '/verify/:certificateId'], async
     
     // Social share meta
     const shareTitle = 'Congratulations on Your Certificate!';
-    const shareDescription = 'Celebrate your achievement with Persi Academy. View and share your certificate now.';
+    const shareDescription = 'Celebrate your achievement with QENDIEL Academy. View and share your certificate now.';
     const shareImage = 'https://persi-edu-platform.s3.us-east-1.amazonaws.com/persi-academy/Ig-images/congratulations.jpeg';
     const shareUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/verify/${certificate.certificateId}`;
     
@@ -445,6 +445,7 @@ app.get('/api/health', (req, res) => {
 
 // Payment routes
 app.use('/api/payment', paymentRoutes);
+app.use('/api/payments', paymentRoutes); // Also support plural for webhook compatibility
 
 // User routes
 app.use('/api/user', userRoutes);
