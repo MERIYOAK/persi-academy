@@ -281,6 +281,13 @@ const uploadVideo = async (req, res) => {
     // Upload video to S3
     const uploadResult = await uploadCourseFile(req.file, 'video', course.title, parseInt(version));
 
+    // Clean up temporary file if using disk storage
+    if (req.file.path) {
+      require('fs').unlink(req.file.path, (err) => {
+        if (err) console.error('Error deleting temp file:', err);
+      });
+    }
+
     // Create video record
     const video = new Video({
       title: title || req.file.originalname,
