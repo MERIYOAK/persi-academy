@@ -74,15 +74,30 @@ const uploadCourseFile = async (file, fileType, courseName, version = 1) => {
   }
 
   try {
+    console.log('🔧 [S3] Starting upload process...');
     const s3Key = generateCourseFileKey(fileType, file.originalname, courseName, version);
+    // Generated S3 key
     
     // Sanitize course name for metadata (remove invalid characters for HTTP headers)
     const sanitizedCourseName = courseName.replace(/[^a-zA-Z0-9\s-]/g, '_').replace(/\s+/g, '_');
+    console.log('🔧 [S3] Sanitized course name:', sanitizedCourseName);
     
+    // Create file stream with proper error handling
+    let fileStream;
+    if (file.path) {
+      const fs = require('fs');
+      fileStream = fs.createReadStream(file.path);
+      
+      // Add error handling for the stream
+      fileStream.on('error', (error) => {
+        console.error('🔧 [S3] File stream error:', error);
+      });
+    }
+
     const uploadParams = {
       Bucket: process.env.AWS_S3_BUCKET,
       Key: s3Key,
-      Body: file.path ? require('fs').createReadStream(file.path) : file.buffer,
+      Body: fileStream || file.buffer,
       ContentType: file.mimetype,
       Metadata: {
         originalName: file.originalname,
@@ -93,8 +108,32 @@ const uploadCourseFile = async (file, fileType, courseName, version = 1) => {
       }
     };
 
+    console.log('🔧 [S3] Upload params prepared, body type:', file.path ? 'file stream' : 'buffer');
+    console.log('🔧 [S3] Sending to S3...');
+    
     const command = new PutObjectCommand(uploadParams);
-    const result = await s3Client.send(command);
+    console.log('🔧 [S3] Command created, starting upload...');
+    
+    // Add timeout to the S3 command
+    const result = await Promise.race([
+      s3Client.send(command).then((res) => {
+        console.log('🔧 [S3] S3 send() completed, result:', res.ETag);
+        return res;
+      }),
+      new Promise((_, reject) => 
+        setTimeout(() => {
+          console.log('🔧 [S3] S3 upload timeout after 5 minutes');
+          reject(new Error('S3 upload timeout after 5 minutes'));
+        }, 5 * 60 * 1000)
+      )
+    ]);
+    
+    console.log('🔧 [S3] S3 upload completed successfully');
+    
+    // Close the file stream if it was created
+    if (fileStream) {
+      fileStream.destroy();
+    }
 
     return {
       success: true,
@@ -104,6 +143,12 @@ const uploadCourseFile = async (file, fileType, courseName, version = 1) => {
     };
   } catch (error) {
     console.error('Upload failed:', error);
+    
+    // Close the file stream if it was created and there was an error
+    if (fileStream) {
+      fileStream.destroy();
+    }
+    
     throw new Error(`Failed to upload ${fileType}: ${error.message}`);
   }
 };
@@ -168,7 +213,7 @@ const getSignedUrlForFile = async (s3Key, expiresIn = 3600, mimeType = null) => 
   }
 
   try {
-    console.log('🔐 [S3] Generating secure signed URL for:', s3Key);
+    // Generating secure signed URL
     console.log('🔐 [S3] MIME type:', mimeType || 'not specified');
     
     const commandParams = {

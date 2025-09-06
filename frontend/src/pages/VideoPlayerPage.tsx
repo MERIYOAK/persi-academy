@@ -47,10 +47,7 @@ const VideoPlayerPage = () => {
   const [currentVideoId, setCurrentVideoId] = useState(videoId || '');
   const [isPlaying, setIsPlaying] = useState(false);
   const [playbackRate, setPlaybackRate] = useState(1);
-  const [showPlaylist, setShowPlaylist] = useState(() => {
-    // Initialize based on screen size immediately
-    return typeof window !== 'undefined' ? window.innerWidth >= 768 : false;
-  });
+  const [showPlaylist, setShowPlaylist] = useState(true); // Always show playlist by default
   const [courseData, setCourseData] = useState<CourseData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -68,6 +65,8 @@ const VideoPlayerPage = () => {
   const [isPaused, setIsPaused] = useState(false);
   const [currentVideoPercentage, setCurrentVideoPercentage] = useState(0); // Track actual video percentage
   const [isRefreshingUrl, setIsRefreshingUrl] = useState(false); // Track URL refresh state
+  const [isSwitchingVideo, setIsSwitchingVideo] = useState(false); // Track video switching state
+  const [currentVideo, setCurrentVideo] = useState<Video | undefined>(undefined); // Track current video object
   
   // Udemy-style progress tracking: Request deduplication and batching
   const pendingProgressRequest = useRef<AbortController | null>(null);
@@ -80,12 +79,15 @@ const VideoPlayerPage = () => {
   // Handle window resize for playlist visibility
   useEffect(() => {
     const handleResize = () => {
-      if (window.innerWidth >= 768) { // md breakpoint
-        setShowPlaylist(true);
+      if (window.innerWidth >= 768) { // md breakpoint - desktop
+        setShowPlaylist(true); // Always show on desktop
       } else {
-        setShowPlaylist(false);
+        setShowPlaylist(false); // Hide on mobile by default
       }
     };
+
+    // Set initial state based on current screen size
+    handleResize();
 
     // Add event listener
     window.addEventListener('resize', handleResize);
@@ -106,6 +108,21 @@ const VideoPlayerPage = () => {
       src: video.src,
       error: video.error
     });
+
+    // Check for 403 Forbidden errors in the video source URL
+    const is403Error = video.src && (
+      video.src.includes('403') || 
+      video.src.includes('Forbidden') ||
+      video.networkState === 2 // NETWORK_NO_SOURCE
+    );
+
+    if (is403Error) {
+      return {
+        type: 'FORBIDDEN',
+        message: 'Video access denied (403 Forbidden)',
+        userMessage: 'Video access expired. Refreshing video link...'
+      };
+    }
 
     switch (errorCode) {
       case 1: // MEDIA_ERR_ABORTED
@@ -186,10 +203,10 @@ const VideoPlayerPage = () => {
       }
       
       // If we can't parse the expiry, assume it's not expired
-      console.log('🔍 [VideoPlayer] Could not parse presigned URL expiry parameters');
+      // Could not parse presigned URL expiry parameters
       return false;
     } catch (error) {
-      console.log('🔍 [VideoPlayer] Could not parse presigned URL for expiry check:', error);
+      // Could not parse presigned URL for expiry check
       return false;
     }
   };
@@ -203,7 +220,7 @@ const VideoPlayerPage = () => {
         return null;
       }
 
-      console.log(`🔄 [VideoPlayer] Refreshing presigned URL for video: ${videoId}`);
+      // Refreshing presigned URL for video
       setIsRefreshingUrl(true);
       
       // Add timeout to the fetch request
@@ -226,7 +243,7 @@ const VideoPlayerPage = () => {
         const videoData = responseData?.data?.video;
         
         if (videoData && videoData.videoUrl) {
-          console.log('✅ [VideoPlayer] Successfully refreshed presigned URL');
+          // Successfully refreshed presigned URL
           // Cache the new URL
           cacheVideoUrl(videoId, videoData.videoUrl);
           setIsRefreshingUrl(false);
@@ -274,7 +291,7 @@ const VideoPlayerPage = () => {
       const freshVideoUrl = await refreshVideoUrl(currentVideoId);
       
       if (freshVideoUrl) {
-        console.log('✅ [VideoPlayer] Got fresh presigned URL, retrying...');
+        // Got fresh presigned URL, retrying...
         
         // Validate the video URL before setting it
         const videoUrl = freshVideoUrl.trim();
@@ -318,15 +335,20 @@ const VideoPlayerPage = () => {
     console.log('🔍 [VideoPlayer] Error details:', errorDetails);
 
     // Check if this is a 403 error (expired presigned URL)
-    if (errorDetails.type === 'MEDIA_ERR_SRC_NOT_SUPPORTED' || 
+    if (errorDetails.type === 'FORBIDDEN' || 
+        errorDetails.type === 'MEDIA_ERR_SRC_NOT_SUPPORTED' || 
         errorDetails.message.includes('403') || 
         errorDetails.message.includes('Forbidden')) {
-      console.log('🔧 [VideoPlayer] Detected 403/expired URL error, refreshing video URL...');
+      // Detected 403/expired URL error, refreshing video URL...
       
       if (currentVideo?.id) {
+        console.log('🔄 [VideoPlayer] Attempting to refresh URL after 403 error...');
+        setVideoError('Video access expired. Refreshing video link...');
+        
         refreshVideoUrl(currentVideo.id).then(freshUrl => {
           if (freshUrl) {
-            console.log('✅ [VideoPlayer] Successfully refreshed URL after 403 error');
+            // Successfully refreshed URL after 403 error
+            console.log('✅ [VideoPlayer] URL refreshed successfully after 403 error');
             setVideoError(null);
             // Update the course data with the fresh URL
             setCourseData(prev => {
@@ -344,6 +366,9 @@ const VideoPlayerPage = () => {
             console.error('❌ [VideoPlayer] Failed to refresh URL after 403 error');
             setVideoError('Failed to refresh video link. Please try refreshing the page.');
           }
+        }).catch(error => {
+          console.error('❌ [VideoPlayer] Error during URL refresh:', error);
+          setVideoError('Failed to refresh video link. Please try refreshing the page.');
         });
         return;
       }
@@ -689,9 +714,7 @@ const VideoPlayerPage = () => {
             console.warn(`⚠️ [VideoPlayer] Video "${video.title}" has access but no URL!`);
             console.log(`   - hasAccess: ${video.hasAccess}`);
             console.log(`   - isFreePreview: ${video.isFreePreview}`);
-            console.log(`   - cachedUrl: ${!!cachedUrl}`);
-            console.log(`   - video.videoUrl: ${!!video.videoUrl}`);
-            console.log(`   - video.videoUrl: ${!!video.videoUrl}`);
+            // Checking video URL availability
           }
           
           // Cache the URL if it's new
@@ -754,8 +777,12 @@ const VideoPlayerPage = () => {
         if (!currentVideoId && transformedVideos.length > 0) {
           console.log('🔧 [VideoPlayer] Setting current video to first video:', transformedVideos[0].id);
           setCurrentVideoId(transformedVideos[0].id);
+          setCurrentVideo(transformedVideos[0]); // Set initial current video state
         } else if (currentVideoId) {
           console.log('🔧 [VideoPlayer] Current video ID already set:', currentVideoId);
+          // Set the current video state based on the currentVideoId
+          const initialCurrentVideo = finalCourseData.videos.find(v => v.id === currentVideoId);
+          setCurrentVideo(initialCurrentVideo); // Set initial current video state
         } else {
           console.log('⚠️ [VideoPlayer] No videos available to set as current video');
         }
@@ -776,6 +803,127 @@ const VideoPlayerPage = () => {
       fetchCourseData();
     }
   }, [id, videoId, currentVideoId]);
+
+  // Periodic progress refresh to update UI progress bars
+  useEffect(() => {
+    if (!id || !courseData) return;
+
+    const refreshProgress = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) return;
+
+        console.log('🔄 [Progress Refresh] Fetching latest progress data...');
+        
+        // Fetch latest progress data
+        const progressResponse = await fetch(buildApiUrl(`/api/progress/course/${id}`), {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        if (progressResponse.ok) {
+          const progressResult = await progressResponse.json();
+          
+          if (progressResult?.data?.videos) {
+            // Create progress map for quick lookup
+            const progressMap = new Map();
+            progressResult.data.videos.forEach((video: any) => {
+              progressMap.set(video._id, video.progress);
+            });
+
+            // Update course data with fresh progress
+            setCourseData(prev => {
+              if (!prev) return null;
+
+              const updatedVideos = prev.videos.map(video => {
+                const freshProgress = progressMap.get(video.id);
+                if (freshProgress) {
+                  return {
+                    ...video,
+                    progress: freshProgress,
+                    completed: freshProgress.isCompleted
+                  };
+                }
+                return video;
+              });
+
+              // Update overall progress if available
+              const updatedOverallProgress = progressResult.data.overallProgress || prev.overallProgress;
+
+              return {
+                ...prev,
+                videos: updatedVideos,
+                overallProgress: updatedOverallProgress
+              };
+            });
+
+            console.log('✅ [Progress Refresh] Progress bars updated successfully');
+          }
+        }
+      } catch (error) {
+        console.error('❌ [Progress Refresh] Failed to refresh progress:', error);
+      }
+    };
+
+    // Refresh progress every 5 seconds
+    const interval = setInterval(refreshProgress, 5000);
+
+    // Initial refresh after 2 seconds
+    const initialTimeout = setTimeout(refreshProgress, 2000);
+
+    return () => {
+      clearInterval(interval);
+      clearTimeout(initialTimeout);
+    };
+  }, [id, courseData]);
+
+  // Periodic URL refresh to prevent 403 errors from expired presigned URLs
+  useEffect(() => {
+    if (!currentVideoId || !courseData) return;
+
+    const refreshVideoUrlPeriodically = async () => {
+      const currentVideo = courseData.videos.find(v => v.id === currentVideoId);
+      if (!currentVideo || !currentVideo.videoUrl) return;
+
+      // Check if URL is expired or will expire soon
+      if (isPresignedUrlExpired(currentVideo.videoUrl)) {
+        console.log('🔄 [URL Refresh] Presigned URL expired, refreshing...');
+        
+        try {
+          const freshUrl = await refreshVideoUrl(currentVideoId);
+          if (freshUrl) {
+            // Update the course data with the fresh URL
+            setCourseData(prev => {
+              if (!prev) return null;
+              return {
+                ...prev,
+                videos: prev.videos.map(video => 
+                  video.id === currentVideoId 
+                    ? { ...video, videoUrl: freshUrl }
+                    : video
+                )
+              };
+            });
+            console.log('✅ [URL Refresh] Video URL refreshed successfully');
+          }
+        } catch (error) {
+          console.error('❌ [URL Refresh] Failed to refresh video URL:', error);
+        }
+      }
+    };
+
+    // Check URL expiry every 2 minutes
+    const interval = setInterval(refreshVideoUrlPeriodically, 120000);
+
+    // Initial check after 30 seconds
+    const initialTimeout = setTimeout(refreshVideoUrlPeriodically, 30000);
+
+    return () => {
+      clearInterval(interval);
+      clearTimeout(initialTimeout);
+    };
+  }, [currentVideoId, courseData]);
 
   // Fetch resume position when current video changes
   useEffect(() => {
@@ -814,7 +962,17 @@ const VideoPlayerPage = () => {
     }
   }, [videoId]);
 
-  const currentVideo = courseData?.videos.find(v => v.id === currentVideoId);
+  // Update currentVideo state when currentVideoId changes
+  useEffect(() => {
+    if (currentVideoId && courseData) {
+      const newCurrentVideo = courseData.videos.find(v => v.id === currentVideoId);
+      if (newCurrentVideo) {
+        setCurrentVideo(newCurrentVideo);
+      }
+    }
+  }, [currentVideoId, courseData]);
+
+  // currentVideo is now a state variable instead of derived
   
   // Debug: Log current video details - only when video changes
   useEffect(() => {
@@ -872,10 +1030,10 @@ const VideoPlayerPage = () => {
       
       // PROACTIVE URL REFRESH: Check if URL is expired and refresh before video player tries to load it
       if (currentVideo.videoUrl && isPresignedUrlExpired(currentVideo.videoUrl)) {
-        console.log('🔧 [VideoPlayer] Current video has expired presigned URL, proactively refreshing...');
+        // Current video has expired presigned URL, proactively refreshing...
         refreshVideoUrl(currentVideo.id).then(freshUrl => {
           if (freshUrl) {
-            console.log('✅ [VideoPlayer] Successfully refreshed expired URL proactively');
+            // Successfully refreshed expired URL proactively
             setCourseData(prev => {
               if (!prev) return null;
               return {
@@ -1120,7 +1278,14 @@ const VideoPlayerPage = () => {
 
   // Handle video selection
   const handleVideoSelect = async (newVideoId: string) => {
+    // Prevent multiple rapid video switches
+    if (isSwitchingVideo) {
+      console.log('🔄 [VideoPlayer] Already switching video, ignoring request');
+      return;
+    }
+    
     console.log('🔧 [VideoPlayer] Switching to video:', newVideoId);
+    setIsSwitchingVideo(true);
     
     // Check if the video is locked
     const newVideo = courseData?.videos.find(v => v.id === newVideoId);
@@ -1135,40 +1300,72 @@ const VideoPlayerPage = () => {
         navigate(`/course/${id}/checkout`);
       }, 2000);
       
+      setIsSwitchingVideo(false);
       return;
     }
     
-    // Check if the new video has a valid presigned URL
-    if (newVideo && (!newVideo.videoUrl || newVideo.videoUrl === 'undefined' || isPresignedUrlExpired(newVideo.videoUrl))) {
-      console.log('🔧 [VideoPlayer] New video has invalid/expired presigned URL, refreshing...');
+    // Always refresh the URL for the new video to ensure it's fresh
+    console.log('🔧 [VideoPlayer] Refreshing URL for new video...');
+    setVideoError('Loading video...');
+    
+    try {
       const freshUrl = await refreshVideoUrl(newVideoId);
       if (freshUrl) {
-        // Update the course data with the fresh URL
-        setCourseData(prev => {
-          if (!prev) return null;
-          return {
-            ...prev,
-            videos: prev.videos.map(video => 
-              video.id === newVideoId 
-                ? { ...video, videoUrl: freshUrl }
-                : video
-            )
-          };
-        });
+        console.log('✅ [VideoPlayer] URL refreshed successfully for new video');
+        
+        // Find the video object and update it with the fresh URL
+        const selectedVideo = courseData?.videos.find(v => v.id === newVideoId);
+        if (selectedVideo) {
+          const updatedVideo = { ...selectedVideo, videoUrl: freshUrl };
+          
+          // Update the course data with the fresh URL
+          setCourseData(prev => {
+            if (!prev) return null;
+            return {
+              ...prev,
+              videos: prev.videos.map(video => 
+                video.id === newVideoId 
+                  ? updatedVideo
+                  : video
+              )
+            };
+          });
+          
+          // Explicitly set the current video state with the fresh URL
+          setCurrentVideo(updatedVideo);
+        }
+        
+        // Clear any error states
+        setVideoError(null);
+        setError(null);
+      } else {
+        console.error('❌ [VideoPlayer] Failed to refresh URL for new video');
+        setVideoError('Failed to load video. Please try again.');
+        setIsSwitchingVideo(false);
+        return;
       }
+    } catch (error) {
+      console.error('❌ [VideoPlayer] Error refreshing URL for new video:', error);
+      setVideoError('Failed to load video. Please try again.');
+      setIsSwitchingVideo(false);
+      return;
     }
     
+    // Only set the new video ID after successful URL refresh
     setCurrentVideoId(newVideoId);
     setIsPlaying(false);
     setCurrentTime(0);
     setDuration(0);
     setCurrentVideoPercentage(0);
-    // Reset error states when changing videos
-    setVideoError(null);
     setRetryCount(0);
     setIsRetrying(false);
     setError(null);
     window.history.pushState(null, '', `/course/${id}/watch/${newVideoId}`);
+    
+    // Reset switching state after a short delay
+    setTimeout(() => {
+      setIsSwitchingVideo(false);
+    }, 500);
   };
 
 
@@ -1350,7 +1547,8 @@ const VideoPlayerPage = () => {
     );
   }
 
-  if (error || !courseData || !currentVideo) {
+  // Only show error state for actual errors, not loading states
+  if (error && !loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-900 text-white">
         <div className="text-center max-w-md mx-auto p-8">
@@ -1388,22 +1586,43 @@ const VideoPlayerPage = () => {
     );
   }
 
+  // Debug logging
+  console.log('🔍 [VideoPlayerPage] Render state:', {
+    showPlaylist,
+    courseData: courseData ? 'loaded' : 'null',
+    videos: courseData?.videos ? `${courseData.videos.length} videos` : 'none',
+    loading,
+    error
+  });
+
   return (
     <div className="min-h-screen bg-gray-900 flex flex-col pt-16">
       {/* Header */}
       <div className="bg-gray-800 border-b border-gray-700 px-3 xxs:px-4 py-3">
         <div className="flex items-center justify-between">
           <h1 className="text-white font-semibold truncate">
-            {courseData.title}
+            {courseData?.title || 'Loading...'}
           </h1>
           
-          <button
-            onClick={() => setShowPlaylist(!showPlaylist)}
-            className="md:hidden flex items-center space-x-1 xxs:space-x-2 text-gray-300 hover:text-white transition-colors duration-200 px-2 xxs:px-3 py-2 rounded-lg hover:bg-gray-700"
-          >
-            <BookOpen className="h-4 w-4 xxs:h-5 xxs:w-5" />
-            <span className="text-sm xxs:text-base">Playlist</span>
-          </button>
+          <div className="flex items-center space-x-2">
+            {/* Desktop Playlist Toggle */}
+            <button
+              onClick={() => setShowPlaylist(!showPlaylist)}
+              className="hidden md:flex items-center space-x-2 text-gray-300 hover:text-white transition-colors duration-200 px-3 py-2 rounded-lg hover:bg-gray-700"
+            >
+              <BookOpen className="h-5 w-5" />
+              <span className="text-sm">{showPlaylist ? 'Hide Playlist' : 'Show Playlist'}</span>
+            </button>
+            
+            {/* Mobile Playlist Toggle */}
+            <button
+              onClick={() => setShowPlaylist(!showPlaylist)}
+              className="md:hidden flex items-center space-x-1 xxs:space-x-2 text-gray-300 hover:text-white transition-colors duration-200 px-2 xxs:px-3 py-2 rounded-lg hover:bg-gray-700"
+            >
+              <BookOpen className="h-4 w-4 xxs:h-5 xxs:w-5" />
+              <span className="text-sm xxs:text-base">Playlist</span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -1418,10 +1637,10 @@ const VideoPlayerPage = () => {
          currentVideo.videoUrl !== 'undefined' &&
          currentVideo.hasAccess &&
          !videoError &&
-         !isRefreshingUrl &&
-         !isPresignedUrlExpired(currentVideo.videoUrl) ? (
+         !isRefreshingUrl ? (
           <>
             <EnhancedVideoPlayer
+                key={`${currentVideoId}-${currentVideo.videoUrl}`}
                 src={currentVideo.videoUrl || ''}
               title={courseData?.title}
               playing={isPlaying}
@@ -1568,12 +1787,31 @@ const VideoPlayerPage = () => {
         {/* Playlist Sidebar */}
           {showPlaylist && (
           <div className="w-80 bg-gray-800 border-l border-gray-700 overflow-y-auto">
-            <VideoPlaylist
-              videos={courseData.videos}
-              currentVideoId={currentVideoId}
-              onVideoSelect={handleVideoSelect}
-              courseProgress={courseData.overallProgress}
-            />
+            {courseData && courseData.videos ? (
+              <VideoPlaylist
+                videos={courseData.videos}
+                currentVideoId={currentVideoId}
+                onVideoSelect={handleVideoSelect}
+                courseProgress={courseData.overallProgress}
+              />
+            ) : (
+              <div className="p-4">
+                <div className="text-white text-sm mb-4">Course Content</div>
+                <div className="text-gray-400 text-xs mb-2">
+                  Debug: showPlaylist={showPlaylist.toString()}, 
+                  courseData={courseData ? 'loaded' : 'null'}, 
+                  videos={courseData?.videos ? `${courseData.videos.length} videos` : 'none'}
+                </div>
+                <div className="space-y-2">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <div key={i} className="animate-pulse">
+                      <div className="h-4 bg-gray-700 rounded mb-2"></div>
+                      <div className="h-3 bg-gray-700 rounded w-3/4"></div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
           )}
       </div>
@@ -1594,15 +1832,28 @@ const VideoPlayerPage = () => {
                 </svg>
               </button>
             </div>
-            <VideoPlaylist
-              videos={courseData.videos}
-              currentVideoId={currentVideoId}
-              onVideoSelect={(videoId) => {
-                handleVideoSelect(videoId);
-                setShowPlaylist(false);
-              }}
-              courseProgress={courseData.overallProgress}
-            />
+            {courseData && courseData.videos ? (
+              <VideoPlaylist
+                videos={courseData.videos}
+                currentVideoId={currentVideoId}
+                onVideoSelect={(videoId) => {
+                  handleVideoSelect(videoId);
+                  setShowPlaylist(false);
+                }}
+                courseProgress={courseData.overallProgress}
+              />
+            ) : (
+              <div className="p-4">
+                <div className="space-y-2">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <div key={i} className="animate-pulse">
+                      <div className="h-4 bg-gray-700 rounded mb-2"></div>
+                      <div className="h-3 bg-gray-700 rounded w-3/4"></div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
           <div
             className="flex-1"

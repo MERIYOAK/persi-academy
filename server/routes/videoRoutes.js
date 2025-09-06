@@ -5,12 +5,28 @@ const auth = require('../middleware/authMiddleware');
 const optionalAuth = require('../middleware/optionalAuthMiddleware');
 const adminAuthMiddleware = require('../middleware/adminAuthMiddleware');
 const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
+
+// Ensure upload directory exists
+const uploadDir = '/tmp/uploads';
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
 
 // Configure multer for video uploads
 const upload = multer({
-  storage: multer.memoryStorage(),
+  storage: multer.diskStorage({
+    destination: (req, file, cb) => {
+      cb(null, '/tmp/uploads'); // Use temporary directory
+    },
+    filename: (req, file, cb) => {
+      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+      cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
+    }
+  }),
   limits: {
-    fileSize: 500 * 1024 * 1024, // 500MB limit
+    fileSize: 1000 * 1024 * 1024, // 1GB limit for large videos
   },
   fileFilter: (req, file, cb) => {
     if (file.mimetype.startsWith('video/')) {
@@ -368,6 +384,98 @@ router.post('/test-durations', async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Failed to set test durations',
+      error: error.message
+    });
+  }
+});
+
+/**
+ * Update video duration (admin only)
+ * PUT /api/videos/:videoId/duration
+ * Body: { duration: "MM:SS" or "HH:MM:SS" }
+ */
+router.put('/:videoId/duration', auth, adminAuthMiddleware, async (req, res) => {
+  try {
+    const { videoId } = req.params;
+    const { duration } = req.body;
+    const adminEmail = req.admin?.email || req.user?.email || 'admin';
+
+    if (!duration) {
+      return res.status(400).json({
+        success: false,
+        message: 'Duration is required'
+      });
+    }
+
+    const Video = require('../models/Video');
+    const video = await Video.findById(videoId);
+    if (!video) {
+      return res.status(404).json({
+        success: false,
+        message: 'Video not found'
+      });
+    }
+
+    // Parse duration to seconds
+    const parseDurationToSeconds = (durationStr) => {
+      const parts = durationStr.trim().split(':');
+      
+      if (parts.length === 2) {
+        // MM:SS format
+        const minutes = parseInt(parts[0], 10);
+        const seconds = parseInt(parts[1], 10);
+        return (minutes * 60) + seconds;
+      } else if (parts.length === 3) {
+        // HH:MM:SS format
+        const hours = parseInt(parts[0], 10);
+        const minutes = parseInt(parts[1], 10);
+        const seconds = parseInt(parts[2], 10);
+        return (hours * 3600) + (minutes * 60) + seconds;
+      } else {
+        throw new Error(`Invalid duration format: ${durationStr}. Use MM:SS or HH:MM:SS`);
+      }
+    };
+
+    const durationInSeconds = parseDurationToSeconds(duration);
+    
+    // Format duration for display
+    const formatDuration = (seconds) => {
+      const hours = Math.floor(seconds / 3600);
+      const minutes = Math.floor((seconds % 3600) / 60);
+      const remainingSeconds = Math.floor(seconds % 60);
+      
+      if (hours > 0) {
+        return `${hours}:${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+      } else {
+        return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+      }
+    };
+
+    // Update video duration
+    video.duration = durationInSeconds;
+    video.formattedDuration = formatDuration(durationInSeconds);
+    await video.save();
+
+    console.log(`✅ [Admin] Video duration updated: ${video.title} = ${durationInSeconds}s (${formatDuration(durationInSeconds)}) by ${adminEmail}`);
+
+    res.json({
+      success: true,
+      message: 'Video duration updated successfully',
+      data: {
+        video: {
+          id: video._id,
+          title: video.title,
+          duration: video.duration,
+          formattedDuration: video.formattedDuration
+        }
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ Update video duration error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to update video duration',
       error: error.message
     });
   }

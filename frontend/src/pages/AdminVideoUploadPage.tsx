@@ -36,6 +36,7 @@ const AdminVideoUploadPage: React.FC = () => {
     title: '',
     description: '',
     order: 1,
+    duration: '', // Duration in MM:SS or HH:MM:SS format
     file: null as File | null,
     isFreePreview: false
   });
@@ -85,11 +86,11 @@ const AdminVideoUploadPage: React.FC = () => {
         return;
       }
       
-      // Validate file size (max 500MB)
-      if (file.size > 500 * 1024 * 1024) {
-        setError('Video file size must be less than 500MB');
-        return;
-      }
+             // Validate file size (max 500MB)
+       if (file.size > 500 * 1024 * 1024) {
+         setError('Video file size must be less than 500MB');
+         return;
+       }
 
       setFormData(prev => ({ ...prev, file }));
       setError(null);
@@ -176,13 +177,16 @@ const AdminVideoUploadPage: React.FC = () => {
       videoFormData.append('order', formData.order.toString());
       videoFormData.append('courseId', courseId!);
       videoFormData.append('isFreePreview', formData.isFreePreview ? 'true' : 'false');
-      videoFormData.append('file', formData.file);
+      if (formData.duration) {
+        videoFormData.append('duration', formData.duration);
+      }
+      videoFormData.append('file', formData.file!);
 
       // Update progress - starting upload
       setProgressOverlay(prev => ({
         ...prev,
-        progress: 30,
-        message: `Uploading video: ${formData.file?.name}...`
+        progress: 5,
+        message: `Starting upload: ${formData.file?.name}...`
       }));
 
       // Upload via XHR to track progress
@@ -190,12 +194,17 @@ const AdminVideoUploadPage: React.FC = () => {
       
       xhr.upload.onprogress = (event) => {
         if (event.lengthComputable) {
-          const progress = Math.round((event.loaded / event.total) * 100);
-          const overallProgress = 30 + (progress * 0.6); // Upload takes 30-90% of progress
+          const httpProgress = Math.round((event.loaded / event.total) * 100);
+          const loadedMB = (event.loaded / (1024 * 1024)).toFixed(1);
+          const totalMB = (event.total / (1024 * 1024)).toFixed(1);
+          
+          // HTTP upload is 30% of total process (server will handle the remaining 70%)
+          const overallProgress = Math.min(Math.round(httpProgress * 0.3), 30); // Cap at 30%
+          
           setProgressOverlay(prev => ({
             ...prev,
-            progress: overallProgress,
-            message: `Uploading video: ${progress}%`
+            progress: Math.min(Math.max(prev.progress, overallProgress), 30), // Don't go backwards, cap at 30%
+            message: `Uploading to server: ${httpProgress}% (${loadedMB}MB / ${totalMB}MB)`
           }));
         }
       };
@@ -203,29 +212,49 @@ const AdminVideoUploadPage: React.FC = () => {
       xhr.onreadystatechange = () => {
         if (xhr.readyState === XMLHttpRequest.DONE) {
           if (xhr.status >= 200 && xhr.status < 300) {
-            // Update progress - processing response
+            // Show server processing message - start from 30% and progress to 100%
             setProgressOverlay(prev => ({
               ...prev,
-              progress: 95,
-              message: 'Processing upload response...'
+              progress: 30,
+              message: 'Processing on server...'
             }));
 
-            // Update progress - success
-            setProgressOverlay({
-              isVisible: true,
-              progress: 100,
-              status: 'success',
-              title: 'Video Uploaded Successfully',
-              message: 'Video uploaded successfully! Duration automatically detected.'
-            });
+            // Simulate server processing with gradual progress
+            let processingProgress = 30;
+            const processingInterval = setInterval(() => {
+              processingProgress += 10;
+              if (processingProgress <= 100) {
+                setProgressOverlay(prev => ({
+                  ...prev,
+                  progress: processingProgress,
+                  message: processingProgress < 100 
+                    ? `Processing on server... ${processingProgress}%`
+                    : 'Finalizing upload...'
+                }));
+              } else {
+                clearInterval(processingInterval);
+                setProgressOverlay({
+                  isVisible: true,
+                  progress: 100,
+                  status: 'success',
+                  title: 'Video Uploaded Successfully',
+                  message: formData.duration 
+                    ? 'Video uploaded successfully with manual duration!'
+                    : 'Video uploaded successfully! Duration automatically detected.'
+                });
+              }
+            }, 200); // Update every 200ms for smooth progress
             
-            setSuccess('Video uploaded successfully! Duration automatically detected.');
+            setSuccess(formData.duration 
+              ? 'Video uploaded successfully with manual duration!'
+              : 'Video uploaded successfully! Duration automatically detected.');
             
             // Reset form
             setFormData({
               title: '',
               description: '',
               order: (course?.videos?.length || 0) + 2,
+              duration: '',
               file: null,
               isFreePreview: false
             });
@@ -412,9 +441,9 @@ const AdminVideoUploadPage: React.FC = () => {
                   </svg>
                 </div>
                 <div className="ml-3">
-                  <h3 className="text-sm font-medium text-blue-800">Automatic Duration Detection</h3>
+                  <h3 className="text-sm font-medium text-blue-800">Duration Input</h3>
                   <p className="text-sm text-blue-700 mt-1">
-                    Video duration will be automatically detected from the uploaded file. No manual input required.
+                    You can manually enter the video duration in MM:SS or HH:MM:SS format. If left empty, duration will be automatically detected from the uploaded file.
                   </p>
                 </div>
               </div>
@@ -470,6 +499,25 @@ const AdminVideoUploadPage: React.FC = () => {
                 />
               </div>
 
+              {/* Duration */}
+              <div>
+                <label htmlFor="duration" className="block text-sm font-medium text-gray-700 mb-2">
+                  Video Duration (MM:SS or HH:MM:SS)
+                </label>
+                <input
+                  type="text"
+                  id="duration"
+                  value={formData.duration}
+                  onChange={(e) => setFormData(prev => ({ ...prev, duration: e.target.value }))}
+                  pattern="^(\d{1,2}:)?[0-5]?\d:[0-5]\d$"
+                  className="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="5:30 or 1:25:45"
+                />
+                <p className="mt-1 text-sm text-gray-500">
+                  Enter duration in MM:SS format (e.g., 5:30) or HH:MM:SS format (e.g., 1:25:45). Leave empty for automatic detection.
+                </p>
+              </div>
+
               {/* File Upload */}
               <div>
                 <label htmlFor="video-file" className="block text-sm font-medium text-gray-700 mb-2">
@@ -501,9 +549,9 @@ const AdminVideoUploadPage: React.FC = () => {
                     <span>{(formData.file.size / (1024 * 1024)).toFixed(2)} MB</span>
                   </div>
                 )}
-                <p className="mt-1 text-sm text-gray-500">
-                  Supported formats: MP4, AVI, MOV, WMV, WebM, OGG, FLV, MKV. Max size: 500MB. Duration will be automatically detected.
-                </p>
+                                 <p className="mt-1 text-sm text-gray-500">
+                   Supported formats: MP4, AVI, MOV, WMV, WebM, OGG, FLV, MKV. Max size: 500MB. Duration can be manually entered or automatically detected.
+                 </p>
               </div>
 
               {/* Free Preview Toggle */}

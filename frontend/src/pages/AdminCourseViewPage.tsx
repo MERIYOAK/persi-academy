@@ -53,9 +53,7 @@ const AdminCourseViewPage: React.FC = () => {
       }
 
       const data = await response.json();
-      console.log('Course data received:', data);
-      console.log('Course videos:', data.data?.course?.videos);
-      console.log('Current version videos:', data.data?.course?.currentVersion?.videos);
+      // Course data received successfully
       
       setCourse(data.data.course);
     } catch (err) {

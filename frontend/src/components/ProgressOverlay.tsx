@@ -57,12 +57,12 @@ const ProgressOverlay: React.FC<ProgressOverlayProps> = ({
           <div className="mb-4">
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm text-gray-600">Progress</span>
-              <span className="text-sm font-medium text-gray-900">{progress}%</span>
+              <span className="text-sm font-medium text-gray-900">{Math.min(progress, 100)}%</span>
             </div>
             <div className="w-full bg-gray-200 rounded-full h-2">
               <div
                 className="bg-red-600 h-2 rounded-full transition-all duration-300 ease-out"
-                style={{ width: `${progress}%` }}
+                style={{ width: `${Math.min(progress, 100)}%` }}
               />
             </div>
           </div>

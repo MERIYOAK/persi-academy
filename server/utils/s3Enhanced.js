@@ -124,7 +124,7 @@ const uploadToS3 = async (file, fileType, context = {}) => {
 
   try {
   const s3Key = generateS3Key(fileType, file.originalname, context);
-    console.log(`🔑 Generated S3 key: ${s3Key}`);
+    // Generated S3 key
   
   const uploadParams = {
     Bucket: process.env.AWS_S3_BUCKET,
@@ -178,7 +178,7 @@ const deleteFromS3 = async (s3Key) => {
   }
 
   try {
-    console.log(`🗑️ Deleting from S3: ${s3Key}`);
+    // Deleting from S3
     
     const command = new DeleteObjectCommand({
       Bucket: process.env.AWS_S3_BUCKET,
@@ -345,7 +345,7 @@ const makeThumbnailPublic = async (s3Key) => {
     // This would require setting the object ACL to public-read
     // However, this depends on your S3 bucket configuration
     
-    console.log(`🔓 Making thumbnail publicly accessible: ${s3Key}`);
+    // Making thumbnail publicly accessible
     return true;
   } catch (error) {
     console.error('❌ Failed to make thumbnail public:', error);

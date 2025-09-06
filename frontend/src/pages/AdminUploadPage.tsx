@@ -10,6 +10,7 @@ interface Video {
   description: string;
   file?: File;
   isFreePreview?: boolean;
+  duration?: string; // Duration in MM:SS format
 }
 
 interface Course {
@@ -350,6 +351,9 @@ const AdminUploadPage = () => {
           videoFormData.append('courseId', courseId);
           videoFormData.append('order', (i + 1).toString());
           videoFormData.append('isFreePreview', video.isFreePreview ? 'true' : 'false');
+          if (video.duration) {
+            videoFormData.append('duration', video.duration);
+          }
           videoFormData.append('file', video.file);
 
           await xhrUpload({
@@ -357,21 +361,58 @@ const AdminUploadPage = () => {
             method: 'POST',
             formData: videoFormData,
             headers: { 'Authorization': `Bearer ${adminToken}` },
-            timeoutMs: 15 * 60 * 1000,
+            timeoutMs: 35 * 60 * 1000, // 35 minutes for large files
             onProgress: (loaded, total) => {
               if (totalBytesToUpload > 0) {
-                const currentPercent = Math.round(((uploadedBytesCompleted + loaded) / totalBytesToUpload) * 100);
+                // Calculate progress more accurately
+                const httpUploadPercent = Math.round((loaded / total) * 100);
+                const currentVideoProgress = Math.round((uploadedBytesCompleted / totalBytesToUpload) * 100);
+                
+                // Show HTTP upload progress for current video, but don't let total progress exceed realistic bounds
+                // HTTP upload typically completes quickly, so we cap the progress to show server processing time
+                const httpUploadWeight = 0.3; // HTTP upload is only 30% of the total process
+                const serverProcessingWeight = 0.7; // Server processing is 70% of the total process
+                
+                const httpProgress = Math.round((httpUploadPercent / 100) * httpUploadWeight * 100);
+                const totalProgress = Math.min(
+                  currentVideoProgress + httpProgress,
+                  currentVideoProgress + Math.round(httpUploadWeight * 100) // Cap at HTTP upload completion
+                );
+                
                 setProgressOverlay(prev => ({
                   ...prev,
-                  progress: currentPercent,
-                  message: `Uploading video ${i + 1}/${course.videos.length}: ${Math.round((loaded / total) * 100)}%`
+                  progress: Math.max(prev.progress, totalProgress), // Don't go backwards
+                  message: `Uploading video ${i + 1}/${course.videos.length}: ${httpUploadPercent}% (Sending to server...)`
                 }));
               }
-              console.debug('[UI] video progress:', { index: i, loaded, total, currentPercent: Math.round(((uploadedBytesCompleted + loaded) / totalBytesToUpload) * 100) });
+              console.debug('[UI] video progress:', { 
+                index: i, 
+                loaded, 
+                total, 
+                httpUploadPercent: Math.round((loaded / total) * 100),
+                totalProgress: Math.round(((uploadedBytesCompleted + loaded) / totalBytesToUpload) * 100) 
+              });
             }
           });
           console.debug('[UI] upload video done:', video.file.name);
+          
+          // Show server processing message
+          setProgressOverlay(prev => ({
+            ...prev,
+            message: `Video ${i + 1}/${course.videos.length}: Processing on server...`
+          }));
+          
           uploadedBytesCompleted += (video.file.size || 0);
+          
+          // Update progress to show this video is complete
+          setProgressOverlay(prev => ({
+            ...prev,
+            progress: Math.round((uploadedBytesCompleted / totalBytesToUpload) * 100),
+            message: `Video ${i + 1}/${course.videos.length} uploaded successfully!`
+          }));
+          
+          // Add a small delay to show the completion message
+          await new Promise(resolve => setTimeout(resolve, 500));
         }
       }
 
@@ -697,22 +738,6 @@ const AdminUploadPage = () => {
 
             {/* Video Lessons */}
             <div className="space-y-6">
-              {/* Info Alert */}
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <div className="flex items-center">
-                  <div className="flex-shrink-0">
-                    <svg className="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-                    </svg>
-                  </div>
-                  <div className="ml-3">
-                    <h3 className="text-sm font-medium text-blue-800">Automatic Video Duration Detection</h3>
-                    <p className="text-sm text-blue-700 mt-1">
-                      Video duration will be automatically detected from uploaded files. No manual duration input required.
-                    </p>
-                  </div>
-                </div>
-              </div>
 
               {/* Free Preview Info Alert */}
               <div className="bg-green-50 border border-green-200 rounded-lg p-4">
@@ -792,6 +817,24 @@ const AdminUploadPage = () => {
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors duration-200"
                       placeholder="Describe what this lesson covers..."
                     />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Video Duration (MM:SS)
+                    </label>
+                    <input
+                      type="text"
+                      value={video.duration || ''}
+                      onChange={(e) => updateVideo(video.id, { duration: e.target.value })}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors duration-200"
+                      placeholder="e.g., 5:30 or 1:25:45"
+                      pattern="^(\d{1,2}:)?[0-5]?\d:[0-5]\d$"
+                      title="Format: MM:SS or HH:MM:SS (e.g., 5:30 or 1:25:45)"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Enter duration in MM:SS format (e.g., 5:30) or HH:MM:SS for longer videos
+                    </p>
                   </div>
 
                   <div>

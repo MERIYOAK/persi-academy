@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { buildApiUrl } from '../config/environment';
 
 import { Link } from 'react-router-dom';
+import { formatDuration } from '../utils/durationFormatter';
 import { 
   ArrowLeft, 
   Users, 
@@ -169,11 +170,7 @@ const AdminAnalyticsPage: React.FC = () => {
     return Math.round(bytes / Math.pow(1024, i) * 100) / 100 + ' ' + sizes[i];
   };
 
-  const formatDuration = (seconds: number) => {
-    const hours = Math.floor(seconds / 3600);
-    const minutes = Math.floor((seconds % 3600) / 60);
-    return `${hours}h ${minutes}m`;
-  };
+  // Using the centralized formatDuration utility
 
   if (loading) {
     return (
@@ -327,7 +324,7 @@ const AdminAnalyticsPage: React.FC = () => {
             <div className="mt-4">
               <div className="flex items-center text-sm text-gray-500">
                 <Clock className="h-4 w-4 mr-1" />
-                {videoStats ? formatDuration(videoStats.duration.totalSeconds) : '0h 0m'} total duration
+                {videoStats ? formatDuration(videoStats.duration.totalSeconds) : '0:00'} total duration
               </div>
             </div>
           </div>

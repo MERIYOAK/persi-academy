@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { buildApiUrl } from '../config/environment';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { 
   ArrowLeft, 

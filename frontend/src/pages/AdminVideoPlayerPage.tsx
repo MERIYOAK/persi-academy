@@ -4,6 +4,7 @@ import { buildApiUrl } from '../config/environment';
 import { useParams, Link } from 'react-router-dom';
 
 import { ChevronLeft, BookOpen, Clock, Edit, Trash2, Play, Pause, Volume2, VolumeX, Maximize } from 'lucide-react';
+import { formatDuration } from '../utils/durationFormatter';
 
 interface Video {
   id: string;
@@ -14,7 +15,6 @@ interface Video {
   order?: number;
   uploadedBy?: string;
   createdAt?: string;
-  subtitleUrl?: string; // Add subtitle URL support
 }
 
 interface CourseData {
@@ -35,9 +35,6 @@ const AdminVideoPlayerPage = () => {
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [isMuted, setIsMuted] = useState(false);
-  const [subtitlesEnabled, setSubtitlesEnabled] = useState(false);
-  const [availableSubtitles, setAvailableSubtitles] = useState<string[]>([]);
-  const [currentSubtitle, setCurrentSubtitle] = useState<string>('');
 
 
   // Fetch course and video data
@@ -106,12 +103,10 @@ const AdminVideoPlayerPage = () => {
               
               // Detailed URL logging
               console.log('🔗 [BROWSER] Video data received for:', videoData.title);
-              console.log('📋 [BROWSER] Video URL from server:', videoData.videoUrl);
-              console.log('🗝️  [BROWSER] S3 Key:', videoData.s3Key);
+              // Video URL and S3 key received from server
               
               if (videoData.videoUrl) {
-                console.log('✅ [BROWSER] Presigned URL received successfully');
-                console.log('🔍 [BROWSER] URL length:', videoData.videoUrl.length);
+                // Presigned URL received successfully
                 try {
                   const url = new URL(videoData.videoUrl);
                   console.log('🌐 [BROWSER] URL domain:', url.hostname);
@@ -119,9 +114,9 @@ const AdminVideoPlayerPage = () => {
                   
                   // Check if URL contains AWS signature
                   if (videoData.videoUrl.includes('X-Amz-Signature')) {
-                    console.log('🔐 [BROWSER] AWS signature detected - URL is presigned');
+                    // AWS signature detected - URL is presigned
                   } else {
-                    console.log('⚠️  [BROWSER] No AWS signature found - URL might not be presigned');
+                    // No AWS signature found - URL might not be presigned
                   }
                 } catch (urlError) {
                   console.error('❌ [BROWSER] Error parsing URL:', urlError);
@@ -217,12 +212,7 @@ const AdminVideoPlayerPage = () => {
 
   const currentVideo = courseData?.videos.find(v => v.id === currentVideoId);
 
-  // Format time
-  const formatTime = (time: number) => {
-    const minutes = Math.floor(time / 60);
-    const seconds = Math.floor(time % 60);
-    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
-  };
+  // Using the centralized formatDuration utility
 
   // Handle playback rate change
   const handlePlaybackRateChange = (newRate: number) => {
@@ -260,22 +250,6 @@ const AdminVideoPlayerPage = () => {
     }
   };
 
-  // Toggle subtitles
-  const toggleSubtitles = () => {
-    if (videoRef.current) {
-      const newSubtitleState = !subtitlesEnabled;
-      setSubtitlesEnabled(newSubtitleState);
-      
-      // Enable/disable subtitle tracks
-      if (videoRef.current.textTracks && videoRef.current.textTracks.length > 0) {
-        for (let i = 0; i < videoRef.current.textTracks.length; i++) {
-          videoRef.current.textTracks[i].mode = newSubtitleState ? 'showing' : 'hidden';
-        }
-      }
-      
-      console.log('📝 Subtitles:', newSubtitleState ? 'enabled' : 'disabled');
-    }
-  };
 
   // Toggle fullscreen
   const toggleFullscreen = () => {
@@ -386,8 +360,8 @@ const AdminVideoPlayerPage = () => {
       // Add CSS protections
       video.style.userSelect = 'none';
       video.style.webkitUserSelect = 'none';
-      video.style.mozUserSelect = 'none';
-      video.style.msUserSelect = 'none';
+      (video.style as any).mozUserSelect = 'none';
+      (video.style as any).msUserSelect = 'none';
       video.style.pointerEvents = 'auto';
       
       // Disable video download attributes
@@ -471,12 +445,6 @@ const AdminVideoPlayerPage = () => {
           case 'KeyF':
             e.preventDefault();
             toggleFullscreen();
-            break;
-          case 'KeyS':
-            e.preventDefault();
-            if (currentVideo?.subtitleUrl) {
-              toggleSubtitles();
-            }
             break;
           case 'ArrowLeft':
             e.preventDefault();
@@ -635,13 +603,13 @@ const AdminVideoPlayerPage = () => {
                   onLoadedData={() => {
                     if (!playerReady) {
                       console.log('✅ Video element ready');
-                      console.log('✅ Video URL:', currentVideo.videoUrl);
+                      // Video URL available
                       setPlayerReady(true);
                     }
                   }}
                   onPlay={() => {
                     console.log('🎬 Video started playing');
-                    console.log('🎬 Current video URL:', currentVideo.videoUrl);
+                    // Current video URL available
                     setIsPlaying(true);
                   }}
                   onPause={() => {
@@ -708,24 +676,6 @@ const AdminVideoPlayerPage = () => {
                     console.log('✅ Video can play');
                   }}
                 >
-                  {/* Subtitle Track - Add sample for testing */}
-                  <track
-                    kind="subtitles"
-                    src="data:text/vtt;base64,V0VCVlRUCgowMDowMDowMS4wMDAgLS0+IDAwOjAwOjA0LjAwMApXZWxjb21lIHRvIHRoaXMgdmlkZW8gdHV0b3JpYWwKCjAwOjAwOjA0LjUwMCAtLT4gMDA6MDA6MDguMDAwClRvZGF5IHdlJ2xsIGxlYXJuIGFib3V0IHZpZGVvIGVkaXRpbmcKCjAwOjAwOjA4LjUwMCAtLT4gMDA6MDA6MTIuMDAwCkxldCdzIGdldCBzdGFydGVkIHdpdGggdGhlIGJhc2ljcw=="
-                    srcLang="en"
-                    label="English"
-                    default={subtitlesEnabled}
-                  />
-                  {/* Subtitle Track */}
-                  {currentVideo.subtitleUrl && (
-                    <track
-                      kind="subtitles"
-                      src={currentVideo.subtitleUrl}
-                      srcLang="en"
-                      label="English"
-                      default={subtitlesEnabled}
-                    />
-                  )}
                 </video>
 
                 
@@ -744,7 +694,7 @@ const AdminVideoPlayerPage = () => {
 
                       {/* Time display */}
                       <div className="text-xs sm:text-sm">
-                        {formatTime(currentTime)} / {formatTime(duration)}
+                        {formatDuration(currentTime)} / {formatDuration(duration)}
                       </div>
 
                       {/* Progress bar */}
@@ -769,20 +719,6 @@ const AdminVideoPlayerPage = () => {
                         {isMuted ? <VolumeX className="w-4 h-4 sm:w-5 sm:h-5" /> : <Volume2 className="w-4 h-4 sm:w-5 sm:h-5" />}
                       </button>
 
-                      {/* Subtitle button - Show for testing or when subtitleUrl exists */}
-                      {(currentVideo.subtitleUrl || true) && (
-                        <button
-                          onClick={toggleSubtitles}
-                          className={`text-white hover:text-gray-300 transition-colors duration-200 ${
-                            subtitlesEnabled ? 'text-red-400' : ''
-                          }`}
-                          title="Toggle Subtitles (S)"
-                        >
-                          <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="currentColor" viewBox="0 0 20 20">
-                            <path d="M2 4a2 2 0 012-2h12a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V4zm2 0v8h12V4H4zm2 2h8v1H6V6zm0 2h6v1H6V8zm0 2h4v1H6v-1z"/>
-                          </svg>
-                        </button>
-                      )}
 
                       {/* Fullscreen button */}
                       <button
@@ -824,7 +760,6 @@ const AdminVideoPlayerPage = () => {
                   <div className="absolute top-2 sm:top-4 right-2 sm:right-4 bg-black bg-opacity-75 text-white text-xs p-2 rounded opacity-75 hover:opacity-100 transition-opacity duration-200">
                     <div className="hidden sm:block">Space: Play/Pause</div>
                     <div className="hidden sm:block">M: Mute</div>
-                    {currentVideo?.subtitleUrl && <div className="hidden sm:block">S: Subtitles</div>}
                     <div className="hidden sm:block">F: Fullscreen</div>
                     <div className="sm:hidden text-xs">Tap to play</div>
                   </div>
@@ -841,7 +776,7 @@ const AdminVideoPlayerPage = () => {
                   <button
                     onClick={() => {
                       const testVideoUrl = 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4';
-                      console.log('🧪 Testing with sample video:', testVideoUrl);
+                      // Testing with sample video
                       // Force reload the page with a working video
                       window.location.href = window.location.href + '?test=sample';
                       // Or directly test the video element
@@ -893,7 +828,7 @@ const AdminVideoPlayerPage = () => {
                         if (video) {
                           video.src = testVideoUrl;
                           setError(null);
-                          console.log('🧪 Testing with sample video:', testVideoUrl);
+                          // Testing with sample video
                         }
                       }}
                       className="bg-green-600 hover:bg-green-700 text-white px-3 sm:px-4 py-2 rounded transition-colors duration-200 text-sm"
@@ -915,7 +850,7 @@ const AdminVideoPlayerPage = () => {
                   <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-gray-300 text-sm">
                     <div className="flex items-center space-x-1">
                       <Clock className="h-3 w-3 sm:h-4 sm:w-4" />
-                      <span>{duration > 0 ? formatTime(duration) : currentVideo.duration || '00:00'}</span>
+                      <span>{duration > 0 ? formatDuration(duration) : formatDuration(currentVideo.duration)}</span>
                     </div>
                     {currentVideo.order && (
                       <div className="flex items-center space-x-1">
@@ -1041,7 +976,7 @@ const AdminVideoPlayerPage = () => {
                           {video.title}
                         </h4>
                         <p className="text-xs text-gray-500 mt-1">
-                          {video.duration} • {video.order ? `Order: ${video.order}` : `Video ${index + 1}`}
+                          {formatDuration(video.duration)} • {video.order ? `Order: ${video.order}` : `Video ${index + 1}`}
                         </p>
                       </div>
                       {video.id === currentVideoId && (
@@ -1092,7 +1027,7 @@ const AdminVideoPlayerPage = () => {
                           {video.title}
                         </h4>
                         <p className="text-xs text-gray-500 mt-1">
-                          {video.duration} • {video.order ? `Order: ${video.order}` : `Video ${index + 1}`}
+                          {formatDuration(video.duration)} • {video.order ? `Order: ${video.order}` : `Video ${index + 1}`}
                         </p>
                       </div>
                       {video.id === currentVideoId && (

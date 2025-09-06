@@ -9,6 +9,9 @@ const {
   validateFile,
   getCourseFolderPath
 } = require('../utils/s3CourseManager');
+
+// Also import the old S3 utility as backup
+const { uploadToS3 } = require('../utils/s3');
 const { 
   getVideoDuration, 
   getVideoMetadata, 
@@ -17,11 +20,40 @@ const {
 } = require('../utils/videoDurationDetector');
 
 /**
+ * Parse duration string to seconds
+ * Supports formats: MM:SS or HH:MM:SS
+ * @param {string} durationStr - Duration string (e.g., "5:30" or "1:25:45")
+ * @returns {number} Duration in seconds
+ */
+const parseDurationToSeconds = (durationStr) => {
+  if (!durationStr || typeof durationStr !== 'string') {
+    return 0;
+  }
+  
+  const parts = durationStr.trim().split(':');
+  
+  if (parts.length === 2) {
+    // MM:SS format
+    const minutes = parseInt(parts[0], 10);
+    const seconds = parseInt(parts[1], 10);
+    return (minutes * 60) + seconds;
+  } else if (parts.length === 3) {
+    // HH:MM:SS format
+    const hours = parseInt(parts[0], 10);
+    const minutes = parseInt(parts[1], 10);
+    const seconds = parseInt(parts[2], 10);
+    return (hours * 3600) + (minutes * 60) + seconds;
+  } else {
+    throw new Error(`Invalid duration format: ${durationStr}. Use MM:SS or HH:MM:SS`);
+  }
+};
+
+/**
  * Upload video for a course version
  */
 exports.uploadVideo = async (req, res) => {
   try {
-    const { title, courseId, description, order, version = 1 } = req.body;
+    const { title, courseId, description, order, version = 1, duration } = req.body;
     const isFreePreview = req.body.isFreePreview === 'true' || req.body.isFreePreview === true;
     const adminEmail = req.admin?.email || req.user?.email || 'admin';
     
@@ -74,29 +106,74 @@ exports.uploadVideo = async (req, res) => {
     // Validate file size
     validateFile(req.file, ['video/mp4', 'video/webm', 'video/ogg'], 500 * 1024 * 1024); // 500MB max
     
-    console.log('🎬 [uploadVideo] Starting automatic duration detection...');
+    console.log('🎬 [uploadVideo] Processing duration from form input...');
     
-    // Automatically detect video duration using ffmpeg
+    // Parse duration from form input (MM:SS or HH:MM:SS format)
     let detectedDuration = 0;
     let videoMetadata = null;
     
-    try {
-      // Get full video metadata
-      videoMetadata = await getVideoMetadata(req.file);
-      detectedDuration = videoMetadata.duration;
-      
-      console.log(`✅ [uploadVideo] Duration detected: ${detectedDuration} seconds (${videoMetadata.durationFormatted})`);
-    } catch (durationError) {
-      console.error(`❌ [uploadVideo] Duration detection failed:`, durationError);
-      
-      // Continue with upload even if duration detection fails
-      detectedDuration = 0;
-      console.log(`⚠️ [uploadVideo] Continuing with default duration: 0:00`);
+    if (duration) {
+      try {
+        detectedDuration = parseDurationToSeconds(duration);
+        console.log(`✅ [uploadVideo] Duration parsed: ${duration} = ${detectedDuration} seconds`);
+      } catch (error) {
+        console.error(`❌ [uploadVideo] Duration parsing failed:`, error);
+        detectedDuration = 0;
+      }
+    } else {
+      console.log(`⚠️ [uploadVideo] No duration provided, using default: 0:00`);
     }
     
-    // Upload with organized structure
-    const uploadResult = await uploadCourseFile(req.file, 'video', course.title, parseInt(version));
-    console.log('[uploadVideo] uploaded s3Key:', uploadResult.s3Key);
+    // Upload with organized structure (with timeout protection)
+    console.log('📤 [uploadVideo] Starting S3 upload...');
+    console.log('📁 [uploadVideo] File details:', {
+      originalname: req.file.originalname,
+      size: req.file.size,
+      mimetype: req.file.mimetype,
+      path: req.file.path,
+      buffer: req.file.buffer ? 'exists' : 'null'
+    });
+    
+    // Use AWS SDK v2 directly since v3 is hanging
+    console.log('🔧 [uploadVideo] Using AWS SDK v2 for reliable upload...');
+    const s3Key = `persi-academy/courses/${course.title.replace(/[^a-zA-Z0-9\s-]/g, '_').replace(/\s+/g, '_')}/v${version}/videos/${Date.now()}_${req.file.originalname}`;
+    // S3 Key generated
+    
+    console.log('🔧 [uploadVideo] About to call uploadToS3...');
+    const uploadStartTime = Date.now();
+    
+    const s3UploadResult = await Promise.race([
+      uploadToS3(req.file, s3Key, 'private').then((result) => {
+        const uploadTime = Date.now() - uploadStartTime;
+        console.log('🔧 [uploadVideo] uploadToS3 completed in', uploadTime, 'ms');
+        return result;
+      }),
+      new Promise((_, reject) => 
+        setTimeout(() => {
+          const uploadTime = Date.now() - uploadStartTime;
+          console.log('🔧 [uploadVideo] uploadToS3 timeout after', uploadTime, 'ms');
+          reject(new Error('AWS SDK v2 upload timeout after 30 minutes'));
+        }, 30 * 60 * 1000) // 30 minutes for large files
+      )
+    ]);
+    
+    uploadResult = {
+      success: true,
+      s3Key,
+      url: s3UploadResult.Location,
+      etag: s3UploadResult.ETag
+    };
+    // AWS SDK v2 upload completed
+
+    // Clean up temporary file immediately after successful upload
+    if (req.file.path) {
+      try {
+        require('fs').unlinkSync(req.file.path);
+        console.log('🧹 [uploadVideo] Temporary file cleaned up:', req.file.path);
+      } catch (err) {
+        console.error('❌ [uploadVideo] Error deleting temp video file:', err);
+      }
+    }
     
     // Use detected duration or fallback to 0
     const processedDuration = detectedDuration || 0; // Store as seconds
@@ -141,6 +218,17 @@ exports.uploadVideo = async (req, res) => {
     // Update version statistics
     await courseVersion.updateStatistics();
     
+    // Optionally queue for background duration detection if no duration was provided
+    if (!duration && process.env.ENABLE_BACKGROUND_DURATION_DETECTION === 'true') {
+      try {
+        const backgroundProcessor = require('../utils/backgroundDurationProcessor');
+        backgroundProcessor.queueVideoForProcessing(video._id);
+        console.log(`📋 [uploadVideo] Queued video ${video._id} for background duration detection`);
+      } catch (error) {
+        console.error(`❌ [uploadVideo] Failed to queue for background processing:`, error);
+      }
+    }
+    
     res.status(201).json({
       success: true,
       message: `Video uploaded successfully${isFreePreview ? ' as free preview' : ''}`,
@@ -166,6 +254,17 @@ exports.uploadVideo = async (req, res) => {
     });
   } catch (err) {
     console.error('[uploadVideo] error:', err?.message || err);
+    
+    // Clean up temporary file if it exists
+    if (req.file && req.file.path) {
+      try {
+        require('fs').unlinkSync(req.file.path);
+        console.log('🧹 [uploadVideo] Temporary file cleaned up on error:', req.file.path);
+      } catch (error) {
+        console.error('❌ [uploadVideo] Error deleting temp video file:', error);
+      }
+    }
+    
     res.status(500).json({ 
       success: false,
       message: 'Upload failed', 
@@ -194,7 +293,7 @@ exports.updateVideo = async (req, res) => {
     // If a new file is uploaded, upload to S3 (preserve old)
     let s3Key = video.s3Key;
     if (req.file) {
-      console.log(`📁 Preserving old video in S3: ${oldVideoInfo.s3Key}`);
+      // Preserving old video in S3
       
       // Get course details for folder organization
       const course = await Course.findById(video.courseId);
@@ -204,7 +303,7 @@ exports.updateVideo = async (req, res) => {
       const uploadResult = await uploadCourseFile(req.file, 'video', course.title, video.courseVersion);
       
       s3Key = uploadResult.s3Key;
-      console.log('[updateVideo] new s3Key:', s3Key);
+      // New S3 key generated
     }
     
     // Update video fields
@@ -363,7 +462,7 @@ exports.getVideoById = async (req, res) => {
     let videoUrl = null;
     try {
       if (video.s3Key) {
-        console.log('🔗 [SERVER] Generating presigned URL for S3 key:', video.s3Key);
+        // Generating presigned URL for S3 key
         console.log('🔗 [SERVER] Video MIME type:', video.mimeType || 'not set');
         
         // Use shorter expiration time for enhanced security
@@ -372,10 +471,9 @@ exports.getVideoById = async (req, res) => {
         videoUrl = await getSignedUrlForFile(video.s3Key, expirationTime, video.mimeType);
         
         if (videoUrl) {
-          console.log('✅ [SERVER] Secure presigned URL generated successfully');
-          console.log('⏰ [SERVER] URL expires in:', expirationTime, 'seconds');
+          // Secure presigned URL generated successfully
         } else {
-          console.log('❌ [SERVER] Failed to generate presigned URL');
+          // Failed to generate presigned URL
         }
       } else {
         console.log('⚠️  [SERVER] No S3 key found for video:', video._id);
@@ -481,7 +579,7 @@ exports.getVideosByCourseVersion = async (req, res) => {
           let presignedUrl = null;
           if (isFreePreview) {
             try {
-              console.log(`🔧 [getVideosByCourseVersion] Generating presigned URL for free preview "${video.title}"`);
+              // Generating presigned URL for free preview
               console.log(`🔧 [getVideosByCourseVersion] Video MIME type: ${video.mimeType || 'not set'}`);
               presignedUrl = await getSignedUrlForFile(video.s3Key, 3600, video.mimeType);
             } catch (error) {
@@ -555,19 +653,19 @@ exports.getVideosByCourseVersion = async (req, res) => {
         // Generate presigned URL if user has access to this video
         if (video.hasAccess && video.s3Key) {
           try {
-            console.log(`🔧 [getVideosByCourseVersion] Generating presigned URL for "${video.title}"`);
+            // Generating presigned URL for video
             console.log(`🔧 [getVideosByCourseVersion] Video MIME type: ${video.mimeType || 'not set'}`);
             const presignedUrl = await getSignedUrlForFile(video.s3Key, 3600, video.mimeType);
             videoObj.videoUrl = presignedUrl;
             videoObj.presignedUrl = presignedUrl; // Keep both for backward compatibility
-            console.log(`✅ [getVideosByCourseVersion] Successfully generated URL for "${video.title}"`);
+            // Successfully generated URL for video
           } catch (error) {
             console.error(`❌ Error getting presigned URL for video ${video._id}:`, error);
             videoObj.videoUrl = null;
             videoObj.presignedUrl = null;
           }
         } else {
-          console.log(`⚠️ [getVideosByCourseVersion] Skipping URL generation for "${video.title}": hasAccess=${video.hasAccess}, hasS3Key=${!!video.s3Key}`);
+          // Skipping URL generation - no access or S3 key
           videoObj.videoUrl = null;
           videoObj.presignedUrl = null;
         }

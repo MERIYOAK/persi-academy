@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import CourseCard from '../components/CourseCard';
 import { Search, Filter, X } from 'lucide-react';
 import { buildApiUrl } from '../config/environment';
+import { parseDurationToSeconds } from '../utils/durationFormatter';
 
 interface ApiCourse {
   _id: string;
@@ -33,6 +34,12 @@ const CoursesPage: React.FC = () => {
   const [priceRange, setPriceRange] = useState<string>('');
   const [showFilters, setShowFilters] = useState<boolean>(false);
 
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(12);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+
   // Check if user is authenticated - immediate check
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -43,7 +50,7 @@ const CoursesPage: React.FC = () => {
     });
   }, []);
 
-  const fetchCourses = useCallback(async () => {
+  const fetchCourses = useCallback(async (page: number = currentPage, limit: number = itemsPerPage) => {
     try {
       setLoading(true);
       setError(null);
@@ -54,6 +61,38 @@ const CoursesPage: React.FC = () => {
       
       console.log('🔍 [CoursesPage] Fetching courses...');
       console.log(`   - User token: ${token ? 'Present' : 'Not present'}`);
+      console.log(`   - Page: ${page}, Limit: ${limit}`);
+      
+      // Build query parameters
+      const queryParams = new URLSearchParams({
+        page: page.toString(),
+        limit: limit.toString()
+      });
+
+      // Add search term if provided
+      if (searchTerm.trim()) {
+        queryParams.append('search', searchTerm.trim());
+      }
+
+      // Add category filter if provided
+      if (selectedCategory) {
+        queryParams.append('category', selectedCategory);
+      }
+
+      // Add level filter if provided
+      if (selectedLevel) {
+        queryParams.append('level', selectedLevel);
+      }
+
+      // Add tag filter if provided
+      if (selectedTag) {
+        queryParams.append('tag', selectedTag);
+      }
+
+      // Add price range filter if provided
+      if (priceRange) {
+        queryParams.append('priceRange', priceRange);
+      }
       
       // Include authentication token if available
       const headers: HeadersInit = {};
@@ -61,7 +100,7 @@ const CoursesPage: React.FC = () => {
         headers['Authorization'] = `Bearer ${token}`;
       }
       
-      const res = await fetch(buildApiUrl('/api/courses'), {
+      const res = await fetch(buildApiUrl(`/api/courses?${queryParams.toString()}`), {
         headers
       });
       
@@ -91,11 +130,17 @@ const CoursesPage: React.FC = () => {
         coursesData = [];
       }
       
-      console.log(`✅ [CoursesPage] Processed ${coursesData.length} courses`);
-      console.log('📋 [CoursesPage] Course titles:', coursesData.map(c => c.title));
+      // Courses processed successfully
       
       setCourses(coursesData);
       setHasFilteredData(true); // Mark that filtered data is ready
+      
+      // Update pagination info
+      if (data.data && data.data.pagination) {
+        setTotalPages(data.data.pagination.pages);
+        setTotalItems(data.data.pagination.total);
+        setCurrentPage(data.data.pagination.page);
+      }
       
     } catch (e) {
       console.error('❌ [CoursesPage] Error fetching courses:', e);
@@ -103,11 +148,58 @@ const CoursesPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, []); // Remove userToken dependency since we get it directly
+  }, [currentPage, itemsPerPage, searchTerm, selectedCategory, selectedLevel, selectedTag, priceRange]); // Add dependencies for filters
+
+  // Handle pagination changes
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    fetchCourses(page, itemsPerPage);
+  };
+
+  const handleItemsPerPageChange = (newItemsPerPage: number) => {
+    setItemsPerPage(newItemsPerPage);
+    setCurrentPage(1); // Reset to first page
+    fetchCourses(1, newItemsPerPage);
+  };
+
+  // Handle search and filter changes
+  const handleSearchChange = (newSearchTerm: string) => {
+    setSearchTerm(newSearchTerm);
+    setCurrentPage(1); // Reset to first page
+  };
+
+  const handleCategoryChange = (newCategory: string) => {
+    setSelectedCategory(newCategory);
+    setCurrentPage(1); // Reset to first page
+  };
+
+  const handleLevelChange = (newLevel: string) => {
+    setSelectedLevel(newLevel);
+    setCurrentPage(1); // Reset to first page
+  };
+
+  const handleTagChange = (newTag: string) => {
+    setSelectedTag(newTag);
+    setCurrentPage(1); // Reset to first page
+  };
+
+  const handlePriceRangeChange = (newPriceRange: string) => {
+    setPriceRange(newPriceRange);
+    setCurrentPage(1); // Reset to first page
+  };
 
   useEffect(() => {
     fetchCourses();
   }, [fetchCourses]);
+
+  // Debounced search and filter effect
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      fetchCourses(1, itemsPerPage);
+    }, 500);
+
+    return () => clearTimeout(timeoutId);
+  }, [searchTerm, selectedCategory, selectedLevel, selectedTag, priceRange]);
 
   useEffect(() => {
     const onCreated = () => {
@@ -126,79 +218,8 @@ const CoursesPage: React.FC = () => {
     };
   }, [fetchCourses]);
 
-  // Filter courses based on search and filter criteria
-  const filteredCourses = useMemo(() => {
-    console.log('🔍 [CoursesPage] Filtering courses...');
-    console.log(`   - Total courses: ${courses.length}`);
-    console.log(`   - Search term: "${searchTerm}"`);
-    console.log(`   - Category filter: "${selectedCategory}"`);
-    console.log(`   - Level filter: "${selectedLevel}"`);
-    console.log(`   - Price range: "${priceRange}"`);
-    
-    const filtered = courses.filter(course => {
-      // Search term filter
-      const matchesSearch = searchTerm === '' || 
-        course.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        course.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (course.tags && course.tags.some(tag => 
-          tag.toLowerCase().includes(searchTerm.toLowerCase())
-        ));
-
-      // Category filter
-      const categoryMapping: Record<string, string> = {
-        'youtube mastering': 'youtube',
-        'video editing': 'video',
-        'camera': 'camera'
-      };
-      const rawCategory = course.category ?? '';
-      const courseCategory = categoryMapping[rawCategory] || rawCategory;
-      const matchesCategory = selectedCategory === '' || courseCategory === selectedCategory;
-
-      // Level filter
-      const matchesLevel = selectedLevel === '' || course.level === selectedLevel;
-
-      // Tag filter
-      const matchesTag = selectedTag === '' || (course.tags && course.tags.includes(selectedTag));
-
-      // Price range filter
-      let matchesPrice = true;
-      if (priceRange !== '') {
-        const price = course.price;
-        switch (priceRange) {
-          case 'free':
-            matchesPrice = price === 0;
-            break;
-          case 'under-50':
-            matchesPrice = price > 0 && price < 50;
-            break;
-          case '50-100':
-            matchesPrice = price >= 50 && price <= 100;
-            break;
-          case 'over-100':
-            matchesPrice = price > 100;
-            break;
-        }
-      }
-
-      const matches = matchesSearch && matchesCategory && matchesLevel && matchesTag && matchesPrice;
-      
-      if (!matches) {
-        console.log(`   ❌ Course "${course.title}" filtered out:`, {
-          matchesSearch,
-          matchesCategory,
-          matchesLevel,
-          matchesPrice
-        });
-      }
-
-      return matches;
-    });
-    
-    console.log(`✅ [CoursesPage] Filtered to ${filtered.length} courses`);
-    console.log('📋 [CoursesPage] Filtered course titles:', filtered.map(c => c.title));
-    
-    return filtered;
-  }, [courses, searchTerm, selectedCategory, selectedLevel, selectedTag, priceRange]);
+  // Use courses directly since filtering is now handled server-side
+  const displayedCourses = courses;
 
   // Get unique categories and levels for dropdowns
   const categories = useMemo(() => {
@@ -250,11 +271,11 @@ const CoursesPage: React.FC = () => {
 
   // Clear all filters
   const clearFilters = () => {
-    setSearchTerm('');
-    setSelectedCategory('');
-    setSelectedLevel('');
-    setSelectedTag('');
-    setPriceRange('');
+    handleSearchChange('');
+    handleCategoryChange('');
+    handleLevelChange('');
+    handleTagChange('');
+    handlePriceRangeChange('');
   };
 
   // Handle purchase success
@@ -264,14 +285,9 @@ const CoursesPage: React.FC = () => {
   }, []);
 
   const content = useMemo(() => {
-    console.log('🔍 [CoursesPage] Rendering content...');
-    console.log(`   - Loading: ${loading}`);
-    console.log(`   - Error: ${error}`);
-    console.log(`   - Total courses: ${courses.length}`);
-    console.log(`   - Filtered courses: ${filteredCourses.length}`);
+    // Rendering content
     
     if (loading || !hasFilteredData) {
-      console.log('🔍 [CoursesPage] Showing loading skeleton...', { loading, hasFilteredData });
       return (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 xxs:gap-6">
           {Array.from({ length: 6 }).map((_, i) => (
@@ -282,7 +298,6 @@ const CoursesPage: React.FC = () => {
     }
     
     if (error) {
-      console.log('🔍 [CoursesPage] Showing error state...');
       return (
         <div className="bg-red-50 text-red-700 border border-red-200 rounded-lg p-3 xxs:p-4 text-sm xxs:text-base">
           {error}
@@ -290,36 +305,21 @@ const CoursesPage: React.FC = () => {
       );
     }
     
-    if (!filteredCourses.length) {
-      console.log('🔍 [CoursesPage] Showing empty state...');
+    if (!displayedCourses.length) {
       return (
         <div className="text-center text-gray-500 py-12 xxs:py-20 text-sm xxs:text-base">
-          {courses.length === 0 ? t('courses.no_courses_available') : t('courses.no_courses_match')}
+          {totalItems === 0 ? t('courses.no_courses_available') : t('courses.no_courses_match')}
         </div>
       );
     }
     
-    console.log('🔍 [CoursesPage] Rendering course grid...');
+    // Rendering course grid
     
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 xxs:gap-6 sm:gap-8">
-        {filteredCourses.map((c) => {
-          const parseDuration = (value: any): number => {
-            if (typeof value === 'number') return value;
-            if (typeof value === 'string') {
-              const v = value.trim();
-              if (v.includes(':')) {
-                const parts = v.split(':').map(p => parseInt(p, 10) || 0);
-                if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2];
-                if (parts.length === 2) return parts[0] * 60 + parts[1];
-                if (parts.length === 1) return parts[0];
-              }
-              const n = parseInt(v, 10);
-              return isNaN(n) ? 0 : n;
-            }
-            return 0;
-          };
-          const totalSeconds = (c.videos || []).reduce((acc, v) => acc + parseDuration(v.duration), 0);
+        {displayedCourses.map((c) => {
+          // Using the centralized parseDurationToSeconds utility
+          const totalSeconds = (c.videos || []).reduce((acc, v) => acc + parseDurationToSeconds(v.duration), 0);
           return (
           <CourseCard
             key={c._id}
@@ -338,7 +338,7 @@ const CoursesPage: React.FC = () => {
         );})}
       </div>
     );
-  }, [filteredCourses, loading, error, courses.length, handlePurchaseSuccess]);
+  }, [displayedCourses, loading, error, totalItems, handlePurchaseSuccess]);
 
   return (
     <div className="min-h-screen bg-gray-50 pt-16 sm:pt-20 xxs:pt-24 pb-6 sm:pb-8 xxs:pb-12">
@@ -363,12 +363,12 @@ const CoursesPage: React.FC = () => {
               type="text"
               placeholder={t('courses.search_placeholder')}
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e) => handleSearchChange(e.target.value)}
               className="block w-full pl-8 sm:pl-10 xxs:pl-12 pr-4 py-1.5 sm:py-2 xxs:py-3 lg:py-4 text-xs sm:text-sm xxs:text-lg border-2 border-gray-200 rounded-lg sm:rounded-xl xxs:rounded-2xl focus:ring-4 focus:ring-red-100 focus:border-red-500 transition-all duration-200 shadow-sm hover:shadow-md"
             />
             {searchTerm && (
               <button
-                onClick={() => setSearchTerm('')}
+                onClick={() => handleSearchChange('')}
                 className="absolute inset-y-0 right-0 pr-2 sm:pr-3 xxs:pr-4 flex items-center text-gray-400 hover:text-gray-600 transition-colors"
               >
                 <X className="h-3 w-3 sm:h-4 sm:w-4 xxs:h-5 xxs:w-5" />
@@ -422,7 +422,7 @@ const CoursesPage: React.FC = () => {
                     <div className="relative">
                       <select
                         value={selectedCategory}
-                        onChange={(e) => setSelectedCategory(e.target.value)}
+                        onChange={(e) => handleCategoryChange(e.target.value)}
                         className="w-full px-1.5 sm:px-2 xxs:px-3 lg:px-4 py-1 sm:py-1.5 xxs:py-1.5 lg:py-3 border-2 border-gray-200 rounded-lg sm:rounded-xl focus:ring-4 focus:ring-red-100 focus:border-red-500 transition-all duration-200 appearance-none bg-white text-xs sm:text-sm xxs:text-base"
                       >
                         <option value="">{t('courses.filter_all')}</option>
@@ -448,7 +448,7 @@ const CoursesPage: React.FC = () => {
                     <div className="relative">
                       <select
                         value={selectedLevel}
-                        onChange={(e) => setSelectedLevel(e.target.value)}
+                        onChange={(e) => handleLevelChange(e.target.value)}
                         className="w-full px-1.5 sm:px-2 xxs:px-3 lg:px-4 py-1 sm:py-1.5 xxs:py-1.5 lg:py-3 border-2 border-gray-200 rounded-lg sm:rounded-xl focus:ring-4 focus:ring-red-100 focus:border-red-500 transition-all duration-200 appearance-none bg-white text-xs sm:text-sm xxs:text-base"
                       >
                         <option value="">{t('courses.filter_all')}</option>
@@ -477,7 +477,7 @@ const CoursesPage: React.FC = () => {
                     <div className="relative">
                       <select
                         value={selectedTag}
-                        onChange={(e) => setSelectedTag(e.target.value)}
+                        onChange={(e) => handleTagChange(e.target.value)}
                         className="w-full px-1.5 sm:px-2 xxs:px-3 lg:px-4 py-1 sm:py-1.5 xxs:py-1.5 lg:py-3 border-2 border-gray-200 rounded-lg sm:rounded-xl focus:ring-4 focus:ring-red-100 focus:border-red-500 transition-all duration-200 appearance-none bg-white text-xs sm:text-sm xxs:text-base"
                       >
                         <option value="">{t('courses.filter_all')}</option>
@@ -503,7 +503,7 @@ const CoursesPage: React.FC = () => {
                     <div className="relative">
                       <select
                         value={priceRange}
-                        onChange={(e) => setPriceRange(e.target.value)}
+                        onChange={(e) => handlePriceRangeChange(e.target.value)}
                         className="w-full px-1.5 sm:px-2 xxs:px-3 lg:px-4 py-1 sm:py-1.5 xxs:py-1.5 lg:py-3 border-2 border-gray-200 rounded-lg sm:rounded-xl focus:ring-4 focus:ring-red-100 focus:border-red-500 transition-all duration-200 appearance-none bg-white text-xs sm:text-sm xxs:text-base"
                       >
                         <option value="">{t('courses.price_all')}</option>
@@ -532,7 +532,7 @@ const CoursesPage: React.FC = () => {
                   <span>{t('common.loading')}</span>
                 ) : (
                   <>
-                    <span className="font-semibold text-gray-900">{filteredCourses.length}</span> of <span className="font-semibold text-gray-900">{courses.length}</span> {t('navbar.courses').toLowerCase()}
+                    Showing <span className="font-semibold text-gray-900">{displayedCourses.length}</span> of <span className="font-semibold text-gray-900">{totalItems}</span> {t('navbar.courses').toLowerCase()}
                   </>
                 )}
               </div>
@@ -575,6 +575,126 @@ const CoursesPage: React.FC = () => {
         </div>
 
         {content}
+
+        {/* Pagination Controls */}
+        {totalPages > 1 && (
+          <div className="mt-8 flex flex-col sm:flex-row items-center justify-between space-y-4 sm:space-y-0">
+            {/* Items per page selector */}
+            <div className="flex items-center space-x-2">
+              <label className="text-sm text-gray-700">Show:</label>
+              <select
+                value={itemsPerPage}
+                onChange={(e) => handleItemsPerPageChange(parseInt(e.target.value))}
+                className="px-3 py-1 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-red-500 focus:border-red-500"
+              >
+                <option value={6}>6 per page</option>
+                <option value={12}>12 per page</option>
+                <option value={24}>24 per page</option>
+                <option value={48}>48 per page</option>
+              </select>
+            </div>
+
+            {/* Pagination info */}
+            <div className="text-sm text-gray-700">
+              Page {currentPage} of {totalPages} ({totalItems} total courses)
+            </div>
+
+            {/* Pagination buttons */}
+            <div className="flex items-center space-x-2">
+              {/* Previous button */}
+              <button
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+                className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Previous
+              </button>
+
+              {/* Page numbers */}
+              <div className="flex items-center space-x-1">
+                {(() => {
+                  const pages = [];
+                  const maxVisiblePages = 5;
+                  let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+                  let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+                  
+                  // Adjust start page if we're near the end
+                  if (endPage - startPage + 1 < maxVisiblePages) {
+                    startPage = Math.max(1, endPage - maxVisiblePages + 1);
+                  }
+
+                  // Add first page and ellipsis if needed
+                  if (startPage > 1) {
+                    pages.push(
+                      <button
+                        key={1}
+                        onClick={() => handlePageChange(1)}
+                        className="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+                      >
+                        1
+                      </button>
+                    );
+                    if (startPage > 2) {
+                      pages.push(
+                        <span key="ellipsis1" className="px-2 text-gray-500">
+                          ...
+                        </span>
+                      );
+                    }
+                  }
+
+                  // Add visible page numbers
+                  for (let i = startPage; i <= endPage; i++) {
+                    pages.push(
+                      <button
+                        key={i}
+                        onClick={() => handlePageChange(i)}
+                        className={`px-3 py-2 text-sm font-medium rounded-md ${
+                          i === currentPage
+                            ? 'text-white bg-red-600 border border-red-600'
+                            : 'text-gray-700 bg-white border border-gray-300 hover:bg-gray-50'
+                        }`}
+                      >
+                        {i}
+                      </button>
+                    );
+                  }
+
+                  // Add last page and ellipsis if needed
+                  if (endPage < totalPages) {
+                    if (endPage < totalPages - 1) {
+                      pages.push(
+                        <span key="ellipsis2" className="px-2 text-gray-500">
+                          ...
+                        </span>
+                      );
+                    }
+                    pages.push(
+                      <button
+                        key={totalPages}
+                        onClick={() => handlePageChange(totalPages)}
+                        className="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+                      >
+                        {totalPages}
+                      </button>
+                    );
+                  }
+
+                  return pages;
+                })()}
+              </div>
+
+              {/* Next button */}
+              <button
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

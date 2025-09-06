@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Play, Pause, Volume2, VolumeX, Maximize, Settings } from 'lucide-react';
+import { formatDuration } from '../utils/durationFormatter';
 
 interface SimpleVideoPlayerProps {
   src: string;
@@ -187,12 +188,7 @@ const SimpleVideoPlayer: React.FC<SimpleVideoPlayerProps> = ({
     };
   }, []);
 
-  // Format time
-  const formatTime = (time: number) => {
-    const minutes = Math.floor(time / 60);
-    const seconds = Math.floor(time % 60);
-    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
-  };
+  // Using the centralized formatDuration utility
 
   return (
     <div className={`simple-video-player ${className}`}>
@@ -232,7 +228,7 @@ const SimpleVideoPlayer: React.FC<SimpleVideoPlayerProps> = ({
 
               {/* Time display */}
               <div className="text-sm">
-                {formatTime(currentTime)} / {formatTime(duration)}
+                {formatDuration(currentTime)} / {formatDuration(duration)}
               </div>
 
               {/* Progress bar */}

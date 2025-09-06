@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 
 import { Link, useNavigate } from 'react-router-dom';
 import { Clock, Users, Star, Play, ShoppingCart, CheckCircle, Loader } from 'lucide-react';
+import { formatDuration } from '../utils/durationFormatter';
 
 interface CourseCardProps {
   id: string;
@@ -42,32 +43,10 @@ const CourseCard: React.FC<CourseCardProps> = ({
   const [errorMessage, setErrorMessage] = useState('');
 
   const formattedDuration = useMemo(() => {
-    // Expecting numeric seconds; fallback parser included
-    let totalSeconds = 0;
-    if (typeof duration === 'number') {
-      totalSeconds = duration;
-    } else if (typeof duration === 'string') {
-      const value = duration.trim();
-      const numeric = parseInt(value, 10);
-      if (!isNaN(numeric)) {
-        totalSeconds = numeric;
-      } else if (value.includes(':')) {
-        const parts = value.split(':').map((p) => parseInt(p, 10) || 0);
-        if (parts.length === 3) totalSeconds = parts[0] * 3600 + parts[1] * 60 + parts[2];
-        else if (parts.length === 2) totalSeconds = parts[0] * 60 + parts[1];
-        else if (parts.length === 1) totalSeconds = parts[0];
-      }
-    }
-    const hours = Math.floor(totalSeconds / 3600);
-    const minutes = Math.floor((totalSeconds % 3600) / 60);
-    const seconds = Math.floor(totalSeconds % 60);
-    return `${hours}h ${minutes}m ${seconds}s`;
+    return formatDuration(duration);
   }, [duration]);
 
-  console.log(`🖼️ CourseCard rendering for course: "${title}"`);
-  console.log(`   - Course ID: ${id}`);
-  console.log(`   - Price: $${price}`);
-  console.log(`   - Thumbnail URL: ${thumbnail || 'NULL/EMPTY'}`);
+  // CourseCard rendering
 
   const placeholderThumb = useMemo(
     () =>
@@ -82,26 +61,17 @@ const CourseCard: React.FC<CourseCardProps> = ({
   const [imgLoading, setImgLoading] = useState<boolean>(true);
   const [imgError, setImgError] = useState<boolean>(false);
 
-  // Debug effect to track image source changes
+  // Track image source changes
   useEffect(() => {
-    console.log(`🔄 CourseCard image source changed for "${title}":`);
-    console.log(`   - New imgSrc: ${imgSrc}`);
-    console.log(`   - Is placeholder: ${imgSrc === placeholderThumb}`);
-    console.log(`   - Loading state: ${imgLoading}`);
-    console.log(`   - Error state: ${imgError}`);
+    // Image source updated
   }, [imgSrc, imgLoading, imgError, title, placeholderThumb]);
 
   const handleImageLoad = () => {
-    console.log(`✅ Image loaded successfully for "${title}"`);
-    console.log(`   - Final image source: ${imgSrc}`);
     setImgLoading(false);
     setImgError(false);
   };
 
   const handleImageError = () => {
-    console.error(`❌ Image failed to load for "${title}"`);
-    console.error(`   - Failed URL: ${imgSrc}`);
-    console.error(`   - Falling back to placeholder`);
     setImgSrc(placeholderThumb);
     setImgLoading(false);
     setImgError(true);

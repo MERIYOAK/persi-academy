@@ -4,6 +4,7 @@ import { buildApiUrl } from '../config/environment';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Plus, Video, Edit, Trash2, Eye, Upload, Clock, User, Save, X, GripVertical, Check, AlertCircle } from 'lucide-react';
 import ProgressOverlay from '../components/ProgressOverlay';
+import { formatDuration } from '../utils/durationFormatter';
 
 interface Video {
   _id: string;
@@ -93,25 +94,6 @@ const AdminCourseVideosPage: React.FC = () => {
         })) || []
       });
       
-      // Debug duration values
-      if (courseData.videos && courseData.videos.length > 0) {
-        console.log('⏱️ Duration debugging (frontend):');
-        courseData.videos.forEach((video, index) => {
-          console.log(`  Video ${index + 1}: "${video.title}"`);
-          console.log(`    Raw duration: ${video.duration} (type: ${typeof video.duration})`);
-          
-          if (typeof video.duration === 'number') {
-            const minutes = Math.floor(video.duration / 60);
-            const seconds = Math.floor(video.duration % 60);
-            const calculatedDisplay = `${minutes}:${seconds.toString().padStart(2, '0')}`;
-            console.log(`    Calculated display: ${calculatedDisplay}`);
-            
-            if (video.duration < 60) {
-              console.log(`    ⚠️  Duration is under 1 minute (${video.duration} seconds)`);
-            }
-          }
-        });
-      }
       
       setCourse(courseData);
       setVideos(courseData.videos || []);
@@ -566,50 +548,35 @@ const AdminCourseVideosPage: React.FC = () => {
                 <div className="flex items-center space-x-1 sm:space-x-2 text-xs sm:text-sm text-gray-500">
                   <span className="hidden sm:inline">Total Duration: </span>
                   <span className="sm:hidden">Duration: </span>
-                  <span>{(() => {
-                    const totalSeconds = videos.reduce((acc, video) => {
-                      const duration = video.duration;
-                      
-                      // Handle new number format (seconds)
-                      if (typeof duration === 'number') {
-                        return acc + duration;
-                      }
-                      
-                      // Handle old string format
-                      if (typeof duration === 'string' && duration) {
-                        if (duration.includes(':')) {
-                          const parts = duration.split(':');
-                          if (parts.length === 2) {
-                            // Format: MM:SS
-                            const [minutes, seconds] = parts.map(Number);
-                            return acc + (minutes * 60 + seconds);
-                          } else if (parts.length === 3) {
-                            // Format: HH:MM:SS
-                            const [hours, minutes, seconds] = parts.map(Number);
-                            return acc + (hours * 3600 + minutes * 60 + seconds);
-                          }
-                        }
-                        // If duration is just a number (seconds)
-                        const seconds = parseInt(duration) || 0;
-                        return acc + seconds;
-                      }
-                      
-                      return acc + 0;
-                    }, 0);
+                  <span>{formatDuration(videos.reduce((acc, video) => {
+                    const duration = video.duration;
                     
-                    // Convert to hours, minutes, seconds
-                    const hours = Math.floor(totalSeconds / 3600);
-                    const minutes = Math.floor((totalSeconds % 3600) / 60);
-                    const seconds = Math.floor(totalSeconds % 60);
-                    
-                    if (hours > 0) {
-                      return `${hours}h ${minutes}m ${seconds}s`;
-                    } else if (minutes > 0) {
-                      return `${minutes}m ${seconds}s`;
-                    } else {
-                      return `${seconds}s`;
+                    // Handle new number format (seconds)
+                    if (typeof duration === 'number') {
+                      return acc + duration;
                     }
-                  })()}</span>
+                    
+                    // Handle old string format
+                    if (typeof duration === 'string' && duration) {
+                      if (duration.includes(':')) {
+                        const parts = duration.split(':');
+                        if (parts.length === 2) {
+                          // Format: MM:SS
+                          const [minutes, seconds] = parts.map(Number);
+                          return acc + (minutes * 60 + seconds);
+                        } else if (parts.length === 3) {
+                          // Format: HH:MM:SS
+                          const [hours, minutes, seconds] = parts.map(Number);
+                          return acc + (hours * 3600 + minutes * 60 + seconds);
+                        }
+                      }
+                      // If duration is just a number (seconds)
+                      const seconds = parseInt(duration) || 0;
+                      return acc + seconds;
+                    }
+                    
+                    return acc + 0;
+                  }, 0))}</span>
                 </div>
               </div>
             </div>
@@ -709,24 +676,7 @@ const AdminCourseVideosPage: React.FC = () => {
                             <div className="flex flex-wrap items-center gap-2 sm:gap-4 mt-1 text-xs text-gray-500">
                               <div className="flex items-center">
                                 <Clock className="h-3 w-3 mr-1" />
-                                {(() => {
-                                  // Handle both old string format and new number format
-                                  let duration = video.duration;
-                                  let displayDuration = '0:00';
-                                  
-                                  if (typeof duration === 'number') {
-                                    // Convert seconds to MM:SS format
-                                    const minutes = Math.floor(duration / 60);
-                                    const seconds = Math.floor(duration % 60);
-                                    displayDuration = `${minutes}:${seconds.toString().padStart(2, '0')}`;
-                                  } else if (typeof duration === 'string' && duration) {
-                                    // Keep existing string format
-                                    displayDuration = duration;
-                                  }
-                                  
-                                  console.log(`🎬 Video "${video.title}" duration: "${displayDuration}" (raw: ${video.duration}, type: ${typeof video.duration})`);
-                                  return displayDuration;
-                                })()}
+                                {formatDuration(video.duration)}
                               </div>
                               <div className="flex items-center">
                                 <span>Order: {video.order || index + 1}</span>
