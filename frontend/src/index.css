@@ -396,6 +396,25 @@
   background: linear-gradient(135deg, #dc2626, #b91c1c);
 }
 
+/* Dark scrollbar for playlist */
+.playlist-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.playlist-scrollbar::-webkit-scrollbar-track {
+  background: #374151;
+  border-radius: 3px;
+}
+
+.playlist-scrollbar::-webkit-scrollbar-thumb {
+  background: #6b7280;
+  border-radius: 3px;
+}
+
+.playlist-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+
 /* Focus styles for accessibility */
 .focus-ring {
   @apply focus:outline-none focus:ring-4 focus:ring-red-500/20 focus:ring-offset-2;

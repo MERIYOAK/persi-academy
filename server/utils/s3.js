@@ -18,13 +18,89 @@ const getSignedUrl = (key, expiresIn = 60 * 5) => {
 };
 
 const uploadToS3 = (file, key, acl = 'private') => {
-  return s3.upload({
-    Bucket: process.env.AWS_S3_BUCKET,
-    Key: key,
-    Body: file.buffer,
-    ContentType: file.mimetype,
-    ACL: acl,
-  }).promise();
+  const fs = require('fs');
+  
+  console.log('🔧 [uploadToS3] Starting upload...');
+  console.log('🔧 [uploadToS3] File path:', file.path);
+  console.log('🔧 [uploadToS3] File size:', file.size);
+  console.log('🔧 [uploadToS3] S3 Key:', key);
+  console.log('🔧 [uploadToS3] Bucket:', process.env.AWS_S3_BUCKET);
+  
+  return new Promise((resolve, reject) => {
+    let fileStream;
+    
+    try {
+      // Create file stream with error handling
+      if (file.path) {
+        console.log('🔧 [uploadToS3] Creating file stream from path...');
+        fileStream = fs.createReadStream(file.path);
+        
+        fileStream.on('error', (error) => {
+          console.error('🔧 [uploadToS3] File stream error:', error);
+          reject(error);
+        });
+        
+        fileStream.on('open', () => {
+          console.log('🔧 [uploadToS3] File stream opened successfully');
+        });
+      } else {
+        console.log('🔧 [uploadToS3] Using file buffer');
+        fileStream = file.buffer;
+      }
+      
+      const uploadParams = {
+        Bucket: process.env.AWS_S3_BUCKET,
+        Key: key,
+        Body: fileStream,
+        ContentType: file.mimetype,
+        ACL: acl,
+        // Optimize for large files (500MB+)
+        partSize: 50 * 1024 * 1024, // 50MB parts for faster uploads
+        queueSize: 6, // Upload 6 parts concurrently
+      };
+      
+      console.log('🔧 [uploadToS3] Upload params prepared, body type:', file.path ? 'file stream' : 'buffer');
+      console.log('🔧 [uploadToS3] Calling s3.upload()...');
+      
+      const upload = s3.upload(uploadParams);
+      
+      // Add timeout to the upload (10 minutes for large files)
+      const uploadTimeout = setTimeout(() => {
+        console.error('🔧 [uploadToS3] Upload timeout after 10 minutes');
+        if (fileStream && fileStream.destroy) {
+          fileStream.destroy();
+        }
+        reject(new Error('S3 upload timeout'));
+      }, 25 * 60 * 1000); // 25 minutes for large files
+      
+      upload.on('httpUploadProgress', (progress) => {
+        console.log('🔧 [uploadToS3] Upload progress:', Math.round((progress.loaded / progress.total) * 100) + '%');
+      });
+      
+      upload.promise().then((result) => {
+        clearTimeout(uploadTimeout);
+        console.log('🔧 [uploadToS3] s3.upload() completed successfully');
+        if (fileStream && fileStream.destroy) {
+          fileStream.destroy();
+        }
+        resolve(result);
+      }).catch((error) => {
+        clearTimeout(uploadTimeout);
+        console.error('🔧 [uploadToS3] s3.upload() failed:', error.message);
+        if (fileStream && fileStream.destroy) {
+          fileStream.destroy();
+        }
+        reject(error);
+      });
+      
+    } catch (error) {
+      console.error('🔧 [uploadToS3] Setup error:', error);
+      if (fileStream && fileStream.destroy) {
+        fileStream.destroy();
+      }
+      reject(error);
+    }
+  });
 };
 
 const deleteFromS3 = (key) => {

@@ -1,5 +1,6 @@
 import React from 'react';
 import { Play, CheckCircle, Clock, Lock } from 'lucide-react';
+import { formatDuration } from '../utils/durationFormatter';
 
 interface VideoProgress {
   watchedDuration: number;
@@ -53,7 +54,7 @@ const VideoPlaylist: React.FC<VideoPlaylistProps> = ({
     : (completedCount / videos.length) * 100;
 
   return (
-    <div className="bg-gray-800 h-full flex flex-col text-white">
+    <div className="bg-gray-800 h-full flex flex-col text-white overflow-hidden">
       {/* Header - Hidden on mobile overlay since it's in the overlay header */}
       <div className="hidden md:block p-4 xxs:p-6 border-b border-gray-700">
         <h3 className="font-bold text-base xxs:text-lg text-white mb-2">Course Content</h3>
@@ -84,7 +85,7 @@ const VideoPlaylist: React.FC<VideoPlaylistProps> = ({
       </div>
 
       {/* Video List */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto playlist-scrollbar">
         {videos.map((video, index) => {
           const isCompleted = video.completed || video.progress?.isCompleted;
           const isCurrent = currentVideoId === video.id;
@@ -137,7 +138,7 @@ const VideoPlaylist: React.FC<VideoPlaylistProps> = ({
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-1 text-gray-400 text-xs">
                   <Clock className="h-3 w-3" />
-                  <span>{video.duration}</span>
+                  <span>{formatDuration(video.duration)}</span>
                     </div>
                     {progress && progress.completionPercentage > 0 && (
                       <div className="text-xs text-gray-400">

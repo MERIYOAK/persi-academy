@@ -84,7 +84,7 @@ const CourseDetailPage = () => {
   const [currentVideoId, setCurrentVideoId] = useState<string>('');
   const [isPlaying, setIsPlaying] = useState(false);
   const [playbackRate, setPlaybackRate] = useState(1);
-  const [showPlaylist, setShowPlaylist] = useState(false);
+  const [showPlaylist, setShowPlaylist] = useState(true); // Show playlist by default on desktop
   const [playerReady, setPlayerReady] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -92,7 +92,6 @@ const CourseDetailPage = () => {
   const [controlsVisible, setControlsVisible] = useState(true);
   const [videoLoading, setVideoLoading] = useState(false);
   const [loadingProgress, setLoadingProgress] = useState(0);
-  const [currentVideoProgress, setCurrentVideoProgress] = useState(0);
   const [videoError, setVideoError] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState(0);
   const [isRetrying, setIsRetrying] = useState(false);
@@ -107,6 +106,26 @@ const CourseDetailPage = () => {
     setUserToken(token);
   }, []);
 
+  // Handle window resize for playlist visibility
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 768) { // md breakpoint - desktop
+        setShowPlaylist(true); // Always show on desktop
+      } else {
+        setShowPlaylist(false); // Hide on mobile by default
+      }
+    };
+
+    // Set initial state based on current screen size
+    handleResize();
+
+    // Add event listener
+    window.addEventListener('resize', handleResize);
+
+    // Cleanup
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   // Fetch course data
   useEffect(() => {
     const fetchCourse = async () => {
@@ -116,8 +135,7 @@ const CourseDetailPage = () => {
         setLoading(true);
         setError(null);
 
-        console.log('🔧 Fetching course details...');
-        console.log(`   - Course ID: ${id}`);
+        // Fetching course details...
 
         const response = await fetch(buildApiUrl(`/api/courses/${id}`));
         
@@ -132,11 +150,11 @@ const CourseDetailPage = () => {
         if (data.success && data.data && data.data.course) {
           // Enhanced controller response format
           courseData = data.data.course;
-          console.log('✅ Course data fetched (enhanced format):', courseData);
+          // Course data fetched (enhanced format)
         } else if (data._id) {
           // Legacy controller response format
           courseData = data;
-          console.log('✅ Course data fetched (legacy format):', courseData);
+          // Course data fetched (legacy format)
         } else {
           throw new Error('Invalid course data format');
         }
@@ -160,7 +178,7 @@ const CourseDetailPage = () => {
       if (!id) return;
 
       try {
-        console.log('🔧 Fetching course video data...');
+        // Fetching course video data...
         
         // Try to fetch videos with authentication first
         let videosResponse;
@@ -222,12 +240,7 @@ const CourseDetailPage = () => {
           // - For non-purchased users: hasAccess = true only for free preview videos
           // - For public users: hasAccess = true only for free preview videos
           
-                     console.log(`🔧 [CourseDetailPage] Video "${video.title}":`, {
-             hasAccess: video.hasAccess,
-             isFreePreview: video.isFreePreview,
-             isLocked: isLocked,
-             hasVideoUrl: !!video.videoUrl
-           });
+                     // Video access details logged
 
           const durationSeconds: number = typeof video.duration === 'number' ? video.duration : 0;
           durationMap[video._id] = durationSeconds;
@@ -272,25 +285,19 @@ const CourseDetailPage = () => {
         };
 
         setCourseData(courseDataObj);
-        console.log('✅ Course data set:', courseDataObj);
+        // Course data set successfully
         
         // Set the first accessible video as current, or first video if all are locked
         const firstAccessibleVideo = transformedVideos.find((v: Video) => !v.locked);
         if (firstAccessibleVideo) {
           setCurrentVideoId(firstAccessibleVideo.id);
-          console.log(`🎬 Set current video to: ${firstAccessibleVideo.title} (${firstAccessibleVideo.id})`);
+          // Set current video to first accessible video
         } else if (transformedVideos.length > 0) {
           setCurrentVideoId(transformedVideos[0].id);
-          console.log(`🎬 Set current video to first video: ${transformedVideos[0].title} (${transformedVideos[0].id})`);
+          // Set current video to first video
         }
 
-        console.log('✅ Course video data fetched:', {
-          totalVideos: transformedVideos.length,
-          hasFreePreviews,
-          userHasPurchased,
-          isPublicUser: !userToken,
-          accessibleVideos: transformedVideos.filter((v: Video) => !v.locked).length
-        });
+        // Course video data fetched successfully
 
       } catch (error) {
         console.error('❌ Error fetching course video data:', error);
@@ -305,16 +312,12 @@ const CourseDetailPage = () => {
   useEffect(() => {
     const fetchPurchaseStatus = async () => {
       if (!userToken || !id) {
-        console.log('⚠️ Skipping purchase status check - missing token or course ID');
-        console.log(`   - userToken: ${userToken ? 'Present' : 'Missing'}`);
-        console.log(`   - courseId: ${id || 'Missing'}`);
+        // Skipping purchase status check - missing token or course ID
         return;
       }
 
       try {
-        console.log('🔧 Checking purchase status...');
-        console.log(`   - Course ID: ${id}`);
-        console.log(`   - Token present: ${!!userToken}`);
+        // Checking purchase status...
         
         const response = await fetch(buildApiUrl(`/api/payment/check-purchase/${id}`), {
           headers: {
@@ -323,13 +326,12 @@ const CourseDetailPage = () => {
           }
         });
 
-        console.log(`📊 Response status: ${response.status}`);
-        console.log(`📊 Response headers:`, Object.fromEntries(response.headers.entries()));
+        // Response received
 
         if (response.ok) {
           const data = await response.json();
           setPurchaseStatus(data);
-          console.log('✅ Purchase status:', data);
+          // Purchase status received
         } else {
           // Handle non-200 responses
           const errorText = await response.text();
@@ -347,9 +349,9 @@ const CourseDetailPage = () => {
       } catch (error) {
         console.error('❌ Error checking purchase status:', error);
         console.error('❌ Error details:', {
-          name: error.name,
-          message: error.message,
-          stack: error.stack
+          name: error instanceof Error ? error.name : 'Unknown',
+          message: error instanceof Error ? error.message : String(error),
+          stack: error instanceof Error ? error.stack : undefined
         });
       }
     };
@@ -379,7 +381,7 @@ const CourseDetailPage = () => {
   const handleVideoSelect = (newVideoId: string) => {
     const newVideo = courseData?.videos.find(v => v.id === newVideoId);
     if (newVideo?.locked) {
-      console.log('🔒 [CourseDetail] Video is locked');
+      // Video is locked
       if (!userToken) {
         // Public user - show sign in/purchase options
         setError('This video requires course purchase. Please sign in or purchase the course.');
@@ -500,7 +502,7 @@ const CourseDetailPage = () => {
   const currentVideo = courseData?.videos.find(v => v.id === currentVideoId);
 
   return (
-    <div className="min-h-screen bg-gray-50 pt-16">
+    <div className="min-h-screen bg-gray-50 pt-14 ">
       {/* Video Player Section */}
       {(!courseData || courseData.videos.length === 0) ? (
         <div className="bg-gray-900 p-8 text-center">
@@ -529,13 +531,25 @@ const CourseDetailPage = () => {
                 </h1>
               </div>
               
-              <button
-                onClick={() => setShowPlaylist(!showPlaylist)}
-                className="md:hidden flex items-center space-x-2 text-gray-300 hover:text-white transition-colors duration-200"
-              >
-                <BookOpen className="h-5 w-5" />
-                <span>Playlist</span>
-              </button>
+              <div className="flex items-center">
+                {/* Desktop Playlist Toggle */}
+                <button
+                  onClick={() => setShowPlaylist(!showPlaylist)}
+                  className="hidden md:flex items-center space-x-2 text-gray-300 hover:text-white transition-colors duration-200 px-3 py-2 rounded-lg hover:bg-gray-700"
+                >
+                  <BookOpen className="h-5 w-5" />
+                  <span className="text-sm">{showPlaylist ? 'Hide Playlist' : 'Show Playlist'}</span>
+                </button>
+                
+                {/* Mobile Playlist Toggle */}
+                <button
+                  onClick={() => setShowPlaylist(!showPlaylist)}
+                  className="md:hidden flex items-center space-x-2 text-gray-300 hover:text-white transition-colors duration-200"
+                >
+                  <BookOpen className="h-5 w-5" />
+                  <span>Playlist</span>
+                </button>
+              </div>
             </div>
           </div>
 
@@ -690,70 +704,39 @@ const CourseDetailPage = () => {
                     </span>
                   )}
                 </h2>
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between text-gray-400 text-xs sm:text-sm space-y-1 sm:space-y-0">
-                  <div className="flex items-center space-x-2 sm:space-x-4">
-                    <span>Duration: {currentVideo?.duration || '00:00'}</span>
-                    <span className="hidden sm:inline">•</span>
-                    <span>Position: {currentVideoPercentage}%</span>
+                {currentVideo?.completed && (
+                  <div className="flex items-center space-x-1 text-green-400 text-xs sm:text-sm">
+                    <CheckCircle className="h-4 w-4" />
+                    <span>Completed</span>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    {currentVideo?.completed && (
-                      <div className="flex items-center space-x-1 text-green-400">
-                        <CheckCircle className="h-4 w-4" />
-                        <span>Completed</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
+                )}
               </div>
 
-              {/* Video Progress Bar Section */}
-              {currentVideo && !currentVideo.locked && (
-                <div className="bg-gray-900 px-4 py-6">
-                  <div className="max-w-4xl mx-auto">
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                      {/* Video Progress Bar */}
-                      <VideoProgressBar
-                        watchedPercentage={currentVideoPercentage}
-                        completionPercentage={currentVideo?.progress?.completionPercentage || 0}
-                        isCompleted={currentVideo?.progress?.isCompleted || false}
-                      />
-                      
-                      {/* Course Progress Summary */}
-                      {courseData.overallProgress && (
-                        <div className="bg-gray-800 rounded-lg p-4">
-                          <h3 className="text-white font-semibold text-sm mb-3">Course Overview</h3>
-                          <div className="space-y-2 text-sm">
-                            <div className="flex justify-between text-gray-300">
-                              <span>Total Videos:</span>
-                              <span>{courseData.overallProgress.totalVideos}</span>
-                            </div>
-                            <div className="flex justify-between text-gray-300">
-                              <span>Completed:</span>
-                              <span className="text-green-400">{courseData.overallProgress.completedVideos}</span>
-                            </div>
-                            <div className="flex justify-between text-gray-300">
-                              <span>Course Progress:</span>
-                              <span className="text-blue-400">{courseData.overallProgress.totalProgress}%</span>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              )}
             </div>
 
             {/* Playlist Sidebar */}
             {showPlaylist && (
-              <div className="w-80 bg-gray-800 border-l border-gray-700 overflow-y-auto">
-                <VideoPlaylist
-                  videos={courseData.videos}
-                  currentVideoId={currentVideoId}
-                  onVideoSelect={handleVideoSelect}
-                  courseProgress={courseData.overallProgress}
-                />
+              <div className="w-80 bg-gray-800 border-l border-gray-700 flex flex-col" style={{ height: '100vh' }}>
+                {courseData && courseData.videos ? (
+                  <VideoPlaylist
+                    videos={courseData.videos}
+                    currentVideoId={currentVideoId}
+                    onVideoSelect={handleVideoSelect}
+                    courseProgress={courseData.overallProgress}
+                  />
+                ) : (
+                  <div className="p-4 flex-1 overflow-y-auto">
+                    <div className="text-white text-sm mb-4">Course Content</div>
+                    <div className="space-y-2">
+                      {Array.from({ length: 5 }).map((_, i) => (
+                        <div key={i} className="animate-pulse">
+                          <div className="h-4 bg-gray-700 rounded mb-2"></div>
+                          <div className="h-3 bg-gray-700 rounded w-3/4"></div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -770,15 +753,28 @@ const CourseDetailPage = () => {
                     Close Playlist
                   </button>
                 </div>
-                <VideoPlaylist
-                  videos={courseData.videos}
-                  currentVideoId={currentVideoId}
-                  onVideoSelect={(videoId) => {
-                    handleVideoSelect(videoId);
-                    setShowPlaylist(false);
-                  }}
-                  courseProgress={courseData.overallProgress}
-                />
+                {courseData && courseData.videos ? (
+                  <VideoPlaylist
+                    videos={courseData.videos}
+                    currentVideoId={currentVideoId}
+                    onVideoSelect={(videoId) => {
+                      handleVideoSelect(videoId);
+                      setShowPlaylist(false);
+                    }}
+                    courseProgress={courseData.overallProgress}
+                  />
+                ) : (
+                  <div className="p-4">
+                    <div className="space-y-2">
+                      {Array.from({ length: 5 }).map((_, i) => (
+                        <div key={i} className="animate-pulse">
+                          <div className="h-4 bg-gray-200 rounded mb-2"></div>
+                          <div className="h-3 bg-gray-200 rounded w-3/4"></div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
               <div
                 className="flex-1"

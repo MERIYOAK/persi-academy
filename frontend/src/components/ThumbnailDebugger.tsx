@@ -15,11 +15,7 @@ const ThumbnailDebugger: React.FC<ThumbnailDebuggerProps> = ({
   const [imageInfo, setImageInfo] = useState<any>(null);
 
   useEffect(() => {
-    console.log(`🔍 ThumbnailDebugger for "${courseTitle}":`);
-    console.log(`   - Course ID: ${courseId}`);
-    console.log(`   - Thumbnail URL: ${thumbnailUrl || 'NULL/EMPTY'}`);
-    console.log(`   - URL type: ${typeof thumbnailUrl}`);
-    console.log(`   - URL length: ${thumbnailUrl ? thumbnailUrl.length : 0}`);
+    // ThumbnailDebugger component loaded
 
     if (!thumbnailUrl) {
       setImageStatus('error');

@@ -28,6 +28,12 @@ const AdminCoursesPage: React.FC = () => {
   const [sortBy, setSortBy] = useState<string>('createdAt');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(12);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+  
   // Delete functionality
   const { deleteCourse, isLoading: isDeleting, error: deleteError } = useCourseDeletion();
   const [courseToDelete, setCourseToDelete] = useState<Course | null>(null);
@@ -54,7 +60,7 @@ const AdminCoursesPage: React.FC = () => {
   };
 
   // Fetch courses from API
-  const fetchCourses = async () => {
+  const fetchCourses = async (page: number = currentPage, limit: number = itemsPerPage) => {
     try {
       setLoading(true);
       const adminToken = localStorage.getItem('adminToken');
@@ -63,7 +69,19 @@ const AdminCoursesPage: React.FC = () => {
         throw new Error('Admin token not found');
       }
 
-      const response = await fetch(buildApiUrl('/api/courses?status=all'), {
+      // Build query parameters
+      const queryParams = new URLSearchParams({
+        status: statusFilter === 'all' ? 'all' : statusFilter,
+        page: page.toString(),
+        limit: limit.toString()
+      });
+
+      // Add search term if provided
+      if (searchTerm.trim()) {
+        queryParams.append('search', searchTerm.trim());
+      }
+
+      const response = await fetch(buildApiUrl(`/api/courses?${queryParams.toString()}`), {
         headers: {
           'Authorization': `Bearer ${adminToken}`,
           'Content-Type': 'application/json',
@@ -76,6 +94,13 @@ const AdminCoursesPage: React.FC = () => {
 
       const data = await response.json();
       setCourses(data.data.courses || []);
+      
+      // Update pagination info
+      if (data.data.pagination) {
+        setTotalPages(data.data.pagination.pages);
+        setTotalItems(data.data.pagination.total);
+        setCurrentPage(data.data.pagination.page);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch courses');
     } finally {
@@ -83,42 +108,44 @@ const AdminCoursesPage: React.FC = () => {
     }
   };
 
-  // Filter and sort courses
-  const filteredAndSortedCourses = courses
-    .filter(course => {
-      const matchesSearch = course.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           course.description.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesStatus = statusFilter === 'all' || course.status === statusFilter;
-      return matchesSearch && matchesStatus;
-    })
-    .sort((a, b) => {
-      let aValue: any = a[sortBy as keyof Course];
-      let bValue: any = b[sortBy as keyof Course];
+  // Handle pagination changes
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    fetchCourses(page, itemsPerPage);
+  };
 
-      // Handle date sorting
-      if (sortBy === 'createdAt' || sortBy === 'updatedAt') {
-        aValue = new Date(aValue).getTime();
-        bValue = new Date(bValue).getTime();
-      }
+  const handleItemsPerPageChange = (newItemsPerPage: number) => {
+    setItemsPerPage(newItemsPerPage);
+    setCurrentPage(1); // Reset to first page
+    fetchCourses(1, newItemsPerPage);
+  };
 
-      // Handle numeric sorting
-      if (typeof aValue === 'number' && typeof bValue === 'number') {
-        return sortOrder === 'asc' ? aValue - bValue : bValue - aValue;
-      }
+  // Handle search and filter changes
+  const handleSearchChange = (newSearchTerm: string) => {
+    setSearchTerm(newSearchTerm);
+    setCurrentPage(1); // Reset to first page
+  };
 
-      // Handle string sorting
-      if (typeof aValue === 'string' && typeof bValue === 'string') {
-        return sortOrder === 'asc' 
-          ? aValue.localeCompare(bValue)
-          : bValue.localeCompare(aValue);
-      }
-
-      return 0;
-    });
+  const handleStatusFilterChange = (newStatusFilter: string) => {
+    setStatusFilter(newStatusFilter);
+    setCurrentPage(1); // Reset to first page
+  };
 
   useEffect(() => {
     fetchCourses();
   }, []);
+
+  // Debounced search effect
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      fetchCourses(1, itemsPerPage);
+    }, 500);
+
+    return () => clearTimeout(timeoutId);
+  }, [searchTerm, statusFilter]);
+
+  // Use courses directly since filtering is now handled server-side
+  const displayedCourses = courses;
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -206,8 +233,8 @@ const AdminCoursesPage: React.FC = () => {
                 {(searchTerm || statusFilter !== 'all') && (
                   <button
                     onClick={() => {
-                      setSearchTerm('');
-                      setStatusFilter('all');
+                      handleSearchChange('');
+                      handleStatusFilterChange('all');
                     }}
                     className="flex items-center space-x-1 xxs:space-x-2 px-2 xxs:px-3 py-1 xxs:py-1.5 text-xs xxs:text-sm text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200"
                   >
@@ -234,7 +261,7 @@ const AdminCoursesPage: React.FC = () => {
                   <input
                     type="text"
                     value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
+                    onChange={(e) => handleSearchChange(e.target.value)}
                     className="block w-full pl-8 xxs:pl-10 pr-4 py-2 xxs:py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-red-100 focus:border-red-500 transition-all duration-200 text-sm xxs:text-base"
                     placeholder="Search by title or description..."
                   />
@@ -257,7 +284,7 @@ const AdminCoursesPage: React.FC = () => {
                 <div className="relative">
                   <select
                     value={statusFilter}
-                    onChange={(e) => setStatusFilter(e.target.value)}
+                    onChange={(e) => handleStatusFilterChange(e.target.value)}
                     className="w-full px-3 xxs:px-4 py-2 xxs:py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-red-100 focus:border-red-500 transition-all duration-200 appearance-none bg-white text-sm xxs:text-base"
                   >
                     <option value="all">All Status</option>
@@ -310,7 +337,7 @@ const AdminCoursesPage: React.FC = () => {
             <div className="mt-4 xxs:mt-6 flex flex-col xxs:flex-row xxs:items-center xxs:justify-between space-y-3 xxs:space-y-0">
               <div className="flex items-center space-x-2 xxs:space-x-4">
                 <div className="text-xs xxs:text-sm text-gray-600">
-                  <span className="font-semibold text-gray-900">{filteredAndSortedCourses.length}</span> of <span className="font-semibold text-gray-900">{courses.length}</span> courses
+                  Showing <span className="font-semibold text-gray-900">{displayedCourses.length}</span> of <span className="font-semibold text-gray-900">{totalItems}</span> courses
                 </div>
                 {(searchTerm || statusFilter !== 'all') && (
                   <div className="flex flex-col xxs:flex-row xxs:items-center space-y-2 xxs:space-y-0 xxs:space-x-2">
@@ -336,7 +363,7 @@ const AdminCoursesPage: React.FC = () => {
 
         {/* Courses Grid */}
         <div className="grid grid-cols-1 xxs:grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 xxs:gap-4 sm:gap-6 mt-4 xxs:mt-6 sm:mt-8">
-          {filteredAndSortedCourses.map((course) => (
+          {displayedCourses.map((course) => (
             <div key={course._id} className="bg-white rounded-lg shadow-sm border overflow-hidden hover:shadow-md transition-shadow duration-200 flex flex-col">
               {/* Course Image */}
               <div className="aspect-video bg-gray-200 relative overflow-hidden">
@@ -448,8 +475,128 @@ const AdminCoursesPage: React.FC = () => {
           ))}
         </div>
 
+        {/* Pagination Controls */}
+        {totalPages > 1 && (
+          <div className="mt-8 flex flex-col sm:flex-row items-center justify-between space-y-4 sm:space-y-0">
+            {/* Items per page selector */}
+            <div className="flex items-center space-x-2">
+              <label className="text-sm text-gray-700">Show:</label>
+              <select
+                value={itemsPerPage}
+                onChange={(e) => handleItemsPerPageChange(parseInt(e.target.value))}
+                className="px-3 py-1 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-red-500 focus:border-red-500"
+              >
+                <option value={6}>6 per page</option>
+                <option value={12}>12 per page</option>
+                <option value={24}>24 per page</option>
+                <option value={48}>48 per page</option>
+              </select>
+            </div>
+
+            {/* Pagination info */}
+            <div className="text-sm text-gray-700">
+              Page {currentPage} of {totalPages} ({totalItems} total courses)
+            </div>
+
+            {/* Pagination buttons */}
+            <div className="flex items-center space-x-2">
+              {/* Previous button */}
+              <button
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+                className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Previous
+              </button>
+
+              {/* Page numbers */}
+              <div className="flex items-center space-x-1">
+                {(() => {
+                  const pages = [];
+                  const maxVisiblePages = 5;
+                  let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+                  let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+                  
+                  // Adjust start page if we're near the end
+                  if (endPage - startPage + 1 < maxVisiblePages) {
+                    startPage = Math.max(1, endPage - maxVisiblePages + 1);
+                  }
+
+                  // Add first page and ellipsis if needed
+                  if (startPage > 1) {
+                    pages.push(
+                      <button
+                        key={1}
+                        onClick={() => handlePageChange(1)}
+                        className="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+                      >
+                        1
+                      </button>
+                    );
+                    if (startPage > 2) {
+                      pages.push(
+                        <span key="ellipsis1" className="px-2 text-gray-500">
+                          ...
+                        </span>
+                      );
+                    }
+                  }
+
+                  // Add visible page numbers
+                  for (let i = startPage; i <= endPage; i++) {
+                    pages.push(
+                      <button
+                        key={i}
+                        onClick={() => handlePageChange(i)}
+                        className={`px-3 py-2 text-sm font-medium rounded-md ${
+                          i === currentPage
+                            ? 'text-white bg-red-600 border border-red-600'
+                            : 'text-gray-700 bg-white border border-gray-300 hover:bg-gray-50'
+                        }`}
+                      >
+                        {i}
+                      </button>
+                    );
+                  }
+
+                  // Add last page and ellipsis if needed
+                  if (endPage < totalPages) {
+                    if (endPage < totalPages - 1) {
+                      pages.push(
+                        <span key="ellipsis2" className="px-2 text-gray-500">
+                          ...
+                        </span>
+                      );
+                    }
+                    pages.push(
+                      <button
+                        key={totalPages}
+                        onClick={() => handlePageChange(totalPages)}
+                        className="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+                      >
+                        {totalPages}
+                      </button>
+                    );
+                  }
+
+                  return pages;
+                })()}
+              </div>
+
+              {/* Next button */}
+              <button
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Empty State */}
-        {filteredAndSortedCourses.length === 0 && (
+        {displayedCourses.length === 0 && (
           <div className="text-center py-8 xxs:py-12">
             <div className="mx-auto h-10 w-10 xxs:h-12 xxs:w-12 text-gray-400">
               <BookOpen className="h-10 w-10 xxs:h-12 xxs:w-12" />
@@ -476,9 +623,9 @@ const AdminCoursesPage: React.FC = () => {
         )}
 
         {/* Results Count */}
-        {filteredAndSortedCourses.length > 0 && (
+        {displayedCourses.length > 0 && (
           <div className="mt-4 xxs:mt-6 text-center text-xs xxs:text-sm text-gray-500">
-            Showing {filteredAndSortedCourses.length} of {courses.length} courses
+            Showing {displayedCourses.length} of {totalItems} courses
           </div>
         )}
       </div>

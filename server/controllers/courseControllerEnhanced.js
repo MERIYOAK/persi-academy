@@ -185,20 +185,26 @@ const uploadThumbnail = async (req, res) => {
     const oldVersionThumbnailURL = courseVersion.thumbnailURL;
     
     console.log(`📁 Preserving old thumbnails:`);
-    console.log(`   - Course thumbnail: ${oldCourseThumbnailURL || 'None'}`);
-    console.log(`   - Version thumbnail: ${oldVersionThumbnailURL || 'None'}`);
+    // Preserving old thumbnails
 
     // Upload thumbnail to S3 using the original working approach
     const uploadResult = await uploadFileWithOrganization(req.file, 'thumbnail', {
       courseName: course.title
     });
+
+    // Clean up temporary file if using disk storage
+    if (req.file.path) {
+      require('fs').unlink(req.file.path, (err) => {
+        if (err) console.error('Error deleting temp thumbnail file:', err);
+      });
+    }
     
     // Ensure we have a public URL - if uploadResult.publicUrl is null, generate one
     let thumbnailURL = uploadResult.publicUrl;
     if (!thumbnailURL) {
       // If the upload didn't result in a public URL, generate one using the S3 key
       thumbnailURL = getPublicUrl(uploadResult.s3Key);
-      console.log(`⚠️ Upload didn't return public URL, generated: ${thumbnailURL}`);
+      // Upload didn't return public URL, generated fallback
     }
 
     // Update course version with thumbnail URL
@@ -665,7 +671,7 @@ const deleteCourse = async (req, res) => {
 
     // Delete thumbnail from S3
     if (course.thumbnailS3Key) {
-      console.log(`🗑️ Deleting thumbnail from S3: ${course.thumbnailS3Key}`);
+      // Deleting thumbnail from S3
       s3DeletionPromises.push(
         deleteFileFromS3(course.thumbnailS3Key).catch(error => {
           console.warn(`⚠️ Failed to delete thumbnail from S3: ${error.message}`);
@@ -676,7 +682,7 @@ const deleteCourse = async (req, res) => {
     // Delete all video files from S3
     for (const video of videos) {
       if (video.s3Key) {
-        console.log(`🗑️ Deleting video from S3: ${video.s3Key}`);
+        // Deleting video from S3
         s3DeletionPromises.push(
           deleteFileFromS3(video.s3Key).catch(error => {
             console.warn(`⚠️ Failed to delete video from S3: ${error.message}`);
@@ -735,7 +741,7 @@ const getAllCourses = async (req, res) => {
   try {
     console.log('🔍 getAllCourses called with query:', req.query);
     
-    const { status, category, limit = 20, page = 1 } = req.query;
+    const { status, category, search, level, tag, priceRange, limit = 20, page = 1 } = req.query;
     const skip = (parseInt(page) - 1) * parseInt(limit);
 
     let query = {};
@@ -754,6 +760,42 @@ const getAllCourses = async (req, res) => {
     // Filter by category
     if (category) {
       query.category = category;
+    }
+
+    // Filter by level
+    if (level) {
+      query.level = level;
+    }
+
+    // Filter by tag
+    if (tag) {
+      query.tags = { $in: [tag] };
+    }
+
+    // Filter by price range
+    if (priceRange) {
+      switch (priceRange) {
+        case 'free':
+          query.price = 0;
+          break;
+        case 'under-50':
+          query.price = { $gt: 0, $lt: 50 };
+          break;
+        case '50-100':
+          query.price = { $gte: 50, $lte: 100 };
+          break;
+        case 'over-100':
+          query.price = { $gt: 100 };
+          break;
+      }
+    }
+
+    // Filter by search term
+    if (search && search.trim()) {
+      query.$or = [
+        { title: { $regex: search.trim(), $options: 'i' } },
+        { description: { $regex: search.trim(), $options: 'i' } }
+      ];
     }
 
     console.log('📊 Database query:', JSON.stringify(query, null, 2));
@@ -808,16 +850,15 @@ const getAllCourses = async (req, res) => {
     // Ensure all courses have proper public thumbnail URLs
     const coursesWithFixedThumbnails = filteredCourses.map(course => {
       console.log(`🔍 Course: "${course.title}"`);
-      console.log(`   - thumbnailURL: ${course.thumbnailURL || 'NULL'}`);
-      console.log(`   - thumbnailS3Key: ${course.thumbnailS3Key || 'NULL'}`);
+      // Processing course thumbnail
       
       if (course.thumbnailS3Key && (!course.thumbnailURL || !course.thumbnailURL.includes('s3.amazonaws.com'))) {
         // Generate public URL from S3 key
         course.thumbnailURL = getPublicUrl(course.thumbnailS3Key);
-        console.log(`🔧 Fixed thumbnail URL for "${course.title}": ${course.thumbnailURL}`);
+        // Fixed thumbnail URL for course
       }
       
-      console.log(`   - Final thumbnailURL: ${course.thumbnailURL || 'NULL'}`);
+      // Final thumbnail URL processed
       return course;
     });
 
@@ -907,16 +948,15 @@ const getUserPurchasedCourses = async (req, res) => {
     // Ensure all courses have proper public thumbnail URLs
     const coursesWithFixedThumbnails = purchasedCourses.map(course => {
       console.log(`🔍 Purchased Course: "${course.title}"`);
-      console.log(`   - thumbnailURL: ${course.thumbnailURL || 'NULL'}`);
-      console.log(`   - thumbnailS3Key: ${course.thumbnailS3Key || 'NULL'}`);
+      // Processing course thumbnail
       
       if (course.thumbnailS3Key && (!course.thumbnailURL || !course.thumbnailURL.includes('s3.amazonaws.com'))) {
         // Generate public URL from S3 key
         course.thumbnailURL = getPublicUrl(course.thumbnailS3Key);
-        console.log(`🔧 Fixed thumbnail URL for "${course.title}": ${course.thumbnailURL}`);
+        // Fixed thumbnail URL for course
       }
       
-      console.log(`   - Final thumbnailURL: ${course.thumbnailURL || 'NULL'}`);
+      // Final thumbnail URL processed
       return course;
     });
 

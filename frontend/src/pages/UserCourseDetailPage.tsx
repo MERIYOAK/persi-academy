@@ -3,6 +3,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Clock, BookOpen, CheckCircle, Users, ArrowLeft, Award } from 'lucide-react';
 import WhatsAppGroupButton from '../components/WhatsAppGroupButton';
 import { buildApiUrl } from '../config/environment';
+import { formatDuration } from '../utils/durationFormatter';
 
 interface Course {
   _id: string;
@@ -85,16 +86,7 @@ const UserCourseDetailPage: React.FC = () => {
     return course.videos.reduce((sum, v) => sum + (v.duration || 0), 0);
   }, [course?.videos]);
 
-  const formatDuration = (seconds?: number) => {
-    if (!seconds) return '0:00';
-    const s = Math.floor(seconds);
-    const h = Math.floor(s / 3600);
-    const m = Math.floor((s % 3600) / 60);
-    const sec = s % 60;
-    return h > 0
-      ? `${h}:${m.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`
-      : `${m}:${sec.toString().padStart(2, '0')}`;
-  };
+  // Using the centralized formatDuration utility
 
   if (loading) {
     return (

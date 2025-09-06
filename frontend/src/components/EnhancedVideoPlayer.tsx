@@ -9,6 +9,7 @@ import {
   SkipForward,
   Settings
 } from 'lucide-react';
+import { formatDuration } from '../utils/durationFormatter';
 
 interface EnhancedVideoPlayerProps {
   src: string;
@@ -78,17 +79,7 @@ const EnhancedVideoPlayer: React.FC<EnhancedVideoPlayerProps> = ({
   const lastProgressUpdate = useRef(0);
   const PROGRESS_UPDATE_INTERVAL = 30000; // 30 seconds
 
-  // Format time helper
-  const formatTime = (time: number) => {
-    const hours = Math.floor(time / 3600);
-    const minutes = Math.floor((time % 3600) / 60);
-    const seconds = Math.floor(time % 60);
-    
-    if (hours > 0) {
-      return `${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-    }
-    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
-  };
+  // Using the centralized formatDuration utility
 
   // Security: Disable right-click context menu
   const handleContextMenu = (e: React.MouseEvent) => {
@@ -644,9 +635,9 @@ const EnhancedVideoPlayer: React.FC<EnhancedVideoPlayerProps> = ({
 
                 {/* Time Display */}
                 <div className="flex items-center space-x-2 text-white text-sm">
-                  <span>{formatTime(currentTime)}</span>
+                  <span>{formatDuration(currentTime)}</span>
                   <span>/</span>
-                  <span>{formatTime(duration)}</span>
+                  <span>{formatDuration(duration)}</span>
                 </div>
               </div>
 
