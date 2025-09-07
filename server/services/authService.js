@@ -888,6 +888,69 @@ class AuthService {
       throw error;
     }
   }
+  /**
+   * Update profile photo only (no other profile data)
+   * @param {string} userId - User ID
+   * @param {Object} profilePhoto - Profile photo file
+   * @returns {Object} - Updated user object
+   */
+  async updateProfilePhotoOnly(userId, profilePhoto) {
+    try {
+      const user = await User.findById(userId);
+      if (!user) {
+        throw new Error('User not found');
+      }
+
+      console.log('🔧 [AuthService] Processing profile photo update only:', {
+        fileName: profilePhoto.originalname,
+        fileSize: profilePhoto.size,
+        mimeType: profilePhoto.mimetype,
+        userId: user._id.toString()
+      });
+
+      try {
+        // Validate profile photo
+        s3Service.validateProfilePhoto(profilePhoto);
+        
+        if (s3Service.isConfigured()) {
+          // Upload new profile photo to S3
+          const profilePhotoKey = await s3Service.uploadProfilePhoto(
+            profilePhoto.buffer,
+            profilePhoto.originalname,
+            user._id.toString()
+          );
+          
+          // Delete old profile photo if it exists
+          if (user.profilePhotoKey) {
+            try {
+              await s3Service.deleteProfilePhoto(user.profilePhotoKey);
+              console.log(`🗑️  Old profile photo deleted: ${user.profilePhotoKey}`);
+            } catch (deleteError) {
+              console.warn('⚠️  Failed to delete old profile photo:', deleteError.message);
+              // Continue with update even if old photo deletion fails
+            }
+          }
+          
+          // Update user with new profile photo key
+          user.profilePhotoKey = profilePhotoKey;
+          await user.save();
+          
+          console.log(`✅ Profile photo updated successfully: ${profilePhotoKey}`);
+        } else {
+          console.log('⚠️  S3 not configured - skipping profile photo upload');
+          throw new Error('Profile photo upload not available');
+        }
+      } catch (error) {
+        console.error('❌ Profile photo upload failed:', error.message);
+        throw new Error(`Profile photo upload failed: ${error.message}`);
+      }
+
+      return user;
+    } catch (error) {
+      console.error('❌ Update profile photo only error:', error);
+      throw error;
+    }
+  }
 }
 
 module.exports = new AuthService(); 

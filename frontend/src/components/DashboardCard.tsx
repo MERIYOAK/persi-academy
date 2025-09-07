@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { buildApiUrl } from '../config/environment';
 
 import { Link } from 'react-router-dom';
@@ -30,6 +31,7 @@ const DashboardCard: React.FC<DashboardCardProps> = ({
   videos,
   isCompleted = false
 }) => {
+  const { t } = useTranslation();
   const [generating, setGenerating] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [certificateExists, setCertificateExists] = useState(false);
@@ -149,28 +151,28 @@ const DashboardCard: React.FC<DashboardCardProps> = ({
   const getCourseCondition = () => {
     if (courseCompleted) {
       return {
-        text: "🎉 Course completed! You've earned your certificate.",
+        text: t('dashboard_card.course_completed'),
         color: "text-green-700",
         bgColor: "bg-green-50",
         borderColor: "border-green-200"
       };
     } else if (progress >= 50) {
       return {
-        text: "🚀 Great progress! You're more than halfway through.",
+        text: t('dashboard_card.great_progress'),
         color: "text-blue-700",
         bgColor: "bg-blue-50",
         borderColor: "border-blue-200"
       };
     } else if (progress > 0) {
       return {
-        text: "📚 Keep going! You're making good progress.",
+        text: t('dashboard_card.keep_going'),
         color: "text-orange-700",
         bgColor: "bg-orange-50",
         borderColor: "border-orange-200"
       };
     } else {
       return {
-        text: "🎯 Ready to start your learning journey!",
+        text: t('dashboard_card.ready_to_start'),
         color: "text-gray-700",
         bgColor: "bg-gray-50",
         borderColor: "border-gray-200"
@@ -191,7 +193,7 @@ const DashboardCard: React.FC<DashboardCardProps> = ({
         <div className="absolute top-3 xxs:top-4 right-3 xxs:right-4 z-10">
           <div className="bg-green-500 text-white px-2 xxs:px-3 py-1 rounded-full text-xs xxs:text-sm font-semibold flex items-center space-x-1">
             <Trophy className="h-3 w-3 xxs:h-4 xxs:w-4" />
-            <span>Completed</span>
+            <span>{t('dashboard_card.completed')}</span>
           </div>
         </div>
       )}
@@ -210,7 +212,7 @@ const DashboardCard: React.FC<DashboardCardProps> = ({
           }`}
           onError={(e) => {
             // Fallback to a default image if thumbnail fails to load
-            (e.target as HTMLImageElement).src = 'https://via.placeholder.com/400x225/1f2937/ffffff?text=Course+Thumbnail';
+            (e.target as HTMLImageElement).src = 'https://via.placeholder.com/400x225/1f2937/ffffff?text=' + encodeURIComponent(t('dashboard_card.thumbnail_placeholder'));
           }}
         />
         <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-300 flex items-center justify-center">
@@ -264,7 +266,7 @@ const DashboardCard: React.FC<DashboardCardProps> = ({
           <div className="flex items-center justify-between text-xs xxs:text-sm">
             <div className="flex items-center space-x-1 xxs:space-x-2 text-gray-600">
               <BookOpen className="h-3 w-3 xxs:h-4 xxs:w-4" />
-              <span>{completedLessons}/{totalLessons} lessons</span>
+              <span>{completedLessons}/{totalLessons} {t('dashboard_card.lessons')}</span>
             </div>
             <div className="flex items-center space-x-1 xxs:space-x-2 text-gray-600">
               <Clock className="h-3 w-3 xxs:h-4 xxs:w-4" />
@@ -290,13 +292,13 @@ const DashboardCard: React.FC<DashboardCardProps> = ({
                 : 'bg-red-600 hover:bg-red-700 text-white'
             }`}
           >
-            {courseCompleted ? 'Review Course' : progress > 0 ? 'Continue' : 'Start Course'}
+            {courseCompleted ? t('dashboard_card.review_course') : progress > 0 ? t('dashboard_card.continue') : t('dashboard_card.start_course')}
           </Link>
           <Link
             to={`/my-course/${_id}`}
             className="flex-1 border border-gray-300 hover:border-red-300 text-gray-700 hover:text-red-600 font-semibold py-2 px-3 xxs:px-4 rounded-lg transition-all duration-200 text-center text-xs xxs:text-sm"
           >
-            View Details
+            {t('dashboard_card.view_details')}
           </Link>
         </div>
 
@@ -313,7 +315,7 @@ const DashboardCard: React.FC<DashboardCardProps> = ({
             <div className="flex items-center space-x-1 xxs:space-x-2 text-xs xxs:text-sm text-gray-600">
               <Award className="h-3 w-3 xxs:h-4 xxs:w-4 text-green-500" />
               <span>
-                {certificateExists ? 'Certificate ready' : 'Certificate available'}
+                {certificateExists ? t('dashboard_card.certificate_ready') : t('dashboard_card.certificate_available')}
               </span>
             </div>
             <div className="flex space-x-2">
@@ -323,7 +325,7 @@ const DashboardCard: React.FC<DashboardCardProps> = ({
                   className="flex items-center space-x-1 bg-green-600 hover:bg-green-700 text-white px-2 xxs:px-3 py-1 rounded-lg transition-all duration-200 text-xs font-medium"
                 >
                   <Eye className="w-3 h-3" />
-                  <span>View</span>
+                  <span>{t('dashboard_card.view')}</span>
                 </button>
               ) : (
                 <button
@@ -334,12 +336,12 @@ const DashboardCard: React.FC<DashboardCardProps> = ({
                   {generating ? (
                     <>
                       <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>
-                      <span>Generating...</span>
+                      <span>{t('dashboard_card.generating')}</span>
                     </>
                   ) : (
                     <>
                       <Sparkles className="w-3 h-3" />
-                      <span>Generate</span>
+                      <span>{t('dashboard_card.generate')}</span>
                     </>
                   )}
                 </button>
@@ -353,7 +355,7 @@ const DashboardCard: React.FC<DashboardCardProps> = ({
           <div className="mt-2 xxs:mt-3 p-2 bg-green-50 border border-green-200 rounded-lg">
             <div className="flex items-center space-x-2 text-green-800">
               <CheckCircle className="w-3 h-3 xxs:w-4 xxs:h-4" />
-              <span className="text-xs xxs:text-sm">Certificate generated successfully!</span>
+              <span className="text-xs xxs:text-sm">{t('dashboard_card.certificate_generated')}</span>
             </div>
           </div>
         )}

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { buildApiUrl } from '../config/environment';
 
 import { Link, useSearchParams } from 'react-router-dom';
@@ -24,6 +25,7 @@ interface ReceiptInfo {
 }
 
 const CheckoutSuccessPage = () => {
+  const { t } = useTranslation();
   const [searchParams] = useSearchParams();
   const [courseInfo, setCourseInfo] = useState<CourseInfo | null>(null);
   const [receiptInfo, setReceiptInfo] = useState<ReceiptInfo | null>(null);
@@ -135,7 +137,7 @@ const CheckoutSuccessPage = () => {
         const courseResponse = await fetch(buildApiUrl(`/api/courses/${effectiveCourseId}`));
         
         if (!courseResponse.ok) {
-          throw new Error('Failed to fetch course information');
+          throw new Error(t('checkout_success.failed_to_fetch_course'));
         }
 
         const courseData = await courseResponse.json();
@@ -236,7 +238,7 @@ const CheckoutSuccessPage = () => {
 
       } catch (error) {
         console.error('❌ Error fetching data:', error);
-        setError(error instanceof Error ? error.message : 'Failed to load information');
+        setError(error instanceof Error ? error.message : t('checkout_success.failed_to_load_information'));
       } finally {
         setLoading(false);
       }
@@ -320,7 +322,7 @@ const CheckoutSuccessPage = () => {
     try {
       const token = localStorage.getItem('token');
       if (!token) {
-        throw new Error('Authentication required');
+        throw new Error(t('checkout_success.authentication_required'));
       }
 
       const response = await fetch(buildApiUrl(`/api/payment/download-receipt/${effectiveCourseId}`), {
@@ -355,14 +357,14 @@ const CheckoutSuccessPage = () => {
       console.error('❌ Error downloading receipt:', error);
       
       // Provide more specific error messages
-      let errorMessage = 'Failed to download receipt. Please try again.';
+      let errorMessage = t('checkout_success.failed_to_download_receipt');
       
       if (error.message.includes('404')) {
-        errorMessage = 'Receipt not found. The payment may still be processing. Please wait a moment and try again.';
+        errorMessage = t('checkout_success.receipt_not_found');
       } else if (error.message.includes('401')) {
-        errorMessage = 'Authentication required. Please log in again.';
+        errorMessage = t('checkout_success.authentication_required_login');
       } else if (error.message.includes('Payment not found')) {
-        errorMessage = 'Payment record not found. The payment may still be processing. Please wait a moment and try again.';
+        errorMessage = t('checkout_success.payment_record_not_found');
       }
       
       alert(errorMessage);
@@ -378,7 +380,7 @@ const CheckoutSuccessPage = () => {
       <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-50 flex items-center justify-center">
         <div className="text-center">
           <Loader className="h-16 w-16 text-green-600 animate-spin mx-auto mb-6" />
-          <p className="text-gray-600 text-lg font-medium">Loading your purchase details...</p>
+          <p className="text-gray-600 text-lg font-medium">{t('checkout_success.loading_purchase_details')}</p>
         </div>
       </div>
     );
@@ -391,16 +393,15 @@ const CheckoutSuccessPage = () => {
           <div className="text-red-600 mb-6">
             <AlertCircle className="h-20 w-20 mx-auto" />
           </div>
-          <h2 className="text-2xl font-bold text-gray-800 mb-4">Payment Successful!</h2>
+          <h2 className="text-2xl font-bold text-gray-800 mb-4">{t('checkout_success.payment_successful')}</h2>
           <p className="text-gray-600 mb-8">
-            Your payment was processed successfully, but we couldn't load the course details. 
-            You can access your course from your dashboard.
+            {t('checkout_success.payment_processed_successfully')}
           </p>
           <Link
             to="/dashboard"
             className="bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-xl font-semibold transition-all duration-200 transform hover:scale-105 shadow-lg"
           >
-            Go to Dashboard
+            {t('checkout_success.go_to_dashboard')}
           </Link>
         </div>
       </div>
@@ -417,10 +418,10 @@ const CheckoutSuccessPage = () => {
               <CheckCircle className="h-16 w-16 text-white" />
             </div>
             <h1 className="text-4xl font-bold text-white mb-4">
-              Payment Successful!
+              {t('checkout_success.payment_successful')}
             </h1>
             <p className="text-xl text-green-100">
-              Welcome to your learning journey
+              {t('checkout_success.welcome_learning_journey')}
             </p>
           </div>
 
@@ -431,8 +432,7 @@ const CheckoutSuccessPage = () => {
                 <div className="flex items-center">
                   <AlertCircle className="h-5 w-5 text-yellow-600 mr-2" />
                   <p className="text-yellow-800 text-sm">
-                    <strong>Note:</strong> You purchased "{correctCourseTitle}" for ${actualAmountPaid}, 
-                    but you're viewing a different course. The amount shown reflects your actual purchase.
+                    <strong>{t('checkout_success.note_wrong_course', { courseTitle: correctCourseTitle, amount: actualAmountPaid })}</strong>
                   </p>
                 </div>
               </div>
@@ -440,42 +440,42 @@ const CheckoutSuccessPage = () => {
 
             {/* Order Details */}
             <div className="bg-gray-50 rounded-lg p-6 mb-8">
-              <h2 className="text-2xl font-bold text-gray-800 mb-4">Order Confirmation</h2>
+              <h2 className="text-2xl font-bold text-gray-800 mb-4">{t('checkout_success.order_confirmation')}</h2>
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
-                  <span className="text-gray-600">Order ID:</span>
+                  <span className="text-gray-600">{t('checkout_success.order_id')}</span>
                   <span className="font-semibold text-gray-800">
                     {receiptInfo?.orderId || `#YTA-${Date.now().toString().slice(-6)}`}
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-gray-600">Course:</span>
+                  <span className="text-gray-600">{t('checkout_success.course')}</span>
                   <span className="font-semibold text-gray-800">
-                    {correctCourseTitle || courseInfo?.title || 'Course Purchase'}
+                    {correctCourseTitle || courseInfo?.title || t('checkout_success.course_purchase')}
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-gray-600">Amount Paid:</span>
+                  <span className="text-gray-600">{t('checkout_success.amount_paid')}</span>
                   <span className="font-semibold text-green-600">
-                    ${actualAmountPaid || receiptInfo?.amount || courseInfo?.price || 'Processing...'}
+                    ${actualAmountPaid || receiptInfo?.amount || courseInfo?.price || t('checkout_success.processing')}
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-gray-600">Payment Method:</span>
+                  <span className="text-gray-600">{t('checkout_success.payment_method')}</span>
                   <span className="font-semibold text-gray-800">
                     {receiptInfo?.paymentMethod || '••••4242'}
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-gray-600">Status:</span>
+                  <span className="text-gray-600">{t('checkout_success.status')}</span>
                   <span className="font-semibold text-green-600 flex items-center">
                     <CheckCircle className="h-4 w-4 mr-1" />
-                    {receiptInfo?.status || 'Completed'}
+                    {receiptInfo?.status || t('checkout_success.completed')}
                   </span>
                 </div>
                 {receiptInfo?.paymentDate && (
                   <div className="flex justify-between items-center">
-                    <span className="text-gray-600">Payment Date:</span>
+                    <span className="text-gray-600">{t('checkout_success.payment_date')}</span>
                     <span className="font-semibold text-gray-800">
                       {new Date(receiptInfo.paymentDate).toLocaleDateString()}
                     </span>
@@ -486,7 +486,7 @@ const CheckoutSuccessPage = () => {
 
             {/* Next Steps */}
             <div className="space-y-6 mb-8">
-              <h3 className="text-2xl font-bold text-gray-800">What's Next?</h3>
+              <h3 className="text-2xl font-bold text-gray-800">{t('checkout_success.whats_next')}</h3>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="bg-red-50 rounded-lg p-6">
@@ -494,16 +494,16 @@ const CheckoutSuccessPage = () => {
                     <div className="bg-red-100 p-3 rounded-full mr-4">
                       <Play className="h-6 w-6 text-red-600" />
                     </div>
-                    <h4 className="text-lg font-semibold text-gray-800">Start Learning</h4>
+                    <h4 className="text-lg font-semibold text-gray-800">{t('checkout_success.start_learning')}</h4>
                   </div>
                   <p className="text-gray-600 mb-4">
-                    Access your course immediately and begin your learning journey today.
+                    {t('checkout_success.access_course_immediately')}
                   </p>
                   <Link
                     to={firstVideoId ? `/course/${courseId}/watch/${firstVideoId}` : `/course/${courseId}`}
                     className="inline-flex items-center space-x-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors duration-200"
                   >
-                    <span>Start Course</span>
+                    <span>{t('checkout_success.start_course')}</span>
                     <ArrowRight className="h-4 w-4" />
                   </Link>
                 </div>
@@ -513,16 +513,16 @@ const CheckoutSuccessPage = () => {
                     <div className="bg-blue-100 p-3 rounded-full mr-4">
                       <BookOpen className="h-6 w-6 text-blue-600" />
                     </div>
-                    <h4 className="text-lg font-semibold text-gray-800">View Dashboard</h4>
+                    <h4 className="text-lg font-semibold text-gray-800">{t('checkout_success.view_dashboard')}</h4>
                   </div>
                   <p className="text-gray-600 mb-4">
-                    Track your progress and manage all your courses from your personal dashboard.
+                    {t('checkout_success.track_progress')}
                   </p>
                   <Link
                     to="/dashboard"
                     className="inline-flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors duration-200"
                   >
-                    <span>Go to Dashboard</span>
+                    <span>{t('checkout_success.go_to_dashboard')}</span>
                     <ArrowRight className="h-4 w-4" />
                   </Link>
                 </div>
@@ -533,10 +533,10 @@ const CheckoutSuccessPage = () => {
             <div className="bg-gray-50 rounded-lg p-6 mb-8">
               <div className="flex items-center mb-4">
                 <Download className="h-5 w-5 text-gray-600 mr-2" />
-                <h4 className="text-lg font-semibold text-gray-800">Download Receipt</h4>
+                <h4 className="text-lg font-semibold text-gray-800">{t('checkout_success.download_receipt')}</h4>
               </div>
               <p className="text-gray-600 mb-4">
-                Download your payment receipt for your records.
+                {t('checkout_success.download_receipt_description')}
               </p>
               <div className="flex flex-col sm:flex-row gap-3">
                 <button 
@@ -549,29 +549,29 @@ const CheckoutSuccessPage = () => {
                   ) : (
                     <Download className="h-4 w-4" />
                   )}
-                  <span>{downloadingReceipt ? 'Downloading...' : 'Download Receipt (PDF)'}</span>
+                  <span>{downloadingReceipt ? t('checkout_success.downloading') : t('checkout_success.download_receipt_pdf')}</span>
                 </button>
               </div>
             </div>
 
             {/* Support */}
             <div className="text-center bg-gradient-to-r from-red-50 to-pink-50 rounded-lg p-6">
-              <h4 className="text-lg font-semibold text-gray-800 mb-2">Need Help?</h4>
+              <h4 className="text-lg font-semibold text-gray-800 mb-2">{t('checkout_success.need_help')}</h4>
               <p className="text-gray-600 mb-4">
-                Our support team is here to help you succeed. Don't hesitate to reach out!
+                {t('checkout_success.support_team_help')}
               </p>
               <div className="flex flex-col sm:flex-row justify-center gap-3">
                 <Link
                   to="/contact"
                   className="bg-white hover:bg-gray-50 text-gray-700 px-6 py-2 rounded-lg transition-colors duration-200 border border-gray-300"
                 >
-                  Contact Support
+                  {t('checkout_success.contact_support')}
                 </Link>
                 <Link
                   to="/help"
                   className="bg-white hover:bg-gray-50 text-gray-700 px-6 py-2 rounded-lg transition-colors duration-200 border border-gray-300"
                 >
-                  Help Center
+                  {t('checkout_success.help_center')}
                 </Link>
               </div>
             </div>

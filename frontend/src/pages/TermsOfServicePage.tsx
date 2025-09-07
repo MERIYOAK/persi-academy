@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { Shield, FileText, CheckCircle, XCircle, AlertTriangle, Users, Lock, Globe, Clock, Mail } from 'lucide-react';
 import { config } from '../config/environment';
 
 const TermsOfServicePage = () => {
+  const { t } = useTranslation();
   return (
     <div className="min-h-screen bg-gray-50 pt-16">
       {/* Hero Section */}

@@ -94,12 +94,12 @@ exports.generateCertificate = async (req, res) => {
       courseId,
       studentName: user.name,
       courseTitle: course.title,
-      instructorName: course.instructorName || 'Learning Platform',
+      instructorName: course.instructorName || 'QENDIEL Academy',
       completionDate: new Date(),
       totalLessons: course.videos.length,
       completedLessons: courseProgress.completedVideos,
       completionPercentage: courseProgress.courseProgressPercentage,
-      platformName: 'Learning Platform'
+      platformName: 'QENDIEL Academy'
     });
 
     // Generate PDF
@@ -454,7 +454,7 @@ async function generateCertificatePDF(certificate) {
       color: navy
     });
     
-    page.drawText('Learning Platform', {
+    page.drawText('QENDIEL Academy', {
       x: 60,
       y: height - 105,
       size: 12,
@@ -585,7 +585,7 @@ async function generateCertificatePDF(certificate) {
       color: navy
     });
     
-    page.drawText('QENDIEL Academy Learning Platform', {
+    page.drawText('QENDIEL Academy', {
       x: width - 200,
       y: currentY - 20,
       size: 14,
@@ -753,12 +753,12 @@ exports.autoGenerateCertificate = async (userId, courseId) => {
       courseId,
       studentName: user.name,
       courseTitle: course.title,
-      instructorName: course.instructorName || 'Learning Platform',
+      instructorName: course.instructorName || 'QENDIEL Academy',
       completionDate: new Date(),
       totalLessons: course.videos.length,
       completedLessons: courseProgress.completedVideos,
       completionPercentage: courseProgress.courseProgressPercentage,
-      platformName: 'Learning Platform'
+      platformName: 'QENDIEL Academy'
     });
 
     // Generate PDF

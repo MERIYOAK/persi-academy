@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { BookOpen, Search, Filter, Trophy, TrendingUp, Clock, Users } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import { BookOpen, Search, Filter, Trophy, TrendingUp, Clock, Users, ChevronLeft, ChevronRight } from 'lucide-react';
 import DashboardCard from '../components/DashboardCard';
 import { buildApiUrl } from '../config/environment';
 
@@ -35,6 +36,7 @@ interface EnrolledCourse extends Course {
 }
 
 const DashboardPage = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [userData, setUserData] = useState<UserData | null>(null);
   const [enrolledCourses, setEnrolledCourses] = useState<EnrolledCourse[]>([]);
@@ -42,6 +44,10 @@ const DashboardPage = () => {
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<'all' | 'in-progress' | 'completed'>('all');
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [coursesPerPage] = useState(6); // Show 6 courses per page
 
   // Derive a friendly display name
   const displayName = useMemo(() => {
@@ -72,7 +78,7 @@ const DashboardPage = () => {
         });
 
         if (!userResponse.ok) {
-          throw new Error('Failed to fetch user data');
+          throw new Error(t('dashboard.failed_fetch_user'));
         }
 
         const userResult = await userResponse.json();
@@ -87,7 +93,7 @@ const DashboardPage = () => {
             });
             
         if (!progressResponse.ok) {
-          throw new Error('Failed to fetch progress data');
+          throw new Error(t('dashboard.failed_fetch_progress'));
         }
 
         const progressResult = await progressResponse.json();
@@ -96,7 +102,7 @@ const DashboardPage = () => {
 
           } catch (error) {
         console.error('Error fetching dashboard data:', error);
-        setError(error instanceof Error ? error.message : 'Failed to load dashboard data');
+        setError(error instanceof Error ? error.message : t('dashboard.failed_load_dashboard'));
       } finally {
         setLoading(false);
       }
@@ -134,6 +140,17 @@ const DashboardPage = () => {
 
     return filtered;
   }, [enrolledCourses, searchTerm, filterStatus]);
+
+  // Reset to first page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, filterStatus]);
+
+  // Pagination calculations
+  const totalPages = Math.ceil(filteredCourses.length / coursesPerPage);
+  const startIndex = (currentPage - 1) * coursesPerPage;
+  const endIndex = startIndex + coursesPerPage;
+  const currentCourses = filteredCourses.slice(startIndex, endIndex);
 
   // Calculate dashboard statistics
   const dashboardStats = useMemo(() => {
@@ -175,13 +192,13 @@ const DashboardPage = () => {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center px-3 xxs:px-4">
         <div className="text-center">
-          <div className="text-red-600 text-lg xxs:text-xl font-semibold mb-3 xxs:mb-4">Error Loading Dashboard</div>
+          <div className="text-red-600 text-lg xxs:text-xl font-semibold mb-3 xxs:mb-4">{t('dashboard.error_loading')}</div>
           <div className="text-gray-600 mb-3 xxs:mb-4 text-sm xxs:text-base">{error}</div>
           <button
             onClick={() => window.location.reload()}
             className="bg-red-600 hover:bg-red-700 text-white px-4 xxs:px-6 py-2 rounded-lg text-sm xxs:text-base"
           >
-            Try Again
+            {t('dashboard.try_again')}
           </button>
         </div>
       </div>
@@ -194,10 +211,10 @@ const DashboardPage = () => {
       {/* Header */}
         <div className="mb-6 xxs:mb-8">
           <h1 className="text-2xl xxs:text-3xl font-bold text-gray-900 mb-2">
-            Welcome back, {displayName}! 👋
+            {t('dashboard.welcome_back')}, {displayName}! 👋
           </h1>
           <p className="text-gray-600 text-sm xxs:text-base">
-            Continue your learning journey where you left off
+            {t('dashboard.continue_learning')}
           </p>
         </div>
 
@@ -206,7 +223,7 @@ const DashboardPage = () => {
           <div className="bg-white rounded-xl p-3 xxs:p-4 sm:p-6 shadow-sm border border-gray-100">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs xxs:text-sm font-medium text-gray-600">Total Courses</p>
+                <p className="text-xs xxs:text-sm font-medium text-gray-600">{t('dashboard.course_stats.total_courses')}</p>
                 <p className="text-lg xxs:text-xl sm:text-2xl font-bold text-gray-900">{dashboardStats.totalCourses}</p>
               </div>
               <div className="p-2 xxs:p-3 bg-blue-100 rounded-lg">
@@ -218,7 +235,7 @@ const DashboardPage = () => {
           <div className="bg-white rounded-xl p-3 xxs:p-4 sm:p-6 shadow-sm border border-gray-100">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs xxs:text-sm font-medium text-gray-600">Completed</p>
+                <p className="text-xs xxs:text-sm font-medium text-gray-600">{t('dashboard.course_stats.completed_courses')}</p>
                 <p className="text-lg xxs:text-xl sm:text-2xl font-bold text-green-600">{dashboardStats.completedCourses}</p>
               </div>
               <div className="p-2 xxs:p-3 bg-green-100 rounded-lg">
@@ -230,7 +247,7 @@ const DashboardPage = () => {
           <div className="bg-white rounded-xl p-3 xxs:p-4 sm:p-6 shadow-sm border border-gray-100">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs xxs:text-sm font-medium text-gray-600">In Progress</p>
+                <p className="text-xs xxs:text-sm font-medium text-gray-600">{t('dashboard.course_stats.in_progress')}</p>
                 <p className="text-lg xxs:text-xl sm:text-2xl font-bold text-orange-600">{dashboardStats.inProgressCourses}</p>
               </div>
               <div className="p-2 xxs:p-3 bg-orange-100 rounded-lg">
@@ -242,7 +259,7 @@ const DashboardPage = () => {
           <div className="bg-white rounded-xl p-3 xxs:p-4 sm:p-6 shadow-sm border border-gray-100">
               <div className="flex items-center justify-between">
                 <div>
-                <p className="text-xs xxs:text-sm font-medium text-gray-600">Avg Progress</p>
+                <p className="text-xs xxs:text-sm font-medium text-gray-600">{t('dashboard.progress')}</p>
                 <p className="text-lg xxs:text-xl sm:text-2xl font-bold text-purple-600">{dashboardStats.averageProgress}%</p>
                 </div>
               <div className="p-2 xxs:p-3 bg-purple-100 rounded-lg">
@@ -258,7 +275,7 @@ const DashboardPage = () => {
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4 xxs:h-5 xxs:w-5" />
               <input
                 type="text"
-              placeholder="Search your courses..."
+              placeholder={t('dashboard.search_courses')}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-9 xxs:pl-10 pr-4 py-2 xxs:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent text-sm xxs:text-base"
@@ -270,9 +287,9 @@ const DashboardPage = () => {
               onChange={(e) => setFilterStatus(e.target.value as 'all' | 'in-progress' | 'completed')}
               className="px-3 xxs:px-4 py-2 xxs:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent text-sm xxs:text-base"
             >
-              <option value="all">All Courses</option>
-              <option value="in-progress">In Progress</option>
-              <option value="completed">Completed</option>
+              <option value="all">{t('dashboard.all_courses')}</option>
+              <option value="in-progress">{t('dashboard.in_progress')}</option>
+              <option value="completed">{t('dashboard.completed')}</option>
             </select>
             </div>
           </div>
@@ -283,31 +300,101 @@ const DashboardPage = () => {
             <div className="text-center py-8 xxs:py-12">
               <BookOpen className="h-12 w-12 xxs:h-16 xxs:w-16 text-gray-300 mx-auto mb-3 xxs:mb-4" />
               <h3 className="text-lg xxs:text-xl font-semibold text-gray-600 mb-2">
-                {enrolledCourses.length === 0 ? 'No courses purchased yet' : 'No courses found'}
+                {enrolledCourses.length === 0 ? t('dashboard.no_courses') : t('dashboard.no_courses')}
               </h3>
               <p className="text-gray-500 mb-4 xxs:mb-6 text-sm xxs:text-base">
                 {enrolledCourses.length === 0 
-                  ? 'Start your learning journey by purchasing your first course'
-                  : 'Try adjusting your search terms or filters'
+                  ? t('dashboard.start_learning')
+                  : t('dashboard.no_courses')
                 }
               </p>
               <Link
                 to="/courses"
                 className="bg-red-600 hover:bg-red-700 text-white px-4 xxs:px-6 py-2 xxs:py-3 rounded-lg font-semibold transition-colors duration-200 text-sm xxs:text-base"
               >
-                Browse Courses
+                {t('dashboard.view_all')}
               </Link>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 xxs:gap-6 sm:gap-8">
-              {filteredCourses.map((course) => (
-                <DashboardCard 
-                  key={course._id} 
-                  {...course}
-                  isCompleted={course.isCompleted}
-                />
-              ))}
-            </div>
+            <>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 xxs:gap-6 sm:gap-8">
+                {currentCourses.map((course) => (
+                  <DashboardCard 
+                    key={course._id} 
+                    {...course}
+                    isCompleted={course.isCompleted}
+                  />
+                ))}
+              </div>
+              
+              {/* Pagination Controls */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-between mt-6 xxs:mt-8">
+                  <div className="text-sm text-gray-700">
+                    {t('dashboard.showing')} {startIndex + 1} {t('dashboard.to')} {Math.min(endIndex, filteredCourses.length)} {t('dashboard.of')} {filteredCourses.length} {t('dashboard.courses')}
+                  </div>
+                  
+                  <div className="flex items-center space-x-2">
+                    {/* Previous Button */}
+                    <button
+                      onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                      disabled={currentPage === 1}
+                      className="flex items-center px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+                    >
+                      <ChevronLeft className="h-4 w-4 mr-1" />
+                      {t('dashboard.previous')}
+                    </button>
+                    
+                    {/* Page Numbers */}
+                    <div className="flex items-center space-x-1">
+                      {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
+                        // Show first page, last page, current page, and pages around current page
+                        const shouldShow = 
+                          page === 1 || 
+                          page === totalPages || 
+                          (page >= currentPage - 1 && page <= currentPage + 1);
+                        
+                        if (!shouldShow) {
+                          // Show ellipsis for gaps
+                          if (page === currentPage - 2 || page === currentPage + 2) {
+                            return (
+                              <span key={page} className="px-2 py-1 text-gray-500">
+                                ...
+                              </span>
+                            );
+                          }
+                          return null;
+                        }
+                        
+                        return (
+                          <button
+                            key={page}
+                            onClick={() => setCurrentPage(page)}
+                            className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-200 ${
+                              page === currentPage
+                                ? 'bg-red-600 text-white'
+                                : 'text-gray-700 bg-white border border-gray-300 hover:bg-gray-50'
+                            }`}
+                          >
+                            {page}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    
+                    {/* Next Button */}
+                    <button
+                      onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                      disabled={currentPage === totalPages}
+                      className="flex items-center px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+                    >
+                      {t('dashboard.next')}
+                      <ChevronRight className="h-4 w-4 ml-1" />
+                    </button>
+                  </div>
+                </div>
+              )}
+            </>
           )}
         </div>
 
@@ -315,9 +402,9 @@ const DashboardPage = () => {
         <div className="bg-gradient-to-r from-red-600 to-red-700 rounded-2xl p-4 xxs:p-6 sm:p-8 text-white mt-8 xxs:mt-12">
           <div className="flex flex-col md:flex-row items-center justify-between">
             <div className="mb-4 xxs:mb-6 md:mb-0 text-center md:text-left">
-              <h3 className="text-xl xxs:text-2xl font-bold mb-2">Ready to learn more?</h3>
+              <h3 className="text-xl xxs:text-2xl font-bold mb-2">{t('dashboard.ready_to_learn')}</h3>
               <p className="text-red-100 text-sm xxs:text-base">
-                Explore our latest courses and continue your learning journey
+                {t('dashboard.explore_courses')}
               </p>
             </div>
             <div className="flex space-x-4">
@@ -325,7 +412,7 @@ const DashboardPage = () => {
                 to="/courses"
                 className="bg-white text-red-600 hover:bg-gray-100 px-4 xxs:px-6 py-2 xxs:py-3 rounded-lg font-semibold transition-colors duration-200 text-sm xxs:text-base"
               >
-                Browse Courses
+                {t('dashboard.browse_courses')}
               </Link>
             </div>
           </div>

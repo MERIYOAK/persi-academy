@@ -1,16 +1,20 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { buildApiUrl } from '../config/environment';
 
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import AuthForm from '../components/AuthForm';
 
 const ResetPasswordPage = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [isResetMode, setIsResetMode] = useState(false);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+
+
 
   // Check if we have a token in the URL (reset mode)
   useEffect(() => {
@@ -23,9 +27,9 @@ const ResetPasswordPage = () => {
   const requestResetFields = [
     {
       name: 'email',
-      label: 'Email Address',
+      label: t('reset_password.email'),
       type: 'email',
-      placeholder: 'Enter your email address',
+      placeholder: t('reset_password.enter_email'),
       required: true
     }
   ];
@@ -33,29 +37,29 @@ const ResetPasswordPage = () => {
   const resetPasswordFields = [
     {
       name: 'newPassword',
-      label: 'New Password',
+      label: t('reset_password.new_password'),
       type: 'password',
-      placeholder: 'Enter your new password',
+      placeholder: t('reset_password.enter_new_password'),
       required: true
     },
     {
       name: 'confirmPassword',
-      label: 'Confirm Password',
+      label: t('reset_password.confirm_password'),
       type: 'password',
-      placeholder: 'Confirm your new password',
+      placeholder: t('reset_password.confirm_new_password'),
       required: true
     }
   ];
 
   const links = [
     {
-      text: 'Remember your password?',
-      linkText: 'Sign in here',
+      text: t('reset_password.remember_password'),
+      linkText: t('reset_password.sign_in_here'),
       href: '/login'
     },
     {
-      text: "Don't have an account?",
-      linkText: 'Sign up here',
+      text: t('reset_password.no_account'),
+      linkText: t('reset_password.sign_up_here'),
       href: '/register'
     }
   ];
@@ -84,11 +88,11 @@ const ResetPasswordPage = () => {
           navigate('/login');
         }, 3000);
       } else {
-        setError(result.message || 'Failed to send reset email');
+        setError(result.message || t('reset_password.reset_error'));
       }
     } catch (error) {
       console.error('Request reset error:', error);
-      setError('Failed to send reset email. Please try again.');
+      setError(t('reset_password.reset_error_retry'));
     } finally {
       setLoading(false);
     }
@@ -106,13 +110,13 @@ const ResetPasswordPage = () => {
 
       // Validate passwords match
       if (newPassword !== confirmPassword) {
-        setError('Passwords do not match');
+        setError(t('reset_password.passwords_no_match'));
         return;
       }
 
       // Validate password strength
       if (newPassword.length < 6) {
-        setError('Password must be at least 6 characters long');
+        setError(t('reset_password.password_too_short'));
         return;
       }
 
@@ -135,11 +139,11 @@ const ResetPasswordPage = () => {
           navigate('/login');
         }, 3000);
       } else {
-        setError(result.message || 'Failed to reset password');
+        setError(result.message || t('reset_password.reset_failed'));
       }
     } catch (error) {
       console.error('Reset password error:', error);
-      setError('Failed to reset password. Please try again.');
+      setError(t('reset_password.reset_failed_retry'));
     } finally {
       setLoading(false);
     }
@@ -156,10 +160,10 @@ const ResetPasswordPage = () => {
   if (isResetMode) {
     return (
       <AuthForm
-        title="Set New Password"
-        subtitle="Enter your new password below"
+        title={t('reset_password.set_new_password')}
+        subtitle={t('reset_password.enter_new_password_below')}
         fields={resetPasswordFields}
-        submitText={loading ? "Resetting..." : "Reset Password"}
+        submitText={loading ? t('reset_password.resetting') : t('reset_password.reset_password')}
         onSubmit={handleSubmit}
         links={links}
         message={message}
@@ -171,10 +175,10 @@ const ResetPasswordPage = () => {
 
   return (
     <AuthForm
-      title="Reset Password"
-      subtitle="Enter your email address and we'll send you a link to reset your password"
+      title={t('reset_password.page_title')}
+      subtitle={t('reset_password.enter_email_reset')}
       fields={requestResetFields}
-      submitText={loading ? "Sending..." : "Send Reset Link"}
+      submitText={loading ? t('reset_password.sending') : t('reset_password.send_reset_link')}
       onSubmit={handleSubmit}
       links={links}
       message={message}

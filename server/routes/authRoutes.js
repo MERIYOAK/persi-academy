@@ -190,6 +190,14 @@ router.get('/users/me/photo', auth, authController.getProfilePhoto);
  */
 router.delete('/users/me/photo', auth, authController.deleteProfilePhoto);
 
+/**
+ * Upload user profile photo only
+ * PUT /api/users/me/photo
+ * Headers: Authorization: Bearer <token>
+ * Body: FormData with profilePhoto file
+ */
+router.put('/users/me/photo', auth, upload.single('profilePhoto'), authController.uploadProfilePhoto);
+
 // ========================================
 // HEALTH CHECK ROUTE
 // ========================================

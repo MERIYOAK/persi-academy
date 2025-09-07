@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { CreditCard, Clock, CheckCircle, XCircle, AlertTriangle, Mail, Phone, MessageCircle } from 'lucide-react';
 import { config } from '../config/environment';
 
 const RefundPolicyPage = () => {
+  const { t } = useTranslation();
   return (
     <div className="min-h-screen bg-gray-50 pt-16">
       {/* Hero Section */}

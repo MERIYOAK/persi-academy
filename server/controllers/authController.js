@@ -480,6 +480,58 @@ const deleteProfilePhoto = async (req, res) => {
 };
 
 /**
+ * Upload user profile photo only
+ * PUT /api/users/me/photo
+ */
+const uploadProfilePhoto = async (req, res) => {
+  try {
+    const profilePhoto = req.file;
+    const userId = req.user.userId;
+
+    console.log('🔧 [Profile Photo Upload] Request received:', {
+      userId,
+      hasProfilePhoto: !!profilePhoto,
+      profilePhotoName: profilePhoto?.originalname,
+      profilePhotoSize: profilePhoto?.size
+    });
+
+    if (!profilePhoto) {
+      return res.status(400).json({
+        success: false,
+        message: 'No profile photo provided'
+      });
+    }
+
+    const updatedUser = await authService.updateProfilePhotoOnly(userId, profilePhoto);
+
+    console.log('✅ [Profile Photo Upload] Successfully updated profile photo:', {
+      userId: updatedUser._id,
+      hasProfilePhotoKey: !!updatedUser.profilePhotoKey
+    });
+
+    res.json({
+      success: true,
+      message: 'Profile photo updated successfully',
+      data: {
+        _id: updatedUser._id,
+        name: updatedUser.name,
+        email: updatedUser.email,
+        profilePhotoKey: updatedUser.profilePhotoKey,
+        authProvider: updatedUser.authProvider,
+        isVerified: updatedUser.isVerified,
+        createdAt: updatedUser.createdAt
+      }
+    });
+  } catch (error) {
+    console.error('❌ Upload profile photo error:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Failed to upload profile photo'
+    });
+  }
+};
+
+/**
  * Google OAuth callback
  * GET /api/auth/google/callback
  */
@@ -706,6 +758,7 @@ module.exports = {
   changePassword,
   getProfilePhoto,
   deleteProfilePhoto,
+  uploadProfilePhoto,
   googleCallback,
   completeGoogleRegistration,
   logout,

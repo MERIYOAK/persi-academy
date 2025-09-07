@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { User, LogOut, LayoutDashboard, Upload, Award } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { useAdminAuth } from '../../contexts/AdminAuthContext';
 
 interface AvatarMenuProps {
@@ -11,6 +12,7 @@ interface AvatarMenuProps {
 const AvatarMenu: React.FC<AvatarMenuProps> = ({ variant, profileImageUrl }) => {
   const [open, setOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const { t } = useTranslation();
   
   // Only use admin auth when variant is 'admin'
   const adminAuth = variant === 'admin' ? useAdminAuth() : null;
@@ -21,8 +23,18 @@ const AvatarMenu: React.FC<AvatarMenuProps> = ({ variant, profileImageUrl }) => 
         setOpen(false);
       }
     };
+
+    const onScroll = () => {
+      setOpen(false);
+    };
+
     document.addEventListener('mousedown', onDocClick);
-    return () => document.removeEventListener('mousedown', onDocClick);
+    window.addEventListener('scroll', onScroll);
+    
+    return () => {
+      document.removeEventListener('mousedown', onDocClick);
+      window.removeEventListener('scroll', onScroll);
+    };
   }, []);
 
   const handleLogout = () => {
@@ -87,19 +99,19 @@ const AvatarMenu: React.FC<AvatarMenuProps> = ({ variant, profileImageUrl }) => 
             ) : (
               <>
                 <Link to="/dashboard" className="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-200">
-                  <LayoutDashboard className="h-4 w-4 mr-3" /> Dashboard
+                  <LayoutDashboard className="h-4 w-4 mr-3" /> {t('navbar.dashboard')}
                 </Link>
                 <Link to="/profile" className="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-200">
-                  <User className="h-4 w-4 mr-3" /> Profile
+                  <User className="h-4 w-4 mr-3" /> {t('navbar.profile')}
                 </Link>
                 <Link to="/certificates" className="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-200">
-                  <Award className="h-4 w-4 mr-3" /> My Certificates
+                  <Award className="h-4 w-4 mr-3" /> {t('navbar.my_certificates')}
                 </Link>
               </>
             )}
             <div className="border-t border-gray-100 my-1"></div>
             <button onClick={handleLogout} className="w-full text-left flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-200">
-              <LogOut className="h-4 w-4 mr-3" /> Logout
+              <LogOut className="h-4 w-4 mr-3" /> {variant === 'admin' ? 'Logout' : t('navbar.logout')}
             </button>
           </div>
         </div>

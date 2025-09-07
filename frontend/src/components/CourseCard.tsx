@@ -52,7 +52,7 @@ const CourseCard: React.FC<CourseCardProps> = ({
     () =>
       'data:image/svg+xml;utf8,' +
       encodeURIComponent(
-        "<svg xmlns='http://www.w3.org/2000/svg' width='600' height='400'><rect fill='#f3f4f6' width='100%' height='100%'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-family='Arial' font-size='24' fill='#9ca3af'>Course Thumbnail</text></svg>"
+        "<svg xmlns='http://www.w3.org/2000/svg' width='600' height='400'><rect fill='#f3f4f6' width='100%' height='100%'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-family='Arial' font-size='24' fill='#9ca3af'>" + t('course_card.thumbnail_placeholder') + "</text></svg>"
       ),
     []
   );
@@ -148,7 +148,7 @@ const CourseCard: React.FC<CourseCardProps> = ({
     if (purchaseStatus === 'error') {
       return (
         <div className="w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-2 xxs:py-3 px-4 xxs:px-6 rounded-lg transition-all duration-200 flex items-center justify-center space-x-1 xxs:space-x-2 text-sm xxs:text-base">
-          <span>Error: {errorMessage}</span>
+          <span>{t('course_card.error')}: {errorMessage}</span>
         </div>
       );
     }

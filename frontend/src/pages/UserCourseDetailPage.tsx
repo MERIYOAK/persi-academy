@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Clock, BookOpen, CheckCircle, Users, ArrowLeft, Award } from 'lucide-react';
 import WhatsAppGroupButton from '../components/WhatsAppGroupButton';
 import { buildApiUrl } from '../config/environment';
@@ -21,6 +22,7 @@ interface Course {
 }
 
 const UserCourseDetailPage: React.FC = () => {
+  const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [course, setCourse] = useState<Course | null>(null);
@@ -51,7 +53,7 @@ const UserCourseDetailPage: React.FC = () => {
         // Fetch course data
         const courseRes = await fetch(buildApiUrl(`/api/courses/${id}`), { headers });
         if (!courseRes.ok) {
-          throw new Error('Failed to load course');
+          throw new Error(t('course_detail.failed_to_load_course'));
         }
         const courseData = await courseRes.json();
         const course = courseData?.data?.course || courseData;
@@ -73,7 +75,7 @@ const UserCourseDetailPage: React.FC = () => {
         
         setCourse(combinedCourseData);
       } catch (e) {
-        setError(e instanceof Error ? e.message : 'Unknown error');
+        setError(e instanceof Error ? e.message : t('course_detail.unknown_error'));
       } finally {
         setLoading(false);
       }
@@ -93,7 +95,7 @@ const UserCourseDetailPage: React.FC = () => {
       <div className="min-h-screen bg-gray-50 pt-16 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-red-600 mx-auto mb-4" />
-          <p className="text-gray-600">Loading course...</p>
+          <p className="text-gray-600">{t('course_detail.loading_course')}</p>
         </div>
       </div>
     );
@@ -103,8 +105,8 @@ const UserCourseDetailPage: React.FC = () => {
     return (
       <div className="min-h-screen bg-gray-50 pt-16 flex items-center justify-center">
         <div className="text-center">
-          <p className="text-gray-600 mb-4">{error || 'Course not found'}</p>
-          <Link to="/dashboard" className="text-red-600 hover:text-red-700 font-semibold">Back to Dashboard</Link>
+          <p className="text-gray-600 mb-4">{error || t('course_detail.course_not_found')}</p>
+          <Link to="/dashboard" className="text-red-600 hover:text-red-700 font-semibold">{t('course_detail.back_to_dashboard')}</Link>
         </div>
       </div>
     );
@@ -120,7 +122,7 @@ const UserCourseDetailPage: React.FC = () => {
             className="inline-flex items-center space-x-2 text-gray-600 hover:text-red-600"
           >
             <ArrowLeft className="h-5 w-5" />
-            <span>Back to Dashboard</span>
+            <span>{t('course_detail.back_to_dashboard')}</span>
           </button>
         </div>
 
@@ -142,17 +144,17 @@ const UserCourseDetailPage: React.FC = () => {
                 <div className="flex items-center space-x-2 text-gray-700">
                   <Clock className="h-5 w-5 text-red-600" />
                   <span className="font-semibold">{formatDuration(totalDuration)}</span>
-                  <span className="text-gray-500 text-sm ml-1">total</span>
+                  <span className="text-gray-500 text-sm ml-1">{t('course_detail.total')}</span>
                 </div>
                 <div className="flex items-center space-x-2 text-gray-700">
                   <BookOpen className="h-5 w-5 text-red-600" />
                   <span className="font-semibold">{course.videos?.length || 0}</span>
-                  <span className="text-gray-500 text-sm ml-1">lessons</span>
+                  <span className="text-gray-500 text-sm ml-1">{t('course_detail.lessons')}</span>
                 </div>
                 <div className="flex items-center space-x-2 text-gray-700">
                   <Users className="h-5 w-5 text-red-600" />
                   <span className="font-semibold">{course.totalEnrollments || 0}</span>
-                  <span className="text-gray-500 text-sm ml-1">students</span>
+                  <span className="text-gray-500 text-sm ml-1">{t('course_detail.students')}</span>
                 </div>
               </div>
             </div>
@@ -167,7 +169,7 @@ const UserCourseDetailPage: React.FC = () => {
               <div className="mt-4">
                 <div className="flex items-center space-x-2 text-green-700">
                   <CheckCircle className="h-5 w-5" />
-                  <span className="text-sm font-semibold">Purchased course</span>
+                  <span className="text-sm font-semibold">{t('course_detail.purchased_course')}</span>
                 </div>
               </div>
             </div>
@@ -178,7 +180,7 @@ const UserCourseDetailPage: React.FC = () => {
         <div className="mt-10 grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-6">
             <section className="bg-white rounded-xl shadow p-6">
-              <h2 className="text-xl font-bold text-gray-900 mb-4">Course Curriculum</h2>
+              <h2 className="text-xl font-bold text-gray-900 mb-4">{t('course_detail.course_curriculum')}</h2>
               {course.videos && course.videos.length > 0 ? (
                 <div className="divide-y divide-gray-100">
                   {course.videos.map((v, idx) => (
@@ -198,24 +200,24 @@ const UserCourseDetailPage: React.FC = () => {
                   ))}
                 </div>
               ) : (
-                <div className="text-gray-500">No lessons available.</div>
+                <div className="text-gray-500">{t('course_detail.no_lessons_available')}</div>
               )}
             </section>
           </div>
           <div className="space-y-6">
             <section className="bg-white rounded-xl shadow p-6">
-              <h3 className="text-lg font-bold text-gray-900 mb-4">What's Included</h3>
+              <h3 className="text-lg font-bold text-gray-900 mb-4">{t('course_detail.whats_included')}</h3>
               <ul className="space-y-3 text-gray-700">
-                <li className="flex items-center gap-2"><CheckCircle className="h-5 w-5 text-green-600" /> Lifetime access</li>
-                <li className="flex items-center gap-2"><Award className="h-5 w-5 text-green-600" /> Certificate of completion</li>
-                <li className="flex items-center gap-2"><BookOpen className="h-5 w-5 text-green-600" /> Regular course updates</li>
+                <li className="flex items-center gap-2"><CheckCircle className="h-5 w-5 text-green-600" /> {t('course_detail.lifetime_access')}</li>
+                <li className="flex items-center gap-2"><Award className="h-5 w-5 text-green-600" /> {t('course_detail.certificate_of_completion')}</li>
+                <li className="flex items-center gap-2"><BookOpen className="h-5 w-5 text-green-600" /> {t('course_detail.regular_course_updates')}</li>
               </ul>
             </section>
 
             {/* WhatsApp Group Button */}
             {course.hasWhatsappGroup && (
               <section className="bg-white rounded-xl shadow p-6">
-                <h3 className="text-lg font-bold text-gray-900 mb-4">Community</h3>
+                <h3 className="text-lg font-bold text-gray-900 mb-4">{t('course_detail.community')}</h3>
                 <WhatsAppGroupButton
                   courseId={id || ''}
                   isEnrolled={!!course.userHasPurchased}

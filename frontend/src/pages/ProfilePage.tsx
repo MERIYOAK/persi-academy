@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { 
   User, Mail, Calendar, Shield, Camera, Save, ArrowLeft, Edit3, X, 
   CheckCircle, AlertCircle, Eye, EyeOff, Phone, MapPin, Globe, 
-  UserCheck, Upload, Trash2, RotateCcw, Plus, Minus
+  UserCheck, Trash2
 } from 'lucide-react';
 import { config } from '../config/environment';
 
@@ -52,6 +52,7 @@ interface ValidationErrors {
 }
 
 const ProfilePage = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [userData, setUserData] = useState<UserData | null>(null);
@@ -109,7 +110,7 @@ const ProfilePage = () => {
         });
 
         if (!response.ok) {
-          throw new Error('Failed to fetch user data');
+          throw new Error(t('profile.failed_to_fetch_user'));
         }
 
         const result = await response.json();
@@ -134,7 +135,7 @@ const ProfilePage = () => {
         // Fetch profile image if available
         if (result.data.profilePhotoKey) {
           try {
-            const photoResponse = await fetch(buildApiUrl('/api/auth/users/me/photo'), {
+            const photoResponse = await fetch(buildApiUrl('/api/users/me/photo'), {
               headers: {
                 'Authorization': `Bearer ${token}`
               }
@@ -158,7 +159,7 @@ const ProfilePage = () => {
 
       } catch (error) {
         console.error('Error fetching user data:', error);
-        showToastMessage('Failed to load profile data', 'error');
+        showToastMessage(t('profile.failed_to_load'), 'error');
       } finally {
         setLoading(false);
       }
@@ -180,46 +181,119 @@ const ProfilePage = () => {
     // Make firstName and lastName optional for profile updates
     // Users can clear these fields if they want to remove the information
     if (formData.firstName && formData.firstName.trim() && formData.firstName.trim().length < 2) {
-      errors.firstName = 'First name must be at least 2 characters if provided';
+      errors.firstName = t('profile.first_name_validation');
     }
 
     if (formData.lastName && formData.lastName.trim() && formData.lastName.trim().length < 2) {
-      errors.lastName = 'Last name must be at least 2 characters if provided';
+      errors.lastName = t('profile.last_name_validation');
     }
 
     if (formData.age) {
       const ageNum = parseInt(formData.age);
       if (isNaN(ageNum) || ageNum < 1 || ageNum > 120) {
-        errors.age = 'Age must be between 1 and 120';
+        errors.age = t('profile.age_validation');
       }
     }
 
     if (formData.phoneNumber) {
       const phoneRegex = /^\+[1-9]\d{1,14}$/;
       if (!phoneRegex.test(formData.phoneNumber.replace(/\s/g, ''))) {
-        errors.phoneNumber = 'Please enter a valid international phone number (e.g., ' + config.SUPPORT_PHONE + ')';
+        errors.phoneNumber = t('profile.phone_validation', { phone: config.SUPPORT_PHONE });
       }
     }
     
     // Phone number is required for local users
     if (userData && userData.authProvider === 'local' && (!formData.phoneNumber || !formData.phoneNumber.trim())) {
-      errors.phoneNumber = 'Phone number is required for email accounts';
+      errors.phoneNumber = t('profile.phone_required');
     }
 
     if (formData.address && formData.address.length < 5) {
-      errors.address = 'Address must be at least 5 characters';
+      errors.address = t('profile.address_validation');
     }
 
     if (formData.country && formData.country.length < 2) {
-      errors.country = 'Country must be at least 2 characters';
+      errors.country = t('profile.country_validation');
     }
 
     if (formData.city && formData.city.length < 2) {
-      errors.city = 'City must be at least 2 characters';
+      errors.city = t('profile.city_validation');
     }
 
     setValidationErrors(errors);
     return Object.keys(errors).length === 0;
+  };
+
+  const uploadProfilePicture = async (file: File) => {
+    console.log('🔧 [ProfilePage] Starting immediate profile picture upload');
+    setIsSaving(true);
+    
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        console.log('❌ [ProfilePage] No token found');
+        showToastMessage(t('profile.failed_to_update'), 'error');
+        return;
+      }
+
+      // Prepare form data for profile picture upload only
+      const formDataToSend = new FormData();
+      formDataToSend.append('profilePhoto', file);
+
+      console.log('🔧 [ProfilePage] Sending profile picture upload request to dedicated endpoint');
+      const response = await fetch(buildApiUrl('/api/users/me/photo'), {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        body: formDataToSend
+      });
+
+      console.log('🔧 [ProfilePage] Profile picture upload response status:', response.status);
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log('✅ [ProfilePage] Profile picture upload successful:', result);
+        setUserData(result.data);
+        setProfileImageFile(null);
+        setImagePreview(null);
+        showToastMessage(t('profile.updated_successfully'), 'success');
+        
+        // Fetch the new signed URL for the uploaded image
+        if (result.data.profilePhotoKey) {
+          console.log('🔧 [ProfilePage] Fetching new profile photo URL');
+          try {
+            const photoResponse = await fetch(buildApiUrl('/api/users/me/photo'), {
+              headers: {
+                'Authorization': `Bearer ${token}`
+              }
+            });
+            
+            if (photoResponse.ok) {
+              const photoResult = await photoResponse.json();
+              console.log('✅ [ProfilePage] New profile photo URL fetched:', photoResult.data.photoUrl);
+              setProfileImageUrl(photoResult.data.photoUrl);
+            } else {
+              console.log('❌ [ProfilePage] Failed to fetch new profile photo URL:', photoResponse.status);
+              // Fallback to preview if signed URL fetch fails
+              setProfileImageUrl(imagePreview);
+            }
+          } catch (photoError) {
+            console.error('❌ [ProfilePage] Error fetching new profile photo URL:', photoError);
+            // Fallback to preview if signed URL fetch fails
+            setProfileImageUrl(imagePreview);
+          }
+        }
+      } else {
+        const error = await response.json();
+        console.log('❌ [ProfilePage] Profile picture upload failed:', error);
+        showToastMessage(error.message || t('profile.failed_to_update'), 'error');
+      }
+    } catch (error) {
+      console.error('Error uploading profile picture:', error);
+      showToastMessage(t('profile.failed_to_update'), 'error');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -236,27 +310,34 @@ const ProfilePage = () => {
       // Validate file type
       if (!file.type.startsWith('image/')) {
         console.log('❌ [ProfilePage] Invalid file type:', file.type);
-        showToastMessage('Please select a valid image file', 'error');
+        showToastMessage(t('profile.invalid_image_file'), 'error');
         return;
       }
 
       // Validate file size (5MB limit)
       if (file.size > 5 * 1024 * 1024) {
         console.log('❌ [ProfilePage] File too large:', file.size);
-        showToastMessage('Image size must be less than 5MB', 'error');
+        showToastMessage(t('profile.image_size_limit'), 'error');
         return;
       }
 
-      console.log('✅ [ProfilePage] File validation passed, setting file and preview');
-      setProfileImageFile(file);
+      console.log('✅ [ProfilePage] File validation passed, starting immediate upload');
       
-      // Create preview
+      // Create preview first
       const reader = new FileReader();
       reader.onload = (e) => {
         console.log('✅ [ProfilePage] Preview created');
         setImagePreview(e.target?.result as string);
       };
       reader.readAsDataURL(file);
+      
+      // Start upload immediately
+      uploadProfilePicture(file);
+      
+      // Clear the file input to allow selecting the same file again
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
     } else {
       console.log('❌ [ProfilePage] No file selected');
     }
@@ -265,11 +346,10 @@ const ProfilePage = () => {
   const handleSave = async () => {
     console.log('🔧 [ProfilePage] Save triggered');
     console.log('🔧 [ProfilePage] Form data:', formData);
-    console.log('🔧 [ProfilePage] Profile image file:', profileImageFile);
     
     if (!validateForm()) {
       console.log('❌ [ProfilePage] Form validation failed');
-      showToastMessage('Please fix the validation errors', 'error');
+      showToastMessage(t('profile.fix_validation_errors'), 'error');
       return;
     }
 
@@ -281,8 +361,8 @@ const ProfilePage = () => {
         return;
       }
 
-      console.log('🔧 [ProfilePage] Preparing form data for upload');
-      // Prepare form data for multipart upload
+      console.log('🔧 [ProfilePage] Preparing form data for profile update (no image upload)');
+      // Prepare form data for profile update (no image upload since it's handled immediately)
       const formDataToSend = new FormData();
       
       // Send all fields, including empty ones, so backend can handle clearing fields
@@ -295,12 +375,7 @@ const ProfilePage = () => {
       formDataToSend.append('country', formData.country || '');
       formDataToSend.append('city', formData.city || '');
       
-      if (profileImageFile) {
-        console.log('🔧 [ProfilePage] Adding profile photo to form data:', profileImageFile.name);
-        formDataToSend.append('profilePhoto', profileImageFile);
-      } else {
-        console.log('🔧 [ProfilePage] No profile photo to upload');
-      }
+      console.log('🔧 [ProfilePage] Profile picture uploads are handled immediately, skipping image upload in save');
 
       console.log('🔧 [ProfilePage] Sending API request to update profile');
       const response = await fetch(buildApiUrl('/api/auth/profile'), {
@@ -318,43 +393,15 @@ const ProfilePage = () => {
         console.log('✅ [ProfilePage] Profile update successful:', result);
         setUserData(result.data);
         setIsEditing(false);
-        setProfileImageFile(null);
-        setImagePreview(null);
-        showToastMessage('Profile updated successfully!', 'success');
-        
-        // If a new image was uploaded, fetch the new signed URL
-        if (profileImageFile && result.data.profilePhotoKey) {
-          console.log('🔧 [ProfilePage] Fetching new profile photo URL');
-          try {
-            const photoResponse = await fetch(buildApiUrl('/api/auth/users/me/photo'), {
-              headers: {
-                'Authorization': `Bearer ${token}`
-              }
-            });
-            
-            if (photoResponse.ok) {
-              const photoResult = await photoResponse.json();
-              console.log('✅ [ProfilePage] New profile photo URL fetched:', photoResult.data.photoUrl);
-              setProfileImageUrl(photoResult.data.photoUrl);
-            } else {
-              console.log('❌ [ProfilePage] Failed to fetch new profile photo URL:', photoResponse.status);
-            }
-          } catch (photoError) {
-            console.error('❌ [ProfilePage] Error fetching new profile photo URL:', photoError);
-            // Fallback to preview if signed URL fetch fails
-            setProfileImageUrl(imagePreview);
-          }
-        } else {
-          console.log('🔧 [ProfilePage] No new profile photo to fetch URL for');
-        }
+        showToastMessage(t('profile.updated_successfully'), 'success');
       } else {
         const error = await response.json();
         console.log('❌ [ProfilePage] Profile update failed:', error);
-        showToastMessage(error.message || 'Failed to update profile', 'error');
+        showToastMessage(error.message || t('profile.failed_to_update'), 'error');
       }
     } catch (error) {
       console.error('Error updating profile:', error);
-      showToastMessage('Failed to update profile', 'error');
+      showToastMessage(t('profile.failed_to_update'), 'error');
     } finally {
       setIsSaving(false);
     }
@@ -362,12 +409,12 @@ const ProfilePage = () => {
 
   const handlePasswordChange = async () => {
     if (passwordData.newPassword !== passwordData.confirmPassword) {
-      showToastMessage('New passwords do not match', 'error');
+      showToastMessage(t('profile.passwords_do_not_match'), 'error');
       return;
     }
 
     if (passwordData.newPassword.length < 6) {
-      showToastMessage('New password must be at least 6 characters long', 'error');
+      showToastMessage(t('profile.password_length_validation'), 'error');
       return;
     }
 
@@ -388,16 +435,16 @@ const ProfilePage = () => {
       });
 
       if (response.ok) {
-        showToastMessage('Password changed successfully!', 'success');
+        showToastMessage(t('profile.password_changed_successfully'), 'success');
         setShowPasswordChange(false);
         setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
       } else {
         const error = await response.json();
-        showToastMessage(error.message || 'Failed to change password', 'error');
+        showToastMessage(error.message || t('profile.failed_to_change_password'), 'error');
       }
     } catch (error) {
       console.error('Error changing password:', error);
-      showToastMessage('Failed to change password', 'error');
+      showToastMessage(t('profile.failed_to_change_password'), 'error');
     }
   };
 
@@ -440,7 +487,7 @@ const ProfilePage = () => {
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center px-3 xxs:px-4">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 xxs:h-16 xxs:w-16 border-4 border-red-600 border-t-transparent mx-auto mb-4 xxs:mb-6"></div>
-          <p className="text-gray-600 text-base xxs:text-lg font-medium">Loading your profile...</p>
+          <p className="text-gray-600 text-base xxs:text-lg font-medium">{t('profile.loading')}</p>
         </div>
       </div>
     );
@@ -453,13 +500,13 @@ const ProfilePage = () => {
           <div className="text-red-600 mb-4 xxs:mb-6">
             <User className="h-16 w-16 xxs:h-20 xxs:w-20 mx-auto" />
           </div>
-          <h2 className="text-xl xxs:text-2xl font-bold text-gray-800 mb-3 xxs:mb-4">User Not Found</h2>
-          <p className="text-gray-600 mb-6 xxs:mb-8 text-sm xxs:text-base">Please log in to access your profile</p>
+          <h2 className="text-xl xxs:text-2xl font-bold text-gray-800 mb-3 xxs:mb-4">{t('profile.user_not_found')}</h2>
+          <p className="text-gray-600 mb-6 xxs:mb-8 text-sm xxs:text-base">{t('profile.please_login')}</p>
           <button
             onClick={() => navigate('/login')}
             className="bg-red-600 hover:bg-red-700 text-white px-6 xxs:px-8 py-2 xxs:py-3 rounded-xl font-semibold transition-all duration-200 transform hover:scale-105 shadow-lg text-sm xxs:text-base"
           >
-            Go to Login
+            {t('profile.go_to_login')}
           </button>
         </div>
       </div>
@@ -495,11 +542,11 @@ const ProfilePage = () => {
               className="flex items-center space-x-1 xxs:space-x-2 text-gray-600 hover:text-gray-800 transition-all duration-200 hover:bg-gray-100 px-2 xxs:px-3 py-2 rounded-lg text-sm xxs:text-base"
             >
               <ArrowLeft className="h-4 w-4 xxs:h-5 xxs:w-5" />
-              <span className="font-medium">Back to Dashboard</span>
+              <span className="font-medium">{t('profile.back_to_dashboard')}</span>
             </button>
           </div>
-          <h1 className="text-xl xxs:text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-800 mt-3 xxs:mt-4 sm:mt-6 mb-2">Profile & Settings</h1>
-          <p className="text-gray-600 text-sm xxs:text-base sm:text-lg">Manage your account information and preferences</p>
+          <h1 className="text-xl xxs:text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-800 mt-3 xxs:mt-4 sm:mt-6 mb-2">{t('profile.title')}</h1>
+          <p className="text-gray-600 text-sm xxs:text-base sm:text-lg">{t('profile.subtitle')}</p>
         </div>
       </div>
 
@@ -531,22 +578,33 @@ const ProfilePage = () => {
                   
                   {/* Image upload button */}
                   <button 
-                    onClick={() => fileInputRef.current?.click()}
-                    className="absolute bottom-4 xxs:bottom-6 right-0 bg-white text-red-600 p-2 xxs:p-3 rounded-full hover:bg-gray-100 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-110"
-                    title="Upload new photo"
+                    onClick={() => !isSaving && fileInputRef.current?.click()}
+                    disabled={isSaving}
+                    className={`absolute bottom-4 xxs:bottom-6 right-0 p-2 xxs:p-3 rounded-full transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-110 ${
+                      isSaving 
+                        ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
+                        : 'bg-white text-red-600 hover:bg-gray-100'
+                    }`}
+                    title={isSaving ? t('profile.saving') : t('profile.upload_new_photo')}
                   >
-                    <Camera className="h-4 w-4 xxs:h-5 xxs:w-5" />
+                    {isSaving ? (
+                      <div className="animate-spin rounded-full h-4 w-4 xxs:h-5 xxs:w-5 border-2 border-gray-500 border-t-transparent"></div>
+                    ) : (
+                      <Camera className="h-4 w-4 xxs:h-5 xxs:w-5" />
+                    )}
                   </button>
                   
                   {/* Remove image button */}
                   {currentImageUrl && (
                     <button 
                       onClick={async () => {
+                        if (isSaving) return; // Prevent deletion during upload
+                        
                         try {
                           const token = localStorage.getItem('token');
                           if (!token) return;
 
-                          const response = await fetch(buildApiUrl('/api/auth/users/me/photo'), {
+                          const response = await fetch(buildApiUrl('/api/users/me/photo'), {
                             method: 'DELETE',
                             headers: {
                               'Authorization': `Bearer ${token}`
@@ -557,18 +615,23 @@ const ProfilePage = () => {
                             setProfileImageFile(null);
                             setImagePreview(null);
                             setProfileImageUrl(null);
-                            showToastMessage('Profile photo removed successfully!', 'success');
+                            showToastMessage(t('profile.photo_removed_successfully'), 'success');
                           } else {
                             const error = await response.json();
-                            showToastMessage(error.message || 'Failed to remove profile photo', 'error');
+                            showToastMessage(error.message || t('profile.failed_to_remove_photo'), 'error');
                           }
                         } catch (error) {
                           console.error('Error removing profile photo:', error);
-                          showToastMessage('Failed to remove profile photo', 'error');
+                          showToastMessage(t('profile.failed_to_remove_photo'), 'error');
                         }
                       }}
-                      className="absolute bottom-4 xxs:bottom-6 left-0 bg-red-500 text-white p-2 xxs:p-3 rounded-full hover:bg-red-600 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-110"
-                      title="Remove photo"
+                      disabled={isSaving}
+                      className={`absolute bottom-4 xxs:bottom-6 left-0 p-2 xxs:p-3 rounded-full transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-110 ${
+                        isSaving 
+                          ? 'bg-gray-400 text-gray-600 cursor-not-allowed' 
+                          : 'bg-red-500 text-white hover:bg-red-600'
+                      }`}
+                      title={isSaving ? t('profile.saving') : t('profile.remove_photo')}
                     >
                       <Trash2 className="h-4 w-4 xxs:h-5 xxs:w-5" />
                     </button>
@@ -581,7 +644,7 @@ const ProfilePage = () => {
                                   <div className="space-y-2 xxs:space-y-3 sm:space-y-4">
                     <div className="flex items-center justify-center space-x-2 xxs:space-x-3 text-xs xxs:text-sm">
                       <Calendar className="h-3 w-3 xxs:h-4 xxs:w-4" />
-                      <span>Member since {new Date(userData.createdAt).toLocaleDateString('en-US', { 
+                      <span>{t('profile.member_since')} {new Date(userData.createdAt).toLocaleDateString('en-US', { 
                         year: 'numeric', 
                         month: 'long' 
                       })}</span>
@@ -592,19 +655,19 @@ const ProfilePage = () => {
                       {userData.isVerified ? (
                         <>
                           <CheckCircle className="h-3 w-3 xxs:h-4 xxs:w-4 text-green-300" />
-                          <span>Verified Account</span>
+                          <span>{t('profile.verified_account')}</span>
                         </>
                       ) : (
                         <>
                           <AlertCircle className="h-3 w-3 xxs:h-4 xxs:w-4 text-yellow-300" />
-                          <span>Unverified Account</span>
+                          <span>{t('profile.unverified_account')}</span>
                         </>
                       )}
                     </span>
                   </div>
                   <div className="flex items-center justify-center space-x-2 xxs:space-x-3 text-xs xxs:text-sm">
                     <User className="h-3 w-3 xxs:h-4 xxs:w-4" />
-                    <span>{userData.authProvider === 'google' ? 'Google Account' : 'Email Account'}</span>
+                    <span>{userData.authProvider === 'google' ? t('profile.google_account') : t('profile.email_account')}</span>
                   </div>
                 </div>
               </div>
@@ -618,9 +681,9 @@ const ProfilePage = () => {
               <div className="bg-gradient-to-r from-gray-50 to-gray-100 px-3 xxs:px-4 sm:px-6 lg:px-8 py-3 xxs:py-4 sm:py-6 border-b border-gray-200">
                 <h3 className="text-base xxs:text-lg sm:text-xl font-bold text-gray-800 flex items-center space-x-2 xxs:space-x-3">
                   <User className="h-4 w-4 xxs:h-5 xxs:w-5 sm:h-6 sm:w-6 text-red-600" />
-                  <span>Personal Information</span>
+                  <span>{t('profile.personal_information')}</span>
                 </h3>
-                <p className="text-gray-600 mt-1 xxs:mt-2 text-xs xxs:text-sm sm:text-base">Update your personal details</p>
+                <p className="text-gray-600 mt-1 xxs:mt-2 text-xs xxs:text-sm sm:text-base">{t('profile.update_personal_details')}</p>
               </div>
               
               <div className="p-3 xxs:p-4 sm:p-6 lg:p-8">
@@ -628,7 +691,7 @@ const ProfilePage = () => {
                   {/* First Name */}
                   <div>
                     <label className="block text-xs xxs:text-sm font-semibold text-gray-700 mb-2 xxs:mb-3">
-                      First Name *
+                      {t('profile.first_name')} *
                     </label>
                     {isEditing ? (
                       <div className="relative">
@@ -645,7 +708,7 @@ const ProfilePage = () => {
                                 ? 'border-red-500' 
                                 : 'border-gray-300 focus:border-red-500 focus:ring-2 focus:ring-red-500/20'
                           }`}
-                          placeholder="Enter your first name"
+                          placeholder={t('profile.enter_first_name')}
                         />
                         {validationErrors.firstName && (
                           <p className="text-red-500 text-xs xxs:text-sm mt-1">{validationErrors.firstName}</p>
@@ -654,7 +717,7 @@ const ProfilePage = () => {
                     ) : (
                       <div className="flex items-center space-x-2 xxs:space-x-3 px-3 xxs:px-4 py-2 xxs:py-3 bg-gray-50 rounded-xl border border-gray-200">
                         <User className="h-4 w-4 xxs:h-5 xxs:w-5 text-gray-400" />
-                        <span className="text-gray-700 font-medium text-sm xxs:text-base">{formData.firstName || 'Not set'}</span>
+                        <span className="text-gray-700 font-medium text-sm xxs:text-base">{formData.firstName || t('profile.not_set')}</span>
                       </div>
                     )}
                   </div>
@@ -662,7 +725,7 @@ const ProfilePage = () => {
                   {/* Last Name */}
                 <div>
                   <label className="block text-xs xxs:text-sm font-semibold text-gray-700 mb-2 xxs:mb-3">
-                      Last Name *
+                      {t('profile.last_name')} *
                   </label>
                   {isEditing ? (
                       <div className="relative">
@@ -679,7 +742,7 @@ const ProfilePage = () => {
                                 ? 'border-red-500' 
                                 : 'border-gray-300 focus:border-red-500 focus:ring-2 focus:ring-red-500/20'
                           }`}
-                          placeholder="Enter your last name"
+                          placeholder={t('profile.enter_last_name')}
                         />
                         {validationErrors.lastName && (
                           <p className="text-red-500 text-sm mt-1">{validationErrors.lastName}</p>
@@ -688,7 +751,7 @@ const ProfilePage = () => {
                   ) : (
                     <div className="flex items-center space-x-3 px-4 py-3 bg-gray-50 rounded-xl border border-gray-200">
                       <User className="h-5 w-5 text-gray-400" />
-                        <span className="text-gray-700 font-medium">{formData.lastName || 'Not set'}</span>
+                        <span className="text-gray-700 font-medium">{formData.lastName || t('profile.not_set')}</span>
                       </div>
                     )}
                   </div>
@@ -696,7 +759,7 @@ const ProfilePage = () => {
                   {/* Age */}
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-3">
-                      Age
+                      {t('profile.age')}
                     </label>
                     {isEditing ? (
                       <div className="relative">
@@ -715,7 +778,7 @@ const ProfilePage = () => {
                                 ? 'border-red-500' 
                                 : 'border-gray-300 focus:border-red-500 focus:ring-2 focus:ring-red-500/20'
                           }`}
-                          placeholder="Enter your age"
+                          placeholder={t('profile.enter_age')}
                         />
                         {validationErrors.age && (
                           <p className="text-red-500 text-sm mt-1">{validationErrors.age}</p>
@@ -724,7 +787,7 @@ const ProfilePage = () => {
                     ) : (
                       <div className="flex items-center space-x-3 px-4 py-3 bg-gray-50 rounded-xl border border-gray-200">
                         <Calendar className="h-5 w-5 text-gray-400" />
-                        <span className="text-gray-700 font-medium">{formData.age || 'Not set'}</span>
+                        <span className="text-gray-700 font-medium">{formData.age || t('profile.not_set')}</span>
                     </div>
                   )}
                 </div>
@@ -732,7 +795,7 @@ const ProfilePage = () => {
                   {/* Sex */}
                 <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-3">
-                      Sex
+                      {t('profile.sex')}
                     </label>
                     {isEditing ? (
                       <select
@@ -746,16 +809,16 @@ const ProfilePage = () => {
                             : 'border-gray-300 focus:border-red-500 focus:ring-2 focus:ring-red-500/20'
                         }`}
                       >
-                        <option value="">Select sex</option>
-                        <option value="male">Male</option>
-                        <option value="female">Female</option>
-                        <option value="other">Other</option>
-                        <option value="prefer-not-to-say">Prefer not to say</option>
+                        <option value="">{t('profile.select_sex')}</option>
+                        <option value="male">{t('profile.male')}</option>
+                        <option value="female">{t('profile.female')}</option>
+                        <option value="other">{t('profile.other')}</option>
+                        <option value="prefer-not-to-say">{t('profile.prefer_not_to_say')}</option>
                       </select>
                     ) : (
                       <div className="flex items-center space-x-3 px-4 py-3 bg-gray-50 rounded-xl border border-gray-200">
                         <UserCheck className="h-5 w-5 text-gray-400" />
-                        <span className="text-gray-700 font-medium capitalize">{formData.sex || 'Not set'}</span>
+                        <span className="text-gray-700 font-medium capitalize">{formData.sex || t('profile.not_set')}</span>
                       </div>
                     )}
                   </div>
@@ -763,13 +826,13 @@ const ProfilePage = () => {
                   {/* Email (Read-only) */}
                   <div className="md:col-span-2">
                   <label className="block text-sm font-semibold text-gray-700 mb-3">
-                    Email Address
+                    {t('profile.email_address')}
                   </label>
                   <div className="flex items-center space-x-3 px-4 py-3 bg-gray-50 rounded-xl border border-gray-200">
                     <Mail className="h-5 w-5 text-gray-400" />
                       <span className="text-gray-700 font-medium">{userData.email}</span>
                     <span className="ml-auto text-xs bg-gray-200 text-gray-600 px-2 py-1 rounded-full">
-                      Not Editable
+                      {t('profile.not_editable')}
                     </span>
                     </div>
                   </div>
@@ -782,9 +845,9 @@ const ProfilePage = () => {
               <div className="bg-gradient-to-r from-gray-50 to-gray-100 px-3 xxs:px-4 sm:px-6 lg:px-8 py-3 xxs:py-4 sm:py-6 border-b border-gray-200">
                 <h3 className="text-base xxs:text-lg sm:text-xl font-bold text-gray-800 flex items-center space-x-2 xxs:space-x-3">
                   <Phone className="h-4 w-4 xxs:h-5 xxs:w-5 sm:h-6 sm:w-6 text-red-600" />
-                  <span>Contact Information</span>
+                  <span>{t('profile.contact_information')}</span>
                 </h3>
-                <p className="text-gray-600 mt-1 xxs:mt-2 text-xs xxs:text-sm sm:text-base">Update your contact details</p>
+                <p className="text-gray-600 mt-1 xxs:mt-2 text-xs xxs:text-sm sm:text-base">{t('profile.update_contact_details')}</p>
               </div>
               
               <div className="p-3 xxs:p-4 sm:p-6 lg:p-8">
@@ -792,7 +855,7 @@ const ProfilePage = () => {
                   {/* Phone Number */}
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-3">
-                      Phone Number{userData && userData.authProvider === 'local' && <span className="text-red-500 ml-1">*</span>}
+                      {t('profile.phone_number')}{userData && userData.authProvider === 'local' && <span className="text-red-500 ml-1">*</span>}
                     </label>
                     {isEditing ? (
                       <div className="relative">
@@ -809,7 +872,7 @@ const ProfilePage = () => {
                                 ? 'border-red-500' 
                                 : 'border-gray-300 focus:border-red-500 focus:ring-2 focus:ring-red-500/20'
                           }`}
-                          placeholder="Enter your phone number"
+                          placeholder={t('profile.enter_phone_number')}
                         />
                         {validationErrors.phoneNumber && (
                           <p className="text-red-500 text-sm mt-1">{validationErrors.phoneNumber}</p>
@@ -817,15 +880,15 @@ const ProfilePage = () => {
                         {!validationErrors.phoneNumber && (
                           <p className="text-xs text-gray-500 mt-1">
                             {userData && userData.authProvider === 'local' 
-                              ? 'Required for email accounts. Use international format (e.g., ' + config.SUPPORT_PHONE + ')' 
-                              : 'Use international format (e.g., ' + config.SUPPORT_PHONE + ')'}
+                              ? t('profile.phone_required_help', { phone: config.SUPPORT_PHONE })
+                              : t('profile.phone_format_help', { phone: config.SUPPORT_PHONE })}
                           </p>
                         )}
                       </div>
                     ) : (
                       <div className="flex items-center space-x-3 px-4 py-3 bg-gray-50 rounded-xl border border-gray-200">
                         <Phone className="h-5 w-5 text-gray-400" />
-                        <span className="text-gray-700 font-medium">{formData.phoneNumber || 'Not set'}</span>
+                        <span className="text-gray-700 font-medium">{formData.phoneNumber || t('profile.not_set')}</span>
                       </div>
                     )}
                   </div>
@@ -833,7 +896,7 @@ const ProfilePage = () => {
                   {/* Address */}
                   <div className="md:col-span-2">
                     <label className="block text-sm font-semibold text-gray-700 mb-3">
-                      Address
+                      {t('profile.address')}
                     </label>
                     {isEditing ? (
                       <div className="relative">
@@ -850,7 +913,7 @@ const ProfilePage = () => {
                                 ? 'border-red-500' 
                                 : 'border-gray-300 focus:border-red-500 focus:ring-2 focus:ring-red-500/20'
                           }`}
-                          placeholder="Enter your address"
+                          placeholder={t('profile.enter_address')}
                         />
                         {validationErrors.address && (
                           <p className="text-red-500 text-sm mt-1">{validationErrors.address}</p>
@@ -859,7 +922,7 @@ const ProfilePage = () => {
                     ) : (
                       <div className="flex items-start space-x-3 px-4 py-3 bg-gray-50 rounded-xl border border-gray-200">
                         <MapPin className="h-5 w-5 text-gray-400 mt-1" />
-                        <span className="text-gray-700 font-medium">{formData.address || 'Not set'}</span>
+                        <span className="text-gray-700 font-medium">{formData.address || t('profile.not_set')}</span>
                       </div>
                     )}
                   </div>
@@ -867,7 +930,7 @@ const ProfilePage = () => {
                   {/* Country */}
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-3">
-                      Country
+                      {t('profile.country')}
                     </label>
                     {isEditing ? (
                       <div className="relative">
@@ -884,7 +947,7 @@ const ProfilePage = () => {
                                 ? 'border-red-500' 
                                 : 'border-gray-300 focus:border-red-500 focus:ring-2 focus:ring-red-500/20'
                           }`}
-                          placeholder="Enter your country"
+                          placeholder={t('profile.enter_country')}
                         />
                         {validationErrors.country && (
                           <p className="text-red-500 text-sm mt-1">{validationErrors.country}</p>
@@ -893,7 +956,7 @@ const ProfilePage = () => {
                     ) : (
                       <div className="flex items-center space-x-3 px-4 py-3 bg-gray-50 rounded-xl border border-gray-200">
                         <Globe className="h-5 w-5 text-gray-400" />
-                        <span className="text-gray-700 font-medium">{formData.country || 'Not set'}</span>
+                        <span className="text-gray-700 font-medium">{formData.country || t('profile.not_set')}</span>
                       </div>
                     )}
                   </div>
@@ -901,7 +964,7 @@ const ProfilePage = () => {
                   {/* City */}
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-3">
-                      City
+                      {t('profile.city')}
                     </label>
                     {isEditing ? (
                       <div className="relative">
@@ -918,7 +981,7 @@ const ProfilePage = () => {
                                 ? 'border-red-500' 
                                 : 'border-gray-300 focus:border-red-500 focus:ring-2 focus:ring-red-500/20'
                           }`}
-                          placeholder="Enter your city"
+                          placeholder={t('profile.enter_city')}
                         />
                         {validationErrors.city && (
                           <p className="text-red-500 text-sm mt-1">{validationErrors.city}</p>
@@ -927,7 +990,7 @@ const ProfilePage = () => {
                     ) : (
                       <div className="flex items-center space-x-3 px-4 py-3 bg-gray-50 rounded-xl border border-gray-200">
                         <MapPin className="h-5 w-5 text-gray-400" />
-                        <span className="text-gray-700 font-medium">{formData.city || 'Not set'}</span>
+                        <span className="text-gray-700 font-medium">{formData.city || t('profile.not_set')}</span>
                       </div>
                     )}
                   </div>
@@ -947,7 +1010,7 @@ const ProfilePage = () => {
                         ) : (
                           <Save className="h-4 w-4 xxs:h-5 xxs:w-5" />
                         )}
-                        <span>{isSaving ? 'Saving...' : 'Save Changes'}</span>
+                        <span>{isSaving ? t('profile.saving') : t('profile.save_changes')}</span>
                       </button>
                       <button
                         onClick={handleCancel}
@@ -955,7 +1018,7 @@ const ProfilePage = () => {
                         className="flex items-center justify-center space-x-2 border border-gray-300 text-gray-700 hover:bg-gray-50 disabled:opacity-50 px-3 xxs:px-4 sm:px-6 py-2 xxs:py-3 rounded-xl font-semibold transition-all duration-200 text-sm xxs:text-base"
                       >
                         <X className="h-4 w-4 xxs:h-5 xxs:w-5" />
-                        <span>Cancel</span>
+                        <span>{t('profile.cancel')}</span>
                       </button>
                     </>
                   ) : (
@@ -964,7 +1027,7 @@ const ProfilePage = () => {
                       className="flex items-center justify-center space-x-2 bg-gray-800 hover:bg-gray-900 text-white px-3 xxs:px-4 sm:px-6 py-2 xxs:py-3 rounded-xl font-semibold transition-all duration-200 transform hover:scale-105 shadow-lg text-sm xxs:text-base"
                     >
                       <Edit3 className="h-4 w-4 xxs:h-5 xxs:w-5" />
-                      <span>Edit Profile</span>
+                      <span>{t('profile.edit_profile')}</span>
                     </button>
                   )}
                 </div>
@@ -976,9 +1039,9 @@ const ProfilePage = () => {
               <div className="bg-gradient-to-r from-gray-50 to-gray-100 px-3 xxs:px-4 sm:px-6 lg:px-8 py-3 xxs:py-4 sm:py-6 border-b border-gray-200">
                 <h3 className="text-base xxs:text-lg sm:text-xl font-bold text-gray-800 flex items-center space-x-2 xxs:space-x-3">
                   <Shield className="h-4 w-4 xxs:h-5 xxs:w-5 sm:h-6 sm:w-6 text-red-600" />
-                  <span>Security Settings</span>
+                  <span>{t('profile.security_settings')}</span>
                 </h3>
-                <p className="text-gray-600 mt-1 xxs:mt-2 text-xs xxs:text-sm sm:text-base">Change your password to keep your account secure</p>
+                <p className="text-gray-600 mt-1 xxs:mt-2 text-xs xxs:text-sm sm:text-base">{t('profile.change_password_description')}</p>
               </div>
               
               <div className="p-3 xxs:p-4 sm:p-6 lg:p-8">
@@ -987,13 +1050,13 @@ const ProfilePage = () => {
                     onClick={() => setShowPasswordChange(true)}
                     className="bg-red-600 hover:bg-red-700 text-white px-3 xxs:px-4 sm:px-6 py-2 xxs:py-3 rounded-xl font-semibold transition-all duration-200 transform hover:scale-105 shadow-lg text-sm xxs:text-base"
                   >
-                    Change Password
+                    {t('profile.change_password')}
                   </button>
                 ) : (
                   <div className="space-y-3 xxs:space-y-4 sm:space-y-6">
                                           <div>
                         <label className="block text-xs xxs:text-sm font-semibold text-gray-700 mb-2 xxs:mb-3">
-                          Current Password
+                          {t('profile.current_password')}
                         </label>
                       <div className="relative">
                         <input
@@ -1001,7 +1064,7 @@ const ProfilePage = () => {
                           value={passwordData.currentPassword}
                           onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
                           className="w-full px-3 xxs:px-4 py-2 xxs:py-3 pr-12 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all duration-200 text-sm xxs:text-base"
-                          placeholder="Enter current password"
+                          placeholder={t('profile.enter_current_password')}
                         />
                         <button
                           type="button"
@@ -1015,7 +1078,7 @@ const ProfilePage = () => {
 
                     <div>
                       <label className="block text-sm font-semibold text-gray-700 mb-2 xxs:mb-3">
-                        New Password
+                        {t('profile.new_password')}
                       </label>
                       <div className="relative">
                         <input
@@ -1023,7 +1086,7 @@ const ProfilePage = () => {
                           value={passwordData.newPassword}
                           onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
                           className="w-full px-3 xxs:px-4 py-2 xxs:py-3 pr-12 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all duration-200 text-sm xxs:text-base"
-                          placeholder="Enter new password"
+                          placeholder={t('profile.enter_new_password')}
                         />
                         <button
                           type="button"
@@ -1037,7 +1100,7 @@ const ProfilePage = () => {
 
                     <div>
                       <label className="block text-sm font-semibold text-gray-700 mb-2 xxs:mb-3">
-                        Confirm New Password
+                        {t('profile.confirm_new_password')}
                       </label>
                       <div className="relative">
                         <input
@@ -1045,7 +1108,7 @@ const ProfilePage = () => {
                           value={passwordData.confirmPassword}
                           onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
                           className="w-full px-3 xxs:px-4 py-2 xxs:py-3 pr-12 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all duration-200 text-sm xxs:text-base"
-                          placeholder="Confirm new password"
+                          placeholder={t('profile.confirm_new_password_placeholder')}
                         />
                         <button
                           type="button"
@@ -1063,7 +1126,7 @@ const ProfilePage = () => {
                         className="flex items-center justify-center space-x-2 bg-red-600 hover:bg-red-700 text-white px-3 xxs:px-4 sm:px-6 py-2 xxs:py-3 rounded-xl font-semibold transition-all duration-200 transform hover:scale-105 shadow-lg text-sm xxs:text-base"
                       >
                         <Save className="h-4 w-4 xxs:h-5 xxs:w-5" />
-                        <span>Update Password</span>
+                        <span>{t('profile.update_password')}</span>
                       </button>
                       <button
                         onClick={() => {
@@ -1073,7 +1136,7 @@ const ProfilePage = () => {
                         className="flex items-center justify-center space-x-2 border border-gray-300 text-gray-700 hover:bg-gray-50 px-3 xxs:px-4 sm:px-6 py-2 xxs:py-3 rounded-xl font-semibold transition-all duration-200 text-sm xxs:text-base"
                       >
                         <X className="h-4 w-4 xxs:h-5 xxs:w-5" />
-                        <span>Cancel</span>
+                        <span>{t('profile.cancel')}</span>
                       </button>
                     </div>
                   </div>

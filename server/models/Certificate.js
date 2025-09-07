@@ -65,7 +65,7 @@ const certificateSchema = new mongoose.Schema({
   // Metadata
   platformName: { 
     type: String, 
-    default: 'Learning Platform' 
+    default: 'QENDIEL Academy' 
   },
   totalLessons: { 
     type: Number, 

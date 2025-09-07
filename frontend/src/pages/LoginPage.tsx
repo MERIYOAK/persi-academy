@@ -1,38 +1,40 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Eye, EyeOff, AlertCircle, CheckCircle } from 'lucide-react';
 import AuthForm from '../components/AuthForm';
 import { buildApiUrl } from '../config/environment';
 
 const LoginPage = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
 
   const fields = [
     {
       name: 'email',
-      label: 'Email Address',
+      label: t('auth.login.email'),
       type: 'email',
-      placeholder: 'Enter your email',
+      placeholder: t('auth.login.enter_email'),
       required: true
     },
     {
       name: 'password',
-      label: 'Password',
+      label: t('auth.login.password'),
       type: 'password',
-      placeholder: 'Enter your password',
+      placeholder: t('auth.login.enter_password'),
       required: true
     }
   ];
 
   const links = [
     {
-      text: "Don't have an account?",
-      linkText: 'Sign up here',
+      text: t('auth.login.dont_have_account'),
+      linkText: t('auth.login.sign_up_here'),
       href: '/register'
     },
     {
-      text: 'Forgot your password?',
-      linkText: 'Reset it here',
+      text: t('auth.login.forgot_password'),
+      linkText: t('auth.login.reset_here'),
       href: '/reset-password'
     }
   ];
@@ -65,23 +67,23 @@ const LoginPage = () => {
       } else {
         // Handle specific error cases
         if (result.message && result.message.includes('verify your email')) {
-          alert('Please verify your email address before logging in. Check your inbox for a verification link.');
+          alert(t('auth.login.verify_email_first'));
         } else {
-          alert(result.message || 'Login failed. Please check your credentials and try again.');
+          alert(result.message || t('auth.login.invalid_credentials'));
         }
       }
     } catch (error) {
       console.error('Login error:', error);
-      alert('Login failed. Please check your connection and try again.');
+      alert(t('auth.login.login_error'));
     }
   };
 
   return (
     <AuthForm
-      title="Welcome Back"
-      subtitle="Sign in to your account to continue learning"
+      title={t('auth.login.welcome_back')}
+      subtitle={t('auth.login.sign_in_to_account')}
       fields={fields}
-      submitText="Sign In"
+      submitText={t('auth.login.sign_in')}
       onSubmit={handleSubmit}
       links={links}
       socialAuth={true}
