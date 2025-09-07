@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Download, ExternalLink, CheckCircle, Calendar, BookOpen, Award, Share2, Sparkles } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { buildApiUrl } from '../config/environment';
@@ -18,6 +19,7 @@ interface Certificate {
 }
 
 const CertificatesPage = () => {
+  const { t } = useTranslation();
   const [certificates, setCertificates] = useState<Certificate[]>([]);
   const [loading, setLoading] = useState(true);
   const [downloading, setDownloading] = useState<string | null>(null);
@@ -46,7 +48,7 @@ const CertificatesPage = () => {
       const token = localStorage.getItem('token');
       
       if (!token) {
-        setError('Authentication required');
+        setError(t('certificates.auth_required'));
         return;
       }
 
@@ -57,14 +59,14 @@ const CertificatesPage = () => {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to fetch certificates');
+        throw new Error(t('certificates.failed_to_fetch'));
       }
 
       const result = await response.json();
       setCertificates(result.data.certificates);
     } catch (error) {
       console.error('Error fetching certificates:', error);
-      setError('Failed to load certificates');
+      setError(t('certificates.failed_to_load'));
     } finally {
       setLoading(false);
     }
@@ -77,7 +79,7 @@ const CertificatesPage = () => {
       const token = localStorage.getItem('token');
       
       if (!token) {
-        setError('Authentication required');
+        setError(t('certificates.auth_required'));
         return;
       }
 
@@ -88,7 +90,7 @@ const CertificatesPage = () => {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to download certificate');
+        throw new Error(t('certificates.failed_to_download'));
       }
 
       // Get the PDF as a blob directly from the response
@@ -115,7 +117,7 @@ const CertificatesPage = () => {
       
     } catch (error) {
       console.error('Error downloading certificate:', error);
-      setError('Failed to download certificate');
+      setError(t('certificates.failed_to_download'));
     } finally {
       setDownloading(null);
     }
@@ -130,7 +132,7 @@ const CertificatesPage = () => {
     // Validate certificate data first
     if (!certificate || !certificate.certificateId) {
       console.error('❌ Invalid certificate data:', certificate);
-      setError('Invalid certificate data');
+      setError(t('certificates.invalid_data'));
       return;
     }
 
@@ -141,7 +143,7 @@ const CertificatesPage = () => {
     // Check if we have a valid URL
     if (!shareUrl) {
       console.error('❌ No share URL available');
-      setError('Certificate URL not available');
+      setError(t('certificates.url_not_available'));
       return;
     }
     
@@ -150,8 +152,8 @@ const CertificatesPage = () => {
       
       // Create share data
       const shareData = {
-        title: `Certificate of Completion - ${certificate.courseTitle}`,
-        text: `I just completed the course "${certificate.courseTitle}"! View my certificate here:`,
+        title: `${t('certificates.certificate_of_completion')} - ${certificate.courseTitle}`,
+        text: `${t('certificates.share_text', { courseTitle: certificate.courseTitle })}`,
         url: shareUrl
       };
       
@@ -173,7 +175,7 @@ const CertificatesPage = () => {
             console.log('⚠️ Share failed or cancelled:', error);
             if (error.name === 'AbortError') {
               console.log('⚠️ Share was cancelled by user');
-              setError('Share cancelled');
+              setError(t('certificates.share_cancelled'));
             } else {
               console.log('📋 Falling back to clipboard...');
               // Fallback to clipboard
@@ -221,9 +223,9 @@ const CertificatesPage = () => {
       
       // Provide more specific error messages
       if (error.name === 'NotAllowedError') {
-        setError('Clipboard permission denied. Please allow clipboard access.');
+        setError(t('certificates.clipboard_permission_denied'));
       } else if (error.name === 'SecurityError') {
-        setError('Clipboard access blocked by browser security. Try using HTTPS.');
+        setError(t('certificates.clipboard_security_error'));
       } else {
         console.log('📋 Trying fallback copy method...');
         fallbackCopyToClipboard(text, certificateId);
@@ -252,7 +254,7 @@ const CertificatesPage = () => {
         setTimeout(() => setShowSuccess(null), 2000);
       } else {
         console.log('❌ Fallback copy method failed');
-        setError('Failed to copy to clipboard. Please copy the link manually.');
+        setError(t('certificates.clipboard_failed'));
       }
     } catch (error) {
       console.error('❌ Fallback copy method error:', error);
@@ -273,7 +275,7 @@ const CertificatesPage = () => {
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center px-3 xxs:px-4">
         <div className="text-center">
           <div className="animate-spin rounded-full h-10 w-10 xxs:h-12 xxs:w-12 border-b-2 border-red-500 mx-auto mb-3 xxs:mb-4"></div>
-          <p className="text-gray-600 text-sm xxs:text-base">Loading your certificates...</p>
+          <p className="text-gray-600 text-sm xxs:text-base">{t('common.loading')}</p>
         </div>
       </div>
     );
@@ -288,13 +290,13 @@ const CertificatesPage = () => {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
             </svg>
           </div>
-          <h2 className="text-xl xxs:text-2xl font-bold mb-3 xxs:mb-4">Error Loading Certificates</h2>
+          <h2 className="text-xl xxs:text-2xl font-bold mb-3 xxs:mb-4">{t('common.error')}</h2>
           <p className="text-gray-600 mb-4 xxs:mb-6 text-sm xxs:text-base">{error}</p>
           <button
             onClick={fetchCertificates}
             className="bg-red-600 hover:bg-red-700 text-white px-4 xxs:px-6 py-2 xxs:py-3 rounded-lg transition-colors duration-200 text-sm xxs:text-base"
           >
-            Try Again
+            {t('common.retry')}
           </button>
         </div>
       </div>
@@ -311,9 +313,9 @@ const CertificatesPage = () => {
               <Award className="w-5 h-5 xxs:w-6 xxs:h-6 text-white" />
             </div>
             <div>
-              <h1 className="text-2xl xxs:text-3xl font-bold text-gray-900">My Certificates</h1>
+              <h1 className="text-2xl xxs:text-3xl font-bold text-gray-900">{t('certificates.my_certificates')}</h1>
               <p className="mt-1 text-gray-600 text-sm xxs:text-base">
-                Your achievements and certificates of completion
+                {t('certificates.congratulations')}
               </p>
             </div>
           </div>
@@ -330,15 +332,15 @@ const CertificatesPage = () => {
                   <BookOpen className="w-8 h-8 xxs:w-10 xxs:h-10" />
                 </div>
               </div>
-              <h3 className="text-lg xxs:text-xl font-semibold text-gray-900 mb-2 xxs:mb-3">No Certificates Yet</h3>
+              <h3 className="text-lg xxs:text-xl font-semibold text-gray-900 mb-2 xxs:mb-3">{t('certificates.no_certificates')}</h3>
               <p className="text-gray-600 mb-6 xxs:mb-8 text-sm xxs:text-base">
-                Complete your courses to earn beautiful certificates of completion. Start your learning journey today!
+                {t('certificates.complete_courses')}
               </p>
               <Link
                 to="/courses"
                 className="bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white px-6 xxs:px-8 py-2 xxs:py-3 rounded-lg transition-all duration-200 font-medium shadow-lg hover:shadow-xl text-sm xxs:text-base"
               >
-                Browse Courses
+                {t('certificates.browse_courses')}
               </Link>
             </div>
           </div>
@@ -354,11 +356,11 @@ const CertificatesPage = () => {
                     </div>
                     <div>
                       <h2 className="text-xl xxs:text-2xl font-bold text-gray-900">{certificates.length}</h2>
-                      <p className="text-gray-600 text-sm xxs:text-base">Certificates Earned</p>
+                      <p className="text-gray-600 text-sm xxs:text-base">{t('certificates.certificates_earned')}</p>
                     </div>
                   </div>
                   <div className="text-center xxs:text-right">
-                    <p className="text-xs xxs:text-sm text-gray-500">Latest Achievement</p>
+                    <p className="text-xs xxs:text-sm text-gray-500">{t('certificates.latest_achievement')}</p>
                     <p className="font-semibold text-gray-900 text-sm xxs:text-base">
                       {certificates.length > 0 ? formatDate(certificates[0].completionDate) : 'N/A'}
                     </p>
@@ -382,12 +384,12 @@ const CertificatesPage = () => {
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center space-x-2">
                           <CheckCircle className="w-5 h-5 xxs:w-6 xxs:h-6" />
-                          <span className="font-semibold text-sm xxs:text-base">Certificate</span>
+                          <span className="font-semibold text-sm xxs:text-base">{t('certificates.certificate')}</span>
                         </div>
                         <span className="text-xs xxs:text-sm opacity-90">#{certificate.certificateId.slice(-8)}</span>
                       </div>
                       <div className="text-xs xxs:text-sm opacity-90">
-                        Course Completed Successfully
+                        {t('certificates.course_completed_successfully')}
                       </div>
                     </div>
                   </div>
@@ -401,12 +403,12 @@ const CertificatesPage = () => {
                     <div className="space-y-2 xxs:space-y-3 mb-4 xxs:mb-6">
                       <div className="flex items-center text-xs xxs:text-sm text-gray-600">
                         <Calendar className="w-3 h-3 xxs:w-4 xxs:h-4 mr-2 text-gray-400" />
-                        <span>Completed: {formatDate(certificate.completionDate)}</span>
+                        <span>{t('certificates.completed')}: {formatDate(certificate.completionDate)}</span>
                       </div>
                       
                       <div className="flex items-center text-xs xxs:text-sm text-gray-600">
                         <Calendar className="w-3 h-3 xxs:w-4 xxs:h-4 mr-2 text-gray-400" />
-                        <span>Issued: {formatDate(certificate.dateIssued)}</span>
+                        <span>{t('certificates.issued')}: {formatDate(certificate.dateIssued)}</span>
                       </div>
                     </div>
 
@@ -416,21 +418,21 @@ const CertificatesPage = () => {
                          onClick={() => downloadCertificate(certificate.certificateId, certificate.courseTitle)}
                          disabled={downloading === certificate.certificateId}
                          className="flex items-center justify-center space-x-1 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white px-2 xxs:px-3 py-2 rounded-lg transition-all duration-200 text-xs xxs:text-sm font-medium"
-                         title="Download PDF"
+                         title={t('certificates.download_pdf')}
                        >
                          {downloading === certificate.certificateId ? (
                            <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>
                          ) : (
                            <Download className="w-3 h-3" />
                          )}
-                         <span className="hidden xxs:inline">Download</span>
+                         <span className="hidden xxs:inline">{t('certificates.download')}</span>
                        </button>
                        
                        <button
                          onClick={() => shareCertificate(certificate)}
                          disabled={sharing === certificate.certificateId}
                          className="flex items-center justify-center space-x-1 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white px-2 xxs:px-3 py-2 rounded-lg transition-all duration-200 text-xs xxs:text-sm font-medium"
-                         title="Share Certificate"
+                         title={t('certificates.share_certificate')}
                        >
                          {sharing === certificate.certificateId ? (
                            <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>
@@ -438,7 +440,7 @@ const CertificatesPage = () => {
                            <Share2 className="w-3 h-3" />
                          )}
                          <span className="hidden xxs:inline">
-                           {sharing === certificate.certificateId ? 'Sharing...' : 'Share'}
+                           {sharing === certificate.certificateId ? t('certificates.sharing') : t('certificates.share')}
                          </span>
                        </button>
                      </div>
@@ -452,7 +454,7 @@ const CertificatesPage = () => {
                         className="flex items-center justify-center space-x-1 text-xs text-gray-500 hover:text-gray-700 transition-colors duration-200"
                       >
                         <ExternalLink className="w-3 h-3" />
-                        <span>Verify Certificate</span>
+                        <span>{t('certificates.verify_certificate')}</span>
                       </a>
                     </div>
                   </div>
@@ -462,7 +464,7 @@ const CertificatesPage = () => {
                     <div className="absolute top-3 xxs:top-4 right-3 xxs:right-4 bg-green-500 text-white px-2 xxs:px-3 py-1 rounded-full text-xs shadow-lg z-10">
                       <div className="flex items-center space-x-1">
                         <CheckCircle className="w-3 h-3" />
-                        <span>Shared!</span>
+                        <span>{t('certificates.shared')}!</span>
                       </div>
                     </div>
                   )}

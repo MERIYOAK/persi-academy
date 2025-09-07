@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 
 interface CourseProgressBarProps {
   progress: number;
@@ -15,11 +16,13 @@ const CourseProgressBar: React.FC<CourseProgressBarProps> = ({
   isCompleted,
   className = ''
 }) => {
+  const { t } = useTranslation();
+  
   return (
     <div className={`${className}`}>
       {/* Progress Info */}
       <div className="flex items-center justify-between text-sm mb-2">
-        <span className="text-gray-600">Course Progress</span>
+        <span className="text-gray-600">{t('course_progress.course_progress')}</span>
         <span className={`font-semibold ${
           isCompleted ? 'text-green-600' : 'text-red-600'
         }`}>
@@ -43,9 +46,9 @@ const CourseProgressBar: React.FC<CourseProgressBarProps> = ({
       
       {/* Lessons Info */}
       <div className="flex items-center justify-between text-xs text-gray-500">
-        <span>{completedLessons}/{totalLessons} lessons completed</span>
+        <span>{completedLessons}/{totalLessons} {t('course_progress.lessons_completed')}</span>
         {isCompleted && (
-          <span className="text-green-600 font-medium">✓ Completed</span>
+          <span className="text-green-600 font-medium">✓ {t('course_progress.completed')}</span>
         )}
       </div>
     </div>

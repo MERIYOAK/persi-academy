@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { ChevronDown, ChevronUp, MessageCircle, Mail, Clock, BookOpen, Shield, CreditCard, Users, Globe, Zap, Star, HelpCircle, Phone, MapPin } from 'lucide-react';
 import { config } from '../config/environment';
@@ -10,6 +11,7 @@ interface FAQItem {
 }
 
 const HelpCenterPage = () => {
+  const { t } = useTranslation();
   const [openFaqs, setOpenFaqs] = useState<number[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
 

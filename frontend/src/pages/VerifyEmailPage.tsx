@@ -1,14 +1,19 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { buildApiUrl } from '../config/environment';
 
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { CheckCircle, XCircle, Loader2 } from 'lucide-react';
 
 const VerifyEmailPage = () => {
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
+  
+  
   const [searchParams] = useSearchParams();
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const [message, setMessage] = useState('');
+  
 
   useEffect(() => {
     const verifyEmail = async () => {
@@ -16,7 +21,7 @@ const VerifyEmailPage = () => {
       
       if (!token) {
         setStatus('error');
-        setMessage('Invalid verification link. Please check your email for the correct link.');
+        setMessage(t('auth.verify_email.invalid_link'));
         return;
       }
 
@@ -33,7 +38,7 @@ const VerifyEmailPage = () => {
 
         if (response.ok) {
           setStatus('success');
-          setMessage(result.message || 'Email verified successfully! You are now logged in.');
+          setMessage(result.message || t('auth.verify_email.verified_successfully'));
           
           // Store the auth token if provided
           if (result.data?.token) {
@@ -46,17 +51,17 @@ const VerifyEmailPage = () => {
           }, 2000);
         } else {
           setStatus('error');
-          setMessage(result.message || 'Email verification failed. Please try again.');
+          setMessage(result.message || t('auth.verify_email.verification_failed'));
         }
       } catch (error) {
         console.error('Verification error:', error);
         setStatus('error');
-        setMessage('Network error. Please check your connection and try again.');
+        setMessage(t('auth.verify_email.network_error'));
       }
     };
 
     verifyEmail();
-  }, [searchParams, navigate]);
+  }, [searchParams, navigate, t]);
 
   const getStatusIcon = () => {
     switch (status) {
@@ -92,9 +97,9 @@ const VerifyEmailPage = () => {
             {getStatusIcon()}
             
             <h2 className={`mt-6 text-2xl font-bold ${getStatusColor()}`}>
-              {status === 'loading' && 'Verifying Email...'}
-              {status === 'success' && 'Email Verified!'}
-              {status === 'error' && 'Verification Failed'}
+              {status === 'loading' && t('auth.verify_email.verifying')}
+              {status === 'success' && t('auth.verify_email.verified')}
+              {status === 'error' && t('auth.verify_email.failed')}
             </h2>
             
             <p className="mt-4 text-gray-600">
@@ -104,7 +109,7 @@ const VerifyEmailPage = () => {
             {status === 'success' && (
               <div className="mt-6">
                 <p className="text-sm text-gray-500">
-                  Redirecting to dashboard...
+                  {t('auth.verify_email.redirecting')}
                 </p>
               </div>
             )}
@@ -115,19 +120,19 @@ const VerifyEmailPage = () => {
                   to="/resend-verification"
                   className="block w-full bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded-lg transition-colors duration-200 text-center"
                 >
-                  Resend Verification Email
+                  {t('auth.verify_email.resend_verification')}
                 </Link>
                 <button
                   onClick={() => navigate('/login')}
                   className="w-full bg-gray-600 hover:bg-gray-700 text-white py-2 px-4 rounded-lg transition-colors duration-200"
                 >
-                  Go to Login
+                  {t('auth.verify_email.back_to_login')}
                 </button>
                 <button
                   onClick={() => navigate('/')}
                   className="w-full bg-gray-500 hover:bg-gray-600 text-white py-2 px-4 rounded-lg transition-colors duration-200"
                 >
-                  Go to Home
+                  {t('auth.verify_email.go_to_home')}
                 </button>
               </div>
             )}

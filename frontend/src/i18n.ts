@@ -6,6 +6,7 @@ import LanguageDetector from 'i18next-browser-languagedetector';
 import tgTranslation from './locales/tg/translation.json';
 import enTranslation from './locales/en/translation.json';
 
+
 // Get stored language from localStorage or default to Tigrinya
 const getStoredLanguage = (): string => {
   const stored = localStorage.getItem('i18nextLng');
@@ -29,7 +30,9 @@ i18n
     },
     lng: getStoredLanguage(), // Default language
     fallbackLng: 'tg', // Fallback to Tigrinya if translation is missing
-    debug: false, // Set to true for development debugging
+    debug: true, // Set to true for development debugging
+    reloadOnPrerender: true, // Reload resources on prerender
+    saveMissing: false, // Don't save missing keys
 
     interpolation: {
       escapeValue: false, // React already escapes values

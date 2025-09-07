@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Clock, Users, Play, CheckCircle, Award, Download, BookOpen, ShoppingCart, Loader, ArrowLeft, Eye, Lock } from 'lucide-react';
 import VideoPlaylist from '../components/VideoPlaylist';
 import VideoProgressBar from '../components/VideoProgressBar';
@@ -70,6 +71,7 @@ interface PurchaseStatus {
 }
 
 const CourseDetailPage = () => {
+  const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [course, setCourse] = useState<Course | null>(null);
@@ -140,7 +142,7 @@ const CourseDetailPage = () => {
         const response = await fetch(buildApiUrl(`/api/courses/${id}`));
         
         if (!response.ok) {
-          throw new Error('Course not found');
+          throw new Error(t('course_detail.course_not_found'));
         }
 
         const data = await response.json();
@@ -163,7 +165,7 @@ const CourseDetailPage = () => {
 
       } catch (error) {
         console.error('❌ Error fetching course:', error);
-        setError(error instanceof Error ? error.message : 'Failed to load course');
+        setError(error instanceof Error ? error.message : t('course_detail.failed_to_load_course'));
       } finally {
         setLoading(false);
       }
@@ -411,6 +413,9 @@ const CourseDetailPage = () => {
       setIsPurchasing(true);
       console.log('🔧 Initiating purchase...');
 
+      // Store courseId in sessionStorage for fallback redirect
+      sessionStorage.setItem('pendingCourseId', id);
+
       const response = await fetch(buildApiUrl('/api/payment/create-checkout-session'), {
         method: 'POST',
         headers: {
@@ -429,6 +434,12 @@ const CourseDetailPage = () => {
       }
 
       console.log('✅ Checkout session created:', data);
+      
+      // Store session info for potential failure handling
+      sessionStorage.setItem('stripeSessionId', data.sessionId || 'unknown');
+      sessionStorage.setItem('checkoutStartTime', Date.now().toString());
+      
+      // Redirect to Stripe Checkout
       window.location.href = data.url;
 
     } catch (error) {
@@ -467,7 +478,7 @@ const CourseDetailPage = () => {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <Loader className="h-16 w-16 text-red-600 animate-spin mx-auto mb-6" />
-          <p className="text-gray-600 text-lg font-medium">Loading course details...</p>
+          <p className="text-gray-600 text-lg font-medium">{t('course_detail.loading_course_details')}</p>
         </div>
       </div>
     );
@@ -480,15 +491,15 @@ const CourseDetailPage = () => {
           <div className="text-red-600 mb-6">
             <BookOpen className="h-20 w-20 mx-auto" />
           </div>
-          <h2 className="text-2xl font-bold text-gray-800 mb-4">Course Not Found</h2>
+          <h2 className="text-2xl font-bold text-gray-800 mb-4">{t('course_detail.course_not_found')}</h2>
           <p className="text-gray-600 mb-8">
-            {error || 'The course you are looking for does not exist or has been removed.'}
+            {error || t('course_detail.course_not_found_message')}
           </p>
           <Link
             to="/courses"
             className="bg-red-600 hover:bg-red-700 text-white px-8 py-3 rounded-xl font-semibold transition-all duration-200 transform hover:scale-105 shadow-lg"
           >
-            Browse All Courses
+            {t('course_detail.browse_all_courses')}
           </Link>
         </div>
       </div>
@@ -508,8 +519,8 @@ const CourseDetailPage = () => {
         <div className="bg-gray-900 p-8 text-center">
           <div className="text-gray-400">
             <BookOpen className="w-16 h-16 mx-auto mb-4" />
-            <p className="text-lg font-semibold mb-2">Loading Course Content...</p>
-            <p className="text-sm">Please wait while we load the course videos.</p>
+            <p className="text-lg font-semibold mb-2">{t('course_detail.loading_course_content')}</p>
+            <p className="text-sm">{t('course_detail.please_wait_loading_videos')}</p>
           </div>
         </div>
       ) : (
@@ -523,7 +534,7 @@ const CourseDetailPage = () => {
                   className="flex items-center space-x-2 text-gray-300 hover:text-white transition-colors duration-200"
                 >
                   <ArrowLeft className="h-5 w-5" />
-                  <span>Back to Courses</span>
+                  <span>{t('course_detail.back_to_courses')}</span>
                 </button>
                 <div className="hidden md:block h-6 w-px bg-gray-600" />
                 <h1 className="hidden md:block text-white font-semibold truncate">
@@ -538,7 +549,7 @@ const CourseDetailPage = () => {
                   className="hidden md:flex items-center space-x-2 text-gray-300 hover:text-white transition-colors duration-200 px-3 py-2 rounded-lg hover:bg-gray-700"
                 >
                   <BookOpen className="h-5 w-5" />
-                  <span className="text-sm">{showPlaylist ? 'Hide Playlist' : 'Show Playlist'}</span>
+                  <span className="text-sm">{showPlaylist ? t('course_detail.hide_playlist') : t('course_detail.show_playlist')}</span>
                 </button>
                 
                 {/* Mobile Playlist Toggle */}
@@ -598,11 +609,11 @@ const CourseDetailPage = () => {
                         <div className="space-y-4 text-center">
                           <div className="text-gray-400">
                             <Lock className="w-16 h-16 mx-auto mb-4" />
-                            <p className="text-lg font-semibold mb-2">Video Locked</p>
+                            <p className="text-lg font-semibold mb-2">{t('course_detail.video_locked')}</p>
                             <p className="text-sm mb-4">
                               {!userToken 
-                                ? 'Sign in or purchase this course to access all videos' 
-                                : 'Purchase this course to access this video'
+                                ? t('course_detail.sign_in_or_purchase')
+                                : t('course_detail.purchase_to_access')
                               }
                             </p>
                             {!userToken ? (
@@ -611,13 +622,13 @@ const CourseDetailPage = () => {
                                   onClick={() => navigate('/login')}
                                   className="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg transition-colors duration-200 font-semibold mr-2"
                                 >
-                                  Sign In
+                                  {t('course_detail.sign_in')}
                                 </button>
                                 <button
                                   onClick={handlePurchase}
                                   className="bg-gray-600 hover:bg-gray-700 text-white px-6 py-3 rounded-lg transition-colors duration-200 font-semibold"
                                 >
-                                  Purchase Course
+                                  {t('course_detail.purchase_course')}
                                 </button>
                               </div>
                             ) : (
@@ -625,7 +636,7 @@ const CourseDetailPage = () => {
                                 onClick={handlePurchase}
                                 className="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg transition-colors duration-200 font-semibold"
                               >
-                                Purchase Course
+                                {t('course_detail.purchase_course')}
                               </button>
                             )}
                           </div>
@@ -637,7 +648,7 @@ const CourseDetailPage = () => {
                             <svg className="w-16 h-16 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
                             </svg>
-                            <p className="text-lg font-semibold mb-2">Video Error</p>
+                            <p className="text-lg font-semibold mb-2">{t('course_detail.video_error')}</p>
                             <p className="text-sm">{videoError}</p>
                           </div>
                           
@@ -645,7 +656,7 @@ const CourseDetailPage = () => {
                             onClick={() => window.location.reload()}
                             className="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg transition-colors duration-200 font-semibold"
                           >
-                            Try Again
+                            {t('course_detail.try_again')}
                           </button>
                         </div>
                       ) : (
@@ -655,22 +666,22 @@ const CourseDetailPage = () => {
                             // All videos are locked for public user
                             <div className="space-y-4 px-4 sm:px-6">
                               <Lock className="w-12 h-12 sm:w-16 sm:h-16 mx-auto text-gray-400" />
-                              <p className="text-base sm:text-lg font-semibold text-gray-300 text-center">Course Preview</p>
+                              <p className="text-base sm:text-lg font-semibold text-gray-300 text-center">{t('course_detail.course_preview')}</p>
                               <p className="text-xs sm:text-sm text-gray-500 mb-4 text-center px-2">
-                                This course doesn't have free preview lessons. Sign in or purchase to access all videos.
+                                {t('course_detail.no_free_preview')}
                               </p>
                               <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 justify-center">
                                 <button
                                   onClick={() => navigate('/login')}
                                   className="bg-red-600 hover:bg-red-700 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg transition-colors duration-200 font-semibold text-sm sm:text-base"
                                 >
-                                  Sign In
+                                  {t('course_detail.sign_in')}
                                 </button>
                                 <button
                                   onClick={handlePurchase}
                                   className="bg-gray-600 hover:bg-gray-700 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg transition-colors duration-200 font-semibold text-sm sm:text-base"
                                 >
-                                  Purchase Course
+                                  {t('course_detail.purchase_course')}
                                 </button>
                               </div>
                             </div>
@@ -678,11 +689,11 @@ const CourseDetailPage = () => {
                             // Loading state
                             <div className="text-center">
                               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-500 mx-auto mb-4"></div>
-                              <p>Loading video...</p>
+                              <p>{t('course_detail.loading_video')}</p>
                               <p className="text-sm mt-2">
                                 {!currentVideo?.videoUrl || currentVideo.videoUrl === 'undefined' 
-                                  ? 'Refreshing video link...' 
-                                  : 'This may take a few moments'
+                                  ? t('course_detail.refreshing_video_link')
+                                  : t('course_detail.this_may_take_moments')
                                 }
                               </p>
                             </div>
@@ -697,17 +708,17 @@ const CourseDetailPage = () => {
               {/* Video Info Section */}
               <div className="bg-gray-800 px-3 sm:px-4 py-3 sm:py-4">
                 <h2 className="text-white font-semibold text-sm sm:text-lg mb-2 line-clamp-2">
-                  {currentVideo?.title || 'Select a video'}
+                  {currentVideo?.title || t('course_detail.select_a_video')}
                   {currentVideo?.isFreePreview && !currentVideo?.locked && (
                     <span className="ml-2 inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-green-600 text-white">
-                      🔓 Free Preview
+                      🔓 {t('course_detail.free_preview')}
                     </span>
                   )}
                 </h2>
                 {currentVideo?.completed && (
                   <div className="flex items-center space-x-1 text-green-400 text-xs sm:text-sm">
                     <CheckCircle className="h-4 w-4" />
-                    <span>Completed</span>
+                    <span>{t('course_detail.completed')}</span>
                   </div>
                 )}
               </div>
@@ -726,7 +737,7 @@ const CourseDetailPage = () => {
                   />
                 ) : (
                   <div className="p-4 flex-1 overflow-y-auto">
-                    <div className="text-white text-sm mb-4">Course Content</div>
+                    <div className="text-white text-sm mb-4">{t('course_detail.course_content')}</div>
                     <div className="space-y-2">
                       {Array.from({ length: 5 }).map((_, i) => (
                         <div key={i} className="animate-pulse">
@@ -750,7 +761,7 @@ const CourseDetailPage = () => {
                     onClick={() => setShowPlaylist(false)}
                     className="text-gray-600 hover:text-gray-800"
                   >
-                    Close Playlist
+                    {t('course_detail.close_playlist')}
                   </button>
                 </div>
                 {courseData && courseData.videos ? (
@@ -840,14 +851,14 @@ const CourseDetailPage = () => {
                   <Clock className="h-6 w-6 text-red-200" />
                   <div>
                     <span className="font-bold text-lg">{totalDuration}</span>
-                    <span className="text-red-200 text-sm ml-2">total</span>
+                    <span className="text-red-200 text-sm ml-2">{t('course_detail.total')}</span>
                   </div>
                 </div>
                 <div className="flex items-center space-x-3 bg-white/10 backdrop-blur-sm px-4 py-3 rounded-lg border border-white/20">
                   <BookOpen className="h-6 w-6 text-red-200" />
                   <div>
                     <span className="font-bold text-lg">{totalVideos}</span>
-                    <span className="text-red-200 text-sm ml-2">lessons</span>
+                    <span className="text-red-200 text-sm ml-2">{t('course_detail.lessons')}</span>
                   </div>
                 </div>
               </div>
@@ -858,14 +869,14 @@ const CourseDetailPage = () => {
                   <BookOpen className="h-10 w-10 text-white" />
                 </div>
                 <div>
-                  <p className="text-red-200 text-sm font-medium">Created by</p>
+                  <p className="text-red-200 text-sm font-medium">{t('course_detail.created_by')}</p>
                   <p className="font-bold text-xl text-white">{course.instructor || 'QENDIEL Academy'}</p>
                   <p className="text-red-200 text-sm">
-                    Last updated {course.updatedAt ? new Date(course.updatedAt).toLocaleDateString('en-US', { 
+                    {t('course_detail.last_updated')} {course.updatedAt ? new Date(course.updatedAt).toLocaleDateString('en-US', { 
                       year: 'numeric', 
                       month: 'long', 
                       day: 'numeric' 
-                    }) : 'Recently'}
+                    }) : t('course_detail.recently')}
                   </p>
                 </div>
               </div>
@@ -910,14 +921,14 @@ const CourseDetailPage = () => {
                   <div className="text-center mb-6">
                     <div className="bg-gradient-to-r from-green-500 to-green-600 text-white px-6 py-4 rounded-2xl flex items-center justify-center space-x-3 shadow-lg">
                       <CheckCircle className="h-6 w-6" />
-                      <span className="font-bold text-lg">Course Purchased</span>
+                      <span className="font-bold text-lg">{t('course_detail.course_purchased')}</span>
                     </div>
                     <button
                       onClick={() => navigate(`/course/${id}/watch/${courseData?.videos[0]?.id}`)}
                       className="w-full mt-4 bg-red-600 hover:bg-red-700 text-white font-bold py-4 px-6 rounded-2xl transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center justify-center space-x-2"
                     >
                       <Play className="h-5 w-5" />
-                      <span>Start Learning</span>
+                      <span>{t('course_detail.start_learning')}</span>
                     </button>
                   </div>
                 ) : (
@@ -930,12 +941,12 @@ const CourseDetailPage = () => {
                       {isPurchasing ? (
                         <>
                           <Loader className="h-6 w-6 animate-spin" />
-                          <span className="text-lg">Processing...</span>
+                          <span className="text-lg">{t('course_detail.processing')}</span>
                         </>
                       ) : (
                         <>
                           <ShoppingCart className="h-6 w-6" />
-                          <span className="text-lg">Enroll Now</span>
+                          <span className="text-lg">{t('course_detail.enroll_now')}</span>
                         </>
                       )}
                     </button>
@@ -945,7 +956,7 @@ const CourseDetailPage = () => {
                         onClick={() => navigate('/login')}
                         className="w-full bg-white border-2 border-red-600 text-red-600 hover:bg-red-50 font-semibold py-3 px-6 rounded-2xl transition-all duration-200 flex items-center justify-center space-x-2"
                       >
-                        <span>Sign In to Enroll</span>
+                        <span>{t('course_detail.sign_in_to_enroll')}</span>
                       </button>
                     )}
                   </div>
@@ -955,29 +966,29 @@ const CourseDetailPage = () => {
                 <div className="text-center mb-8">
                   <div className="flex items-center justify-center space-x-2 text-gray-600 text-sm">
                     <CheckCircle className="h-4 w-4 text-green-500" />
-                    <span>5-day money-back guarantee</span>
+                    <span>{t('course_detail.money_back_guarantee')}</span>
                   </div>
                 </div>
                 
                 {/* Enhanced Course Features */}
                 <div className="space-y-4">
-                  <h4 className="font-semibold text-gray-800 mb-4 text-center">What's included:</h4>
+                  <h4 className="font-semibold text-gray-800 mb-4 text-center">{t('course_detail.whats_included')}</h4>
                   <div className="space-y-3">
                     <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors duration-200">
                       <Clock className="h-5 w-5 text-red-600 flex-shrink-0" />
-                      <span className="text-gray-700">{totalDuration} on-demand video</span>
+                      <span className="text-gray-700">{totalDuration} {t('course_detail.on_demand_video')}</span>
                     </div>
                     <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors duration-200">
                       <Award className="h-5 w-5 text-red-600 flex-shrink-0" />
-                      <span className="text-gray-700">Certificate of completion</span>
+                      <span className="text-gray-700">{t('course_detail.certificate_of_completion')}</span>
                     </div>
                     <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors duration-200">
                       <Download className="h-5 w-5 text-red-600 flex-shrink-0" />
-                      <span className="text-gray-700">Downloadable resources</span>
+                      <span className="text-gray-700">{t('course_detail.downloadable_resources')}</span>
                     </div>
                     <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors duration-200">
                       <Users className="h-5 w-5 text-red-600 flex-shrink-0" />
-                      <span className="text-gray-700">Lifetime access</span>
+                      <span className="text-gray-700">{t('course_detail.lifetime_access')}</span>
                     </div>
                   </div>
                 </div>
@@ -993,12 +1004,12 @@ const CourseDetailPage = () => {
           <div className="lg:col-span-2 space-y-12">
             {/* Course Curriculum */}
             <section>
-              <h2 className="text-3xl font-bold text-gray-800 mb-6">Course Curriculum</h2>
+              <h2 className="text-3xl font-bold text-gray-800 mb-6">{t('course_detail.course_curriculum')}</h2>
               {course.videos && course.videos.length > 0 ? (
                 <div className="bg-white rounded-lg shadow-lg overflow-hidden">
                   <div className="bg-gray-50 px-6 py-4 border-b border-gray-200">
-                    <h3 className="text-lg font-semibold text-gray-800">All Lessons</h3>
-                    <p className="text-sm text-gray-600">{totalVideos} lessons • {totalDuration}</p>
+                    <h3 className="text-lg font-semibold text-gray-800">{t('course_detail.all_lessons')}</h3>
+                    <p className="text-sm text-gray-600">{totalVideos} {t('course_detail.lessons')} • {totalDuration}</p>
                   </div>
                   <div className="divide-y divide-gray-200">
                     {course.videos.map((video, index) => (
@@ -1031,15 +1042,15 @@ const CourseDetailPage = () => {
               ) : (
                 <div className="bg-white rounded-lg shadow-lg p-8 text-center">
                   <BookOpen className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold text-gray-800 mb-2">No Lessons Available</h3>
-                  <p className="text-gray-600">This course doesn't have any lessons yet.</p>
+                  <h3 className="text-lg font-semibold text-gray-800 mb-2">{t('course_detail.no_lessons_available')}</h3>
+                  <p className="text-gray-600">{t('course_detail.no_lessons_message')}</p>
                 </div>
               )}
             </section>
 
             {/* Course Description */}
             <section>
-              <h2 className="text-3xl font-bold text-gray-800 mb-6">About This Course</h2>
+              <h2 className="text-3xl font-bold text-gray-800 mb-6">{t('course_detail.about_this_course')}</h2>
               <div className="bg-white rounded-lg shadow-lg p-8">
                 <p className="text-gray-700 leading-relaxed text-lg">
                   {course.description}
@@ -1052,25 +1063,25 @@ const CourseDetailPage = () => {
           <div className="lg:col-span-1">
             {/* Course Stats */}
             <section className="bg-white rounded-lg shadow-lg p-6 mb-8">
-              <h3 className="text-xl font-bold text-gray-800 mb-6">Course Statistics</h3>
+              <h3 className="text-xl font-bold text-gray-800 mb-6">{t('course_detail.course_statistics')}</h3>
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <span className="text-gray-600">Total Duration</span>
+                  <span className="text-gray-600">{t('course_detail.total_duration')}</span>
                   <span className="font-semibold">{totalDuration}</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-gray-600">Total Lessons</span>
+                  <span className="text-gray-600">{t('course_detail.total_lessons')}</span>
                   <span className="font-semibold">{totalVideos}</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-gray-600">Students Enrolled</span>
+                  <span className="text-gray-600">{t('course_detail.students_enrolled')}</span>
                   <span className="font-semibold">{course.totalEnrollments || 0}</span>
                 </div>
 
                 <div className="flex items-center justify-between">
-                  <span className="text-gray-600">Last Updated</span>
+                  <span className="text-gray-600">{t('course_detail.last_updated')}</span>
                   <span className="font-semibold">
-                    {course.updatedAt ? new Date(course.updatedAt).toLocaleDateString() : 'Recently'}
+                    {course.updatedAt ? new Date(course.updatedAt).toLocaleDateString() : t('course_detail.recently')}
                   </span>
                 </div>
               </div>
@@ -1078,27 +1089,27 @@ const CourseDetailPage = () => {
 
             {/* Course Features */}
             <section className="bg-white rounded-lg shadow-lg p-6">
-              <h3 className="text-xl font-bold text-gray-800 mb-6">What's Included</h3>
+              <h3 className="text-xl font-bold text-gray-800 mb-6">{t('course_detail.whats_included')}</h3>
               <div className="space-y-4">
                 <div className="flex items-center space-x-3">
                   <CheckCircle className="h-5 w-5 text-green-500" />
-                  <span className="text-gray-700">Lifetime access to course content</span>
+                  <span className="text-gray-700">{t('course_detail.lifetime_access_content')}</span>
                 </div>
                 <div className="flex items-center space-x-3">
                   <CheckCircle className="h-5 w-5 text-green-500" />
-                  <span className="text-gray-700">Certificate of completion</span>
+                  <span className="text-gray-700">{t('course_detail.certificate_of_completion')}</span>
                 </div>
                 <div className="flex items-center space-x-3">
                   <CheckCircle className="h-5 w-5 text-green-500" />
-                  <span className="text-gray-700">Regular course updates</span>
+                  <span className="text-gray-700">{t('course_detail.regular_course_updates')}</span>
                 </div>
                 <div className="flex items-center space-x-3">
                   <CheckCircle className="h-5 w-5 text-green-500" />
-                  <span className="text-gray-700">Community Q&A support</span>
+                  <span className="text-gray-700">{t('course_detail.community_qa_support')}</span>
                 </div>
                 <div className="flex items-center space-x-3">
                   <CheckCircle className="h-5 w-5 text-green-500" />
-                  <span className="text-gray-700">5-day money-back guarantee</span>
+                  <span className="text-gray-700">{t('course_detail.money_back_guarantee')}</span>
                 </div>
               </div>
             </section>
@@ -1110,43 +1121,43 @@ const CourseDetailPage = () => {
                   <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center">
                     <Users className="h-5 w-5 text-white" />
                   </div>
-                  <h3 className="text-xl font-bold text-gray-800">Join Our Exclusive Community</h3>
+                  <h3 className="text-xl font-bold text-gray-800">{t('course_detail.join_exclusive_community')}</h3>
                 </div>
                 <div className="space-y-4">
                   <p className="text-gray-700 leading-relaxed">
-                    🎉 <strong>Bonus:</strong> Get instant access to our private WhatsApp community when you enroll!
+                    🎉 <strong>{t('course_detail.bonus_whatsapp_access')}</strong>
                   </p>
                   <div className="bg-white rounded-lg p-4 border border-green-200">
                     <h4 className="font-semibold text-gray-800 mb-3 flex items-center">
                       <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
-                      What you'll get in our community:
+                      {t('course_detail.what_youll_get_community')}
                     </h4>
                     <ul className="space-y-2 text-sm text-gray-700">
                       <li className="flex items-start space-x-2">
                         <span className="text-green-500 mt-1">•</span>
-                        <span><strong>Direct access to instructors</strong> - Ask questions and get personalized help</span>
+                        <span><strong>{t('course_detail.direct_access_instructors')}</strong></span>
                       </li>
                       <li className="flex items-start space-x-2">
                         <span className="text-green-500 mt-1">•</span>
-                        <span><strong>Connect with fellow students</strong> - Network and learn together</span>
+                        <span><strong>{t('course_detail.connect_fellow_students')}</strong></span>
                       </li>
                       <li className="flex items-start space-x-2">
                         <span className="text-green-500 mt-1">•</span>
-                        <span><strong>Exclusive tips and updates</strong> - Get the latest industry insights</span>
+                        <span><strong>{t('course_detail.exclusive_tips_updates')}</strong></span>
                       </li>
                       <li className="flex items-start space-x-2">
                         <span className="text-green-500 mt-1">•</span>
-                        <span><strong>Project feedback and reviews</strong> - Share your work and get constructive feedback</span>
+                        <span><strong>{t('course_detail.project_feedback_reviews')}</strong></span>
                       </li>
                       <li className="flex items-start space-x-2">
                         <span className="text-green-500 mt-1">•</span>
-                        <span><strong>Job opportunities and referrals</strong> - Access to exclusive career opportunities</span>
+                        <span><strong>{t('course_detail.job_opportunities_referrals')}</strong></span>
                       </li>
                     </ul>
                   </div>
                   <div className="bg-green-100 rounded-lg p-4 border border-green-300">
                     <p className="text-green-800 font-medium text-sm">
-                      💡 <strong>Pro Tip:</strong> Students who join our community complete courses 3x faster and have 90% higher success rates!
+                      💡 <strong>{t('course_detail.pro_tip_success')}</strong>
                     </p>
                   </div>
                 </div>

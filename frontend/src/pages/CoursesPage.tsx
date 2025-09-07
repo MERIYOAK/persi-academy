@@ -581,22 +581,22 @@ const CoursesPage: React.FC = () => {
           <div className="mt-8 flex flex-col sm:flex-row items-center justify-between space-y-4 sm:space-y-0">
             {/* Items per page selector */}
             <div className="flex items-center space-x-2">
-              <label className="text-sm text-gray-700">Show:</label>
+              <label className="text-sm text-gray-700">{t('courses.pagination.show')}:</label>
               <select
                 value={itemsPerPage}
                 onChange={(e) => handleItemsPerPageChange(parseInt(e.target.value))}
                 className="px-3 py-1 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-red-500 focus:border-red-500"
               >
-                <option value={6}>6 per page</option>
-                <option value={12}>12 per page</option>
-                <option value={24}>24 per page</option>
-                <option value={48}>48 per page</option>
+                <option value={6}>{t('courses.pagination.per_page', { count: 6 })}</option>
+                <option value={12}>{t('courses.pagination.per_page', { count: 12 })}</option>
+                <option value={24}>{t('courses.pagination.per_page', { count: 24 })}</option>
+                <option value={48}>{t('courses.pagination.per_page', { count: 48 })}</option>
               </select>
             </div>
 
             {/* Pagination info */}
             <div className="text-sm text-gray-700">
-              Page {currentPage} of {totalPages} ({totalItems} total courses)
+              {t('courses.pagination.page_info', { current: currentPage, total: totalPages, items: totalItems })}
             </div>
 
             {/* Pagination buttons */}
@@ -607,7 +607,7 @@ const CoursesPage: React.FC = () => {
                 disabled={currentPage === 1}
                 className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Previous
+                {t('courses.pagination.previous')}
               </button>
 
               {/* Page numbers */}
@@ -690,7 +690,7 @@ const CoursesPage: React.FC = () => {
                 disabled={currentPage === totalPages}
                 className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Next
+                {t('courses.pagination.next')}
               </button>
             </div>
           </div>

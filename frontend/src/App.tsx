@@ -31,6 +31,7 @@ import AdminAnalyticsPage from './pages/AdminAnalyticsPage';
 import AdminSettingsPage from './pages/AdminSettingsPage';
 import CheckoutSuccessPage from './pages/CheckoutSuccessPage';
 import CheckoutCancelPage from './pages/CheckoutCancelPage';
+import PaymentFailurePage from './pages/PaymentFailurePage';
 import AboutPage from './pages/AboutPage';
 import ContactPage from './pages/ContactPage';
 import CoursesPage from './pages/CoursesPage';
@@ -41,11 +42,13 @@ import RefundPolicyPage from './pages/RefundPolicyPage';
 import GoogleCallbackPage from './pages/GoogleCallbackPage';
 import UserCourseDetailPage from './pages/UserCourseDetailPage';
 import CompleteGoogleRegistrationPage from './pages/CompleteGoogleRegistrationPage';
+import PaymentFailureHandler from './components/PaymentFailureHandler';
 
 function App() {
   return (
     <Router>
       <ScrollManager>
+        <PaymentFailureHandler />
         <Routes>
         <Route element={<UserLayout />}>
           <Route path="/" element={<HomePage />} />
@@ -65,6 +68,7 @@ function App() {
           <Route path="/course/:id/watch/:videoId" element={<VideoPlayerPage />} />
           <Route path="/checkout/success" element={<CheckoutSuccessPage />} />
           <Route path="/checkout/cancel" element={<CheckoutCancelPage />} />
+          <Route path="/checkout/failure" element={<PaymentFailurePage />} />
           <Route path="/about" element={<AboutPage />} />
           <Route path="/contact" element={<ContactPage />} />
           <Route path="/help-center" element={<HelpCenterPage />} />

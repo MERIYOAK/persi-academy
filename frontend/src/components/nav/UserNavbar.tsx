@@ -230,7 +230,7 @@ const UserNavbar: React.FC = () => {
             {/* Auth Section */}
               {isAuthenticated ? (
                <div className="px-4 py-2">
-                 <div className="text-xs text-gray-500 mb-3 font-medium">ACCOUNT</div>
+                 <div className="text-xs text-gray-500 mb-3 font-medium">{t('navbar.account')}</div>
                  <div className="space-y-2">
                                        <Link
                       to="/dashboard"
@@ -260,7 +260,7 @@ const UserNavbar: React.FC = () => {
                      <svg className="h-4 w-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
                      </svg>
-                     My Certificates
+                     {t('navbar.my_certificates')}
                    </Link>
                    <div className="border-t border-gray-200 my-2"></div>
                                        <button
@@ -280,7 +280,7 @@ const UserNavbar: React.FC = () => {
                 </div>
               ) : (
               <div className="space-y-3">
-                <div className="text-xs text-gray-500 px-4 font-medium">AUTHENTICATION</div>
+                <div className="text-xs text-gray-500 px-4 font-medium">{t('navbar.authentication')}</div>
                                      <Link
                      to="/login"
                    className="block px-4 py-3 text-sm sm:text-base font-semibold text-gray-700 hover:text-red-600 transition-all duration-300 ease-in-out rounded-lg hover:bg-gray-50"

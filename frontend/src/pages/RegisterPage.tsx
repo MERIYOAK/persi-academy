@@ -1,59 +1,61 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Eye, EyeOff, AlertCircle, CheckCircle, Phone } from 'lucide-react';
 import AuthForm from '../components/AuthForm';
 import { buildApiUrl } from '../config/environment';
 import { config } from '../config/environment';
 
 const RegisterPage = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
 
   const fields = [
     {
       name: 'firstName',
-      label: 'First Name',
+      label: t('auth.register.first_name'),
       type: 'text',
-      placeholder: 'Enter your first name',
+      placeholder: t('auth.register.enter_first_name'),
       required: true
     },
     {
       name: 'lastName',
-      label: 'Last Name',
+      label: t('auth.register.last_name'),
       type: 'text',
-      placeholder: 'Enter your last name',
+      placeholder: t('auth.register.enter_last_name'),
       required: true
     },
     {
       name: 'email',
-      label: 'Email Address',
+      label: t('auth.register.email'),
       type: 'email',
-      placeholder: 'Enter your email',
+      placeholder: t('auth.register.enter_email'),
       required: true
     },
     {
       name: 'phoneNumber',
-      label: 'Phone Number',
+      label: t('auth.register.phone_number'),
       type: 'tel',
       placeholder: config.SUPPORT_PHONE,
       required: true
     },
     {
       name: 'password',
-      label: 'Password',
+      label: t('auth.register.password'),
       type: 'password',
-      placeholder: 'Create a password',
+      placeholder: t('auth.register.create_password'),
       required: true
     },
     {
       name: 'confirmPassword',
-      label: 'Confirm Password',
+      label: t('auth.register.confirm_password'),
       type: 'password',
-      placeholder: 'Confirm your password',
+      placeholder: t('auth.register.confirm_password_placeholder'),
       required: true
     },
     {
       name: 'profilePhoto',
-      label: 'Profile Photo',
+      label: t('auth.register.profile_photo'),
       type: 'file',
       required: false
     }
@@ -61,8 +63,8 @@ const RegisterPage = () => {
 
   const links = [
     {
-      text: 'Already have an account?',
-      linkText: 'Sign in here',
+      text: t('auth.register.already_have_account'),
+      linkText: t('auth.register.sign_in_here'),
       href: '/login'
     }
   ];
@@ -72,21 +74,21 @@ const RegisterPage = () => {
     
     // Basic validation
     if (data.password !== data.confirmPassword) {
-      alert('Passwords do not match');
+      alert(t('auth.register.password_mismatch'));
       return;
     }
 
     // Phone number validation
     const phoneNumber = data.phoneNumber as string;
     if (!phoneNumber) {
-      alert('Phone number is required');
+      alert(t('auth.register.phone_required'));
       return;
     }
 
     // Basic phone number format validation (international format)
     const phoneRegex = /^\+[1-9]\d{1,14}$/;
     if (!phoneRegex.test(phoneNumber)) {
-      alert('Please enter a valid international phone number (e.g., +1234567890)');
+      alert(t('auth.register.invalid_phone'));
       return;
     }
     
@@ -114,28 +116,28 @@ const RegisterPage = () => {
       if (response.ok) {
         if (result.data.verificationRequired) {
           // Show verification message and redirect to home page
-          alert(result.message || 'Registration successful! Please check your email to verify your account.');
+          alert(result.message || t('auth.register.registration_success'));
           navigate('/'); // Redirect to home page, not dashboard
         } else {
           // This shouldn't happen for manual registration, but handle it just in case
-          alert('Registration successful! Please check your email to verify your account.');
+          alert(t('auth.register.registration_success'));
           navigate('/'); // Redirect to home page
         }
       } else {
-        alert(result.message || 'Registration failed. Please try again.');
+        alert(result.message || t('auth.register.registration_error'));
       }
     } catch (error) {
       console.error('Registration error:', error);
-      alert('Registration failed. Please check your connection and try again.');
+      alert(t('auth.register.registration_error'));
     }
   };
 
   return (
     <AuthForm
-              title="Join QENDIEL Academy"
-      subtitle="Create your account to start your YouTube journey"
+      title={t('auth.register.join_us')}
+      subtitle={t('auth.register.create_account')}
       fields={fields}
-      submitText="Create Account"
+      submitText={t('auth.register.sign_up')}
       onSubmit={handleSubmit}
       links={links}
       socialAuth={true}

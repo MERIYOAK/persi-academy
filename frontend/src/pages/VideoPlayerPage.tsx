@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { ChevronLeft, BookOpen, CheckCircle } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import { BookOpen, CheckCircle } from 'lucide-react';
 import VideoPlaylist from '../components/VideoPlaylist';
-import VideoProgressBar from '../components/VideoProgressBar';
 import EnhancedVideoPlayer from '../components/EnhancedVideoPlayer';
 import WhatsAppGroupButton from '../components/WhatsAppGroupButton';
 import { buildApiUrl } from '../config/environment';
@@ -42,6 +42,7 @@ interface CourseData {
 }
 
 const VideoPlayerPage = () => {
+  const { t } = useTranslation();
   const { id, videoId } = useParams<{ id: string; videoId: string }>();
   const navigate = useNavigate();
   const [currentVideoId, setCurrentVideoId] = useState(videoId || '');
@@ -63,7 +64,7 @@ const VideoPlayerPage = () => {
   const [isRetrying, setIsRetrying] = useState(false);
   const [pauseStartTime, setPauseStartTime] = useState<number | null>(null);
   const [isPaused, setIsPaused] = useState(false);
-  const [currentVideoPercentage, setCurrentVideoPercentage] = useState(0); // Track actual video percentage
+  const [, setCurrentVideoPercentage] = useState(0); // Track actual video percentage
   const [isRefreshingUrl, setIsRefreshingUrl] = useState(false); // Track URL refresh state
   const [isSwitchingVideo, setIsSwitchingVideo] = useState(false); // Track video switching state
   const [currentVideo, setCurrentVideo] = useState<Video | undefined>(undefined); // Track current video object
@@ -781,7 +782,7 @@ const VideoPlayerPage = () => {
         } else if (currentVideoId) {
           console.log('🔧 [VideoPlayer] Current video ID already set:', currentVideoId);
           // Set the current video state based on the currentVideoId
-          const initialCurrentVideo = finalCourseData.videos.find(v => v.id === currentVideoId);
+          const initialCurrentVideo = finalCourseData.videos.find((v: Video) => v.id === currentVideoId);
           setCurrentVideo(initialCurrentVideo); // Set initial current video state
         } else {
           console.log('⚠️ [VideoPlayer] No videos available to set as current video');
@@ -1553,10 +1554,10 @@ const VideoPlayerPage = () => {
       <div className="min-h-screen flex items-center justify-center bg-gray-900 text-white">
         <div className="text-center max-w-md mx-auto p-8">
           <h2 className="text-2xl font-bold mb-4">
-            {error?.includes('purchase') ? 'Course Not Purchased' : 'Video not found'}
+            {error?.includes('purchase') ? t('video_player.course_not_purchased') : t('video_player.video_not_found')}
           </h2>
           <p className="text-gray-400 mb-6">
-            {error || 'The video you are looking for does not exist.'}
+            {error || t('video_player.video_not_exist')}
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             {error?.includes('purchase') ? (
@@ -1564,21 +1565,21 @@ const VideoPlayerPage = () => {
                 to={`/course/${id}`}
                 className="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg transition-colors duration-200"
               >
-                Purchase Course
+                {t('video_player.purchase_course')}
               </Link>
             ) : (
           <Link
             to="/courses"
             className="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg transition-colors duration-200"
           >
-            Back to Courses
+            {t('video_player.back_to_courses')}
           </Link>
             )}
             <Link
               to="/dashboard"
               className="border border-gray-600 text-gray-300 hover:text-white px-6 py-3 rounded-lg transition-colors duration-200"
             >
-              Go to Dashboard
+              {t('video_player.go_to_dashboard')}
             </Link>
           </div>
         </div>
@@ -1611,7 +1612,7 @@ const VideoPlayerPage = () => {
               className="hidden md:flex items-center space-x-2 text-gray-300 hover:text-white transition-colors duration-200 px-3 py-2 rounded-lg hover:bg-gray-700"
             >
               <BookOpen className="h-5 w-5" />
-              <span className="text-sm">{showPlaylist ? 'Hide Playlist' : 'Show Playlist'}</span>
+              <span className="text-sm">{showPlaylist ? t('video_player.hide_playlist') : t('video_player.show_playlist')}</span>
             </button>
             
             {/* Mobile Playlist Toggle */}
@@ -1620,7 +1621,7 @@ const VideoPlayerPage = () => {
               className="md:hidden flex items-center space-x-1 xxs:space-x-2 text-gray-300 hover:text-white transition-colors duration-200 px-2 xxs:px-3 py-2 rounded-lg hover:bg-gray-700"
             >
               <BookOpen className="h-4 w-4 xxs:h-5 xxs:w-5" />
-              <span className="text-sm xxs:text-base">Playlist</span>
+              <span className="text-sm xxs:text-base">{t('video_player.playlist')}</span>
             </button>
           </div>
         </div>
@@ -1726,14 +1727,14 @@ const VideoPlayerPage = () => {
                     <p>Loading video...</p>
                     <p className="text-sm mt-2">
                       {isRefreshingUrl
-                        ? 'Refreshing video link...'
+                        ? t('video_player.refreshing_video_link')
                         : !currentVideo?.videoUrl || currentVideo.videoUrl === 'undefined' 
-                        ? 'Loading video link...' 
+                        ? t('video_player.loading_video_link')
                         : !currentVideo?.hasAccess
-                        ? `Checking video access... (hasAccess: ${currentVideo?.hasAccess}, locked: ${currentVideo?.locked})`
+                        ? t('video_player.checking_video_access')
                         : isPresignedUrlExpired(currentVideo.videoUrl)
-                        ? 'Video link expired, refreshing...'
-                        : 'This may take a few moments'
+                        ? t('video_player.video_link_expired')
+                        : t('video_player.this_may_take_moments')
                       }
                     </p>
                     {videoLoading && (
@@ -1744,7 +1745,7 @@ const VideoPlayerPage = () => {
                             style={{ width: `${loadingProgress}%` }}
                           />
                       </div>
-                        <p className="text-xs text-gray-500">{Math.round(loadingProgress)}% loaded</p>
+                        <p className="text-xs text-gray-500">{Math.round(loadingProgress)}% {t('video_player.loaded')}</p>
                       </div>
                     )}
                   </div>
@@ -1756,8 +1757,8 @@ const VideoPlayerPage = () => {
           {/* Video Info */}
           <div className="bg-gray-800 px-3 xxs:px-4 py-3 xxs:py-4">
             <div className="flex items-center justify-between">
-              <h2 className="text-white font-semibold text-base xxs:text-lg line-clamp-2">{currentVideo.title}</h2>
-              {currentVideo.completed && (
+              <h2 className="text-white font-semibold text-base xxs:text-lg line-clamp-2">{currentVideo?.title}</h2>
+              {currentVideo?.completed && (
                 <div className="flex items-center space-x-1 text-green-400">
                   <CheckCircle className="h-3 w-3 xxs:h-4 xxs:w-4" />
                   <span className="text-xs xxs:text-sm">Completed</span>
@@ -1768,7 +1769,7 @@ const VideoPlayerPage = () => {
 
 
           {/* WhatsApp Group Button Section */}
-          {courseData.hasWhatsappGroup && (
+          {courseData && courseData.hasWhatsappGroup && (
             <div className="bg-gray-800 px-3 xxs:px-4 py-4 xxs:py-6">
               <div className="max-w-4xl mx-auto">
                 <WhatsAppGroupButton
@@ -1821,11 +1822,11 @@ const VideoPlayerPage = () => {
         <div className="md:hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex">
           <div className="bg-gray-800 w-full max-w-sm xxs:max-w-md sm:max-w-lg ml-auto h-full overflow-y-auto">
             <div className="p-3 xxs:p-4 border-b border-gray-700 flex items-center justify-between">
-              <h3 className="text-white font-semibold text-sm xxs:text-base">Course Content</h3>
+              <h3 className="text-white font-semibold text-sm xxs:text-base">{t('video_player.course_content')}</h3>
               <button
                 onClick={() => setShowPlaylist(false)}
                 className="text-gray-400 hover:text-white p-1 rounded-lg transition-colors duration-200"
-                aria-label="Close playlist"
+                aria-label={t('video_player.close_playlist')}
               >
                 <svg className="w-5 h-5 xxs:w-6 xxs:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />

@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const path = require('path');
 const session = require('express-session');
+const multer = require('multer');
 require('dotenv').config({ path: path.join(__dirname, '.env') });
 
 // Import Passport configuration
@@ -30,6 +31,21 @@ const authController = require('./controllers/authController');
 // Import middleware
 const authMiddleware = require('./middleware/authMiddleware');
 const adminAuthMiddleware = require('./middleware/adminAuthMiddleware');
+
+// Configure multer for file uploads
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB limit
+  },
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.startsWith('image/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only image files are allowed'), false);
+    }
+  }
+});
 
 const app = express();
 
@@ -332,7 +348,7 @@ app.get(['/certificate-preview/:certificateId', '/verify/:certificateId'], async
          
          <!-- Footer -->
          <div class="text-center mt-8 text-sm text-gray-500">
-           <p>This certificate is issued by ${certificate.platformName || 'Learning Platform'}</p>
+           <p>This certificate is issued by ${certificate.platformName || 'QENDIEL Academy'}</p>
            <p class="mt-1">Certificate ID: ${certificate.certificateId}</p>
          </div>
        </div>
@@ -420,6 +436,10 @@ app.get('/api/users/me/photo', authMiddleware, (req, res) => {
 
 app.delete('/api/users/me/photo', authMiddleware, (req, res) => {
   authController.deleteProfilePhoto(req, res);
+});
+
+app.put('/api/users/me/photo', authMiddleware, upload.single('profilePhoto'), (req, res) => {
+  authController.uploadProfilePhoto(req, res);
 });
 
 // Enhanced course routes (new versioning system) - PRIMARY

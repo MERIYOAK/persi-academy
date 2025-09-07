@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Search, CheckCircle, XCircle, FileText, Calendar, User, BookOpen, Shield, Award, Sparkles } from 'lucide-react';
 import { useParams, Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { buildApiUrl } from '../config/environment';
 
 interface CertificateVerification {
@@ -23,7 +24,9 @@ interface VerificationResult {
 }
 
 const CertificateVerificationPage = () => {
+  const { t } = useTranslation();
   const { certificateId: urlCertificateId } = useParams<{ certificateId?: string }>();
+  
   const [certificateId, setCertificateId] = useState(urlCertificateId || '');
   const [certificate, setCertificate] = useState<CertificateVerification | null>(null);
   const [verification, setVerification] = useState<VerificationResult | null>(null);
@@ -40,19 +43,19 @@ const CertificateVerificationPage = () => {
 
   const verifyCertificate = async (id: string) => {
     if (!id.trim()) {
-      setError('Please enter a certificate ID');
+      setError(t('certificate_verification.enter_certificate_id'));
       return;
     }
 
     // Client-side validation to avoid unnecessary 404 requests
     const candidate = id.trim().toUpperCase();
     if (!candidate.startsWith('CERT-')) {
-      setError('Certificate ID must start with "CERT-".');
+      setError(t('certificate_verification.must_start_with_cert'));
       return;
     }
     const pattern = /^CERT-[A-Z0-9]{5,}-[A-Z0-9]{5,}$/;
     if (!pattern.test(candidate)) {
-      setError('Please enter a valid certificate ID (e.g., CERT-XXXXXX-XXXXXX).');
+      setError(t('certificate_verification.invalid_format'));
       return;
     }
 
@@ -66,21 +69,21 @@ const CertificateVerificationPage = () => {
               const response = await fetch(buildApiUrl(`/api/certificates/verify/${candidate}`));
 
       if (response.status === 404) {
-        throw new Error('Certificate not found. Please check the certificate ID and try again.');
+        throw new Error(t('certificate_verification.certificate_not_found'));
       }
       if (!response.ok) {
         // Try to parse error response as JSON first
         try {
           const errorData = await response.json();
-          throw new Error(errorData.message || 'Failed to verify certificate');
+          throw new Error(errorData.message || t('certificate_verification.verification_failed'));
         } catch (parseError) {
           // If JSON parsing fails, use status-based error messages
           if (response.status === 500) {
-            throw new Error('Server error occurred. Please try again later.');
+            throw new Error(t('certificate_verification.server_error'));
           } else if (response.status === 0) {
-            throw new Error('Unable to connect to server. Please check if the backend is running.');
+            throw new Error(t('certificate_verification.connection_error'));
           } else {
-            throw new Error('Failed to verify certificate. Please try again.');
+            throw new Error(t('certificate_verification.verification_failed_generic'));
           }
         }
       }
@@ -90,7 +93,7 @@ const CertificateVerificationPage = () => {
       if (result?.data?.certificate === null) {
         setCertificate(null);
         setVerification(result.data.verification);
-        setError('Certificate not found. Please check the certificate ID and try again.');
+        setError(t('certificate_verification.certificate_not_found'));
         setShowSuccess(false);
         setLoading(false);
         return;
@@ -102,9 +105,9 @@ const CertificateVerificationPage = () => {
       setLoading(false);
     } catch (error) {
       if (error instanceof TypeError) {
-        setError('Network error. Please check your connection and try again.');
+        setError(t('certificate_verification.network_error'));
       } else {
-        setError(error instanceof Error ? error.message : 'Failed to verify certificate');
+        setError(error instanceof Error ? error.message : t('certificate_verification.verification_failed'));
       }
       setLoading(false);
     }
@@ -164,10 +167,10 @@ const CertificateVerificationPage = () => {
               <Shield className="w-8 h-8 xxs:w-9 xxs:h-9 sm:w-10 sm:h-10 text-white" />
             </div>
                          <h1 className="text-2xl xxs:text-3xl sm:text-4xl lg:text-5xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent mb-3 xxs:mb-4 animate-fade-in-up">
-              Certificate Verification
+              {t('certificate_verification.page_title')}
             </h1>
             <p className="text-sm xxs:text-base sm:text-lg lg:text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed px-2">
-              Verify the authenticity of certificates issued by our platform with advanced blockchain technology
+              {t('certificate_verification.page_subtitle')}
             </p>
           </div>
         </div>
@@ -181,14 +184,14 @@ const CertificateVerificationPage = () => {
             <div className="inline-flex items-center justify-center w-12 h-12 xxs:w-14 xxs:h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full mb-3 xxs:mb-4 shadow-lg">
               <Search className="w-6 h-6 xxs:w-7 xxs:h-7 sm:w-8 sm:h-8 text-white" />
             </div>
-            <h2 className="text-xl xxs:text-2xl font-bold text-gray-900 mb-2">Verify Certificate</h2>
-            <p className="text-sm xxs:text-base text-gray-600">Enter the certificate ID to verify its authenticity</p>
+            <h2 className="text-xl xxs:text-2xl font-bold text-gray-900 mb-2">{t('certificate_verification.verify_certificate')}</h2>
+            <p className="text-sm xxs:text-base text-gray-600">{t('certificate_verification.certificate_id_help')}</p>
           </div>
           
                      <form onSubmit={handleSubmit} className="max-w-lg mx-auto space-y-4 xxs:space-y-6">
              <div className="space-y-2 xxs:space-y-3">
                <label htmlFor="certificateId" className="block text-sm xxs:text-base font-semibold text-gray-700 text-left">
-                 Certificate ID
+                 {t('certificate_verification.certificate_id_label')}
                </label>
                                <input
                   id="certificateId"
@@ -198,12 +201,12 @@ const CertificateVerificationPage = () => {
                     setCertificateId(e.target.value);
                     if (error) setError(null);
                   }}
-                  placeholder="CERT-MEG68Y1E-SO5ZMU"
+                  placeholder={t('certificate_verification.certificate_id_placeholder')}
                   className="w-full px-4 xxs:px-6 py-3 xxs:py-4 text-base xxs:text-lg border-2 border-gray-300 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300 bg-white shadow-sm"
                   required
                 />
                <p className="text-xs xxs:text-sm text-gray-500 text-left">
-                 Enter the unique certificate ID to verify its authenticity
+                 {t('certificate_verification.certificate_id_help')}
                </p>
              </div>
              
@@ -215,12 +218,12 @@ const CertificateVerificationPage = () => {
                {loading ? (
                  <>
                    <div className="animate-spin rounded-full h-5 w-5 xxs:h-6 xxs:w-6 border-b-2 border-white"></div>
-                   <span>Verifying Certificate...</span>
+                   <span>{t('certificate_verification.verifying_certificate')}</span>
                  </>
                ) : (
                  <>
                    <Search className="w-5 h-5 xxs:w-6 xxs:h-6" />
-                   <span>Verify Certificate</span>
+                   <span>{t('certificate_verification.verify_certificate')}</span>
                  </>
                )}
              </button>
@@ -234,20 +237,21 @@ const CertificateVerificationPage = () => {
               <XCircle className="w-5 h-5 xxs:w-6 xxs:h-6 text-red-500 mr-2 xxs:mr-3 mt-0.5" />
               <div className="w-full">
                 <p className="text-sm xxs:text-base text-red-800 font-semibold">
-                  {error.includes('not found') ? "We couldn't find that certificate" : 'Verification failed'}
+                  {error.includes('not found') ? t('certificate_verification.certificate_not_found') : t('certificate_verification.verification_failed')}
                 </p>
                 {certificateId && (
                   <p className="mt-1 text-xs xxs:text-sm text-red-700">
-                    Searched ID: <span className="font-mono bg-red-100 text-red-800 px-1.5 py-0.5 rounded">{certificateId}</span>
+                    {t('certificate_verification.searched_id')}: <span className="font-mono bg-red-100 text-red-800 px-1.5 py-0.5 rounded">{certificateId}</span>
                   </p>
                 )}
                 <div className="mt-2 text-xs xxs:text-sm text-red-700 space-y-1">
                   {error.includes('not found') ? (
                     <>
-                      <p>Please check for typos and try again.</p>
+                      <p>{t('certificate_verification.check_typos')}</p>
                       <ul className="list-disc ml-5 space-y-1">
-                        <li>Include all letters, numbers, and hyphens.</li>
-                        <li>Common format looks like: <span className="font-mono">CERT-XXXXXX-XXXXXX</span></li>
+                        <li>{t('certificate_verification.typo_in_id')}</li>
+                        <li>{t('certificate_verification.wrong_format')}</li>
+                        <li>{t('certificate_verification.expired_certificate')}</li>
                       </ul>
                     </>
                   ) : (
@@ -263,13 +267,13 @@ const CertificateVerificationPage = () => {
                     }}
                     className="text-xs xxs:text-sm px-3 py-1.5 rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors"
                   >
-                    Try again
+                    {t('certificate_verification.try_again')}
                   </button>
                   <Link
                     to="/help-center"
                     className="text-xs xxs:text-sm px-3 py-1.5 rounded-lg bg-white text-red-700 border border-red-300 hover:bg-red-100 transition-colors"
                   >
-                    Get help
+                    {t('certificate_verification.get_help')}
                   </Link>
                 </div>
               </div>
@@ -283,7 +287,7 @@ const CertificateVerificationPage = () => {
             <div className="flex items-center">
               <CheckCircle className="w-5 h-5 xxs:w-6 xxs:h-6 text-green-500 mr-2 xxs:mr-3" />
                                <p className="text-sm xxs:text-base text-green-800 font-medium">
-                   Certificate verified successfully! This is a public verification page.
+                   {t('certificate_verification.verified_successfully')}
                  </p>
             </div>
           </div>
@@ -309,10 +313,10 @@ const CertificateVerificationPage = () => {
                   </div>
                   <div>
                     <h2 className="text-xl xxs:text-2xl sm:text-3xl font-bold">
-                      {verification.isValid ? 'Certificate Verified' : 'Certificate Invalid'}
+                      {verification.isValid ? t('certificate_verification.certificate_verified') : t('certificate_verification.certificate_invalid')}
                     </h2>
                     <p className="text-sm xxs:text-base text-white/90">
-                      Verified on {formatDate(verification.verifiedAt)}
+                      {t('certificate_verification.verified_on')} {formatDate(verification.verifiedAt)}
                     </p>
                   </div>
                 </div>
@@ -333,11 +337,11 @@ const CertificateVerificationPage = () => {
                   <div className="w-10 h-10 xxs:w-12 xxs:h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center mr-3 xxs:mr-4">
                     <User className="w-5 h-5 xxs:w-6 xxs:h-6 text-white" />
                   </div>
-                  <h3 className="text-xl xxs:text-2xl font-bold text-gray-900">Student Information</h3>
+                  <h3 className="text-xl xxs:text-2xl font-bold text-gray-900">{t('certificate_verification.student_information')}</h3>
                 </div>
                 <div className="space-y-3 xxs:space-y-4">
                   <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-3 xxs:p-4">
-                    <p className="text-xs xxs:text-sm text-gray-600 font-medium">Student Name</p>
+                    <p className="text-xs xxs:text-sm text-gray-600 font-medium">{t('certificate_verification.student_name')}</p>
                     <p className="text-base xxs:text-lg font-semibold text-gray-900">{certificate.studentName}</p>
                   </div>
                 </div>
@@ -349,15 +353,15 @@ const CertificateVerificationPage = () => {
                   <div className="w-10 h-10 xxs:w-12 xxs:h-12 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full flex items-center justify-center mr-3 xxs:mr-4">
                     <BookOpen className="w-5 h-5 xxs:w-6 xxs:h-6 text-white" />
                   </div>
-                  <h3 className="text-xl xxs:text-2xl font-bold text-gray-900">Course Information</h3>
+                  <h3 className="text-xl xxs:text-2xl font-bold text-gray-900">{t('certificate_verification.course_information')}</h3>
                 </div>
                 <div className="space-y-3 xxs:space-y-4">
                   <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-3 xxs:p-4">
-                    <p className="text-xs xxs:text-sm text-gray-600 font-medium">Course Title</p>
+                    <p className="text-xs xxs:text-sm text-gray-600 font-medium">{t('certificate_verification.course_title')}</p>
                     <p className="text-base xxs:text-lg font-semibold text-gray-900">{certificate.courseTitle}</p>
                   </div>
                   <div className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl p-3 xxs:p-4">
-                    <p className="text-xs xxs:text-sm text-gray-600 font-medium">Instructor</p>
+                    <p className="text-xs xxs:text-sm text-gray-600 font-medium">{t('certificate_verification.instructor')}</p>
                     <p className="text-base xxs:text-lg font-semibold text-gray-900">{certificate.instructorName}</p>
                   </div>
                 </div>
@@ -369,15 +373,15 @@ const CertificateVerificationPage = () => {
                   <div className="w-10 h-10 xxs:w-12 xxs:h-12 bg-gradient-to-br from-orange-500 to-red-600 rounded-full flex items-center justify-center mr-3 xxs:mr-4">
                     <Calendar className="w-5 h-5 xxs:w-6 xxs:h-6 text-white" />
                   </div>
-                  <h3 className="text-xl xxs:text-2xl font-bold text-gray-900">Completion Details</h3>
+                  <h3 className="text-xl xxs:text-2xl font-bold text-gray-900">{t('certificate_verification.completion_details')}</h3>
                 </div>
                 <div className="space-y-3 xxs:space-y-4">
                   <div className="bg-gradient-to-r from-orange-50 to-red-50 rounded-xl p-3 xxs:p-4">
-                    <p className="text-xs xxs:text-sm text-gray-600 font-medium">Completion Date</p>
+                    <p className="text-xs xxs:text-sm text-gray-600 font-medium">{t('certificate_verification.completion_date')}</p>
                     <p className="text-base xxs:text-lg font-semibold text-gray-900">{formatDate(certificate.completionDate)}</p>
                   </div>
                   <div className="bg-gradient-to-r from-yellow-50 to-orange-50 rounded-xl p-3 xxs:p-4">
-                    <p className="text-xs xxs:text-sm text-gray-600 font-medium">Date Issued</p>
+                    <p className="text-xs xxs:text-sm text-gray-600 font-medium">{t('certificate_verification.date_issued')}</p>
                     <p className="text-base xxs:text-lg font-semibold text-gray-900">{formatDate(certificate.dateIssued)}</p>
                   </div>
                 </div>
@@ -389,21 +393,21 @@ const CertificateVerificationPage = () => {
                   <div className="w-10 h-10 xxs:w-12 xxs:h-12 bg-gradient-to-br from-purple-500 to-pink-600 rounded-full flex items-center justify-center mr-3 xxs:mr-4">
                     <FileText className="w-5 h-5 xxs:w-6 xxs:h-6 text-white" />
                   </div>
-                  <h3 className="text-xl xxs:text-2xl font-bold text-gray-900">Course Statistics</h3>
+                  <h3 className="text-xl xxs:text-2xl font-bold text-gray-900">{t('certificate_verification.course_statistics')}</h3>
                 </div>
                 <div className="space-y-3 xxs:space-y-4">
                   <div className="grid grid-cols-2 gap-3 xxs:gap-4">
                     <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-3 xxs:p-4">
-                      <p className="text-xs xxs:text-sm text-gray-600 font-medium">Total Lessons</p>
+                      <p className="text-xs xxs:text-sm text-gray-600 font-medium">{t('certificate_verification.total_lessons')}</p>
                       <p className="text-xl xxs:text-2xl font-bold text-gray-900">{certificate.totalLessons}</p>
                     </div>
                     <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-3 xxs:p-4">
-                      <p className="text-xs xxs:text-sm text-gray-600 font-medium">Completed</p>
+                      <p className="text-xs xxs:text-sm text-gray-600 font-medium">{t('certificate_verification.completed')}</p>
                       <p className="text-xl xxs:text-2xl font-bold text-gray-900">{certificate.completedLessons}</p>
                     </div>
                   </div>
                   <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-3 xxs:p-4">
-                    <p className="text-xs xxs:text-sm text-gray-600 font-medium">Completion Rate</p>
+                    <p className="text-xs xxs:text-sm text-gray-600 font-medium">{t('certificate_verification.completion_rate')}</p>
                     <div className="flex items-center space-x-2 xxs:space-x-3">
                       <div className="flex-1 bg-gray-200 rounded-full h-2 xxs:h-3">
                         <div 
@@ -424,13 +428,13 @@ const CertificateVerificationPage = () => {
                 <div className="w-10 h-10 xxs:w-12 xxs:h-12 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center mr-3 xxs:mr-4">
                   <Award className="w-5 h-5 xxs:w-6 xxs:h-6 text-white" />
                 </div>
-                <h3 className="text-xl xxs:text-2xl font-bold text-gray-900">Platform Information</h3>
+                <h3 className="text-xl xxs:text-2xl font-bold text-gray-900">{t('certificate_verification.platform_information')}</h3>
               </div>
               <p className="text-base xxs:text-lg text-gray-700 mb-3 xxs:mb-4">
-                This certificate was issued by <span className="font-bold text-indigo-600">{certificate.platformName}</span>
+                {t('certificate_verification.issued_by')} <span className="font-bold text-indigo-600">{certificate.platformName}</span>
               </p>
               <p className="text-xs xxs:text-sm text-gray-500">
-                Certificate verification powered by secure blockchain technology and cryptographic signatures
+                {t('certificate_verification.blockchain_verification')}
               </p>
             </div>
 
@@ -438,10 +442,10 @@ const CertificateVerificationPage = () => {
              <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 xxs:p-6 text-center">
                <div className="flex items-center justify-center mb-2 xxs:mb-3">
                  <Shield className="w-5 h-5 xxs:w-6 xxs:h-6 text-blue-600 mr-2" />
-                 <p className="text-sm xxs:text-base text-blue-800 font-medium">Certificate Verification Complete</p>
+                 <p className="text-sm xxs:text-base text-blue-800 font-medium">{t('certificate_verification.verification_complete')}</p>
                </div>
                <p className="text-xs xxs:text-sm text-blue-600">
-                 This is a public verification page. Only the certificate owner can download the PDF version from their dashboard.
+                 {t('certificate_verification.public_verification_notice')}
                </p>
              </div>
           </div>
@@ -453,36 +457,36 @@ const CertificateVerificationPage = () => {
             <div className="inline-flex items-center justify-center w-12 h-12 xxs:w-14 xxs:h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full mb-3 xxs:mb-4 shadow-lg">
               <Sparkles className="w-6 h-6 xxs:w-7 xxs:h-7 sm:w-8 sm:h-8 text-white" />
             </div>
-            <h3 className="text-xl xxs:text-2xl font-bold text-gray-900 mb-3 xxs:mb-4">How to Verify a Certificate</h3>
+            <h3 className="text-xl xxs:text-2xl font-bold text-gray-900 mb-3 xxs:mb-4">{t('certificate_verification.how_to_verify')}</h3>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 xxs:gap-6">
             <div className="text-center p-4 xxs:p-6 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl transform hover:scale-105 transition-all duration-300">
               <div className="w-10 h-10 xxs:w-12 xxs:h-12 bg-blue-500 rounded-full flex items-center justify-center mx-auto mb-3 xxs:mb-4">
                 <span className="text-white font-bold text-base xxs:text-lg">1</span>
               </div>
-              <h4 className="font-semibold text-gray-900 mb-2 text-sm xxs:text-base">Enter Certificate ID</h4>
-              <p className="text-gray-600 text-xs xxs:text-sm">Input the unique certificate ID from the certificate</p>
+              <h4 className="font-semibold text-gray-900 mb-2 text-sm xxs:text-base">{t('certificate_verification.step_1')}</h4>
+              <p className="text-gray-600 text-xs xxs:text-sm">{t('certificate_verification.step_1_desc')}</p>
             </div>
             <div className="text-center p-4 xxs:p-6 bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl transform hover:scale-105 transition-all duration-300">
               <div className="w-10 h-10 xxs:w-12 xxs:h-12 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-3 xxs:mb-4">
                 <span className="text-white font-bold text-base xxs:text-lg">2</span>
               </div>
-              <h4 className="font-semibold text-gray-900 mb-2 text-sm xxs:text-base">Click Verify</h4>
-              <p className="text-gray-600 text-xs xxs:text-sm">Our system will check the certificate's authenticity</p>
+              <h4 className="font-semibold text-gray-900 mb-2 text-sm xxs:text-base">{t('certificate_verification.step_2')}</h4>
+              <p className="text-gray-600 text-xs xxs:text-sm">{t('certificate_verification.step_2_desc')}</p>
             </div>
             <div className="text-center p-4 xxs:p-6 bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl transform hover:scale-105 transition-all duration-300">
               <div className="w-10 h-10 xxs:w-12 xxs:h-12 bg-purple-500 rounded-full flex items-center justify-center mx-auto mb-3 xxs:mb-4">
                 <span className="text-white font-bold text-base xxs:text-lg">3</span>
               </div>
-              <h4 className="font-semibold text-gray-900 mb-2 text-sm xxs:text-base">Review Results</h4>
-              <p className="text-gray-600 text-xs xxs:text-sm">Check the verification status and certificate details</p>
+              <h4 className="font-semibold text-gray-900 mb-2 text-sm xxs:text-base">{t('certificate_verification.step_3')}</h4>
+              <p className="text-gray-600 text-xs xxs:text-sm">{t('certificate_verification.step_3_desc')}</p>
             </div>
             <div className="text-center p-4 xxs:p-6 bg-gradient-to-br from-orange-50 to-red-50 rounded-xl transform hover:scale-105 transition-all duration-300">
               <div className="w-10 h-10 xxs:w-12 xxs:h-12 bg-orange-500 rounded-full flex items-center justify-center mx-auto mb-3 xxs:mb-4">
                 <span className="text-white font-bold text-base xxs:text-lg">4</span>
               </div>
-              <h4 className="font-semibold text-gray-900 mb-2 text-sm xxs:text-base">Contact Support</h4>
-              <p className="text-gray-600 text-xs xxs:text-sm">Reach out if you have questions about verification</p>
+              <h4 className="font-semibold text-gray-900 mb-2 text-sm xxs:text-base">{t('certificate_verification.step_4')}</h4>
+              <p className="text-gray-600 text-xs xxs:text-sm">{t('certificate_verification.step_4_desc')}</p>
             </div>
           </div>
         </div>
