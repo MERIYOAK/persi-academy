@@ -82,8 +82,8 @@ const HelpCenterPage = () => {
       category: "payments"
     },
     {
-      question: "Can I get a refund if I'm not satisfied?",
-      answer: "Yes — we offer a 5-day money-back guarantee. If you're not satisfied with your purchase, contact our support team within 5 days for a refund.",
+      question: "Are all purchases final?",
+      answer: "Yes, all purchases are final. We encourage you to review course details and preview content before making a purchase to ensure it meets your needs.",
       category: "payments"
     },
     {

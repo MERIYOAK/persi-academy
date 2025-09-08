@@ -966,7 +966,7 @@ const CourseDetailPage = () => {
                 <div className="text-center mb-8">
                   <div className="flex items-center justify-center space-x-2 text-gray-600 text-sm">
                     <CheckCircle className="h-4 w-4 text-green-500" />
-                    <span>{t('course_detail.money_back_guarantee')}</span>
+                    <span>{t('course_detail.secure_checkout')}</span>
                   </div>
                 </div>
                 
@@ -1106,10 +1106,6 @@ const CourseDetailPage = () => {
                 <div className="flex items-center space-x-3">
                   <CheckCircle className="h-5 w-5 text-green-500" />
                   <span className="text-gray-700">{t('course_detail.community_qa_support')}</span>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <CheckCircle className="h-5 w-5 text-green-500" />
-                  <span className="text-gray-700">{t('course_detail.money_back_guarantee')}</span>
                 </div>
               </div>
             </section>

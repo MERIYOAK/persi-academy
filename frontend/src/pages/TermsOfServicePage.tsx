@@ -120,12 +120,12 @@ const TermsOfServicePage = () => {
               
               <h3 className="text-lg font-semibold text-gray-900 mb-3">Payment Processing</h3>
               <p className="text-gray-600 mb-4">
-                Payments are processed securely through Stripe. By making a purchase, you authorize us to charge your payment method for the specified amount. All payments are subject to our refund policy.
+                Payments are processed securely through Stripe. By making a purchase, you authorize us to charge your payment method for the specified amount. All purchases are final.
               </p>
               
-              <h3 className="text-lg font-semibold text-gray-900 mb-3">Refunds</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-3">All Sales Final</h3>
               <p className="text-gray-600">
-                We offer a 5-day money-back guarantee for course purchases. If you're not satisfied with your purchase, contact our support team within 5 days for a refund. No refunds will be issued after 5 days.
+                All course purchases are final. We encourage you to review course details and preview content before making a purchase to ensure it meets your needs.
               </p>
             </div>
           </section>

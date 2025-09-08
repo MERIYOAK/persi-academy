@@ -23,7 +23,6 @@
     "copyright": "መሰል ወናኒ ዝተሓለወ እዩ።",
     "privacy_policy": "ፖሊሲ ብሕቲ",
     "terms_of_service": "ውዕል ኣገልግሎት",
-    "refund_policy": "ፖሊሲ ምምላስ ሕሳብ",
     "help_center": "ማእከል ሓገዝ",
     "help": "ሓገዝ",
     "verify_certificate": "ሰርቲፊኬት ኣረጋግጽ",
@@ -101,9 +100,9 @@
           "question": "ኮርስ ብከመይ እየ ዝጀምር?",
           "answer": "መጀመርያ ብነጻ ተመዝገብ ብቐሊሉ ኣብ ዝኾነ ኮርስ ክትጅምር እንተኾንካ፣ ኩሉ ሓጋዚ ንጥብታት ብቕጽበት ክትረክብ ኢኻ።"
         },
-        "refunds": {
-          "question": "ክፍሊት ምምላስ ይከኣል ድዩ?",
-          "answer": "እወ! ኣብ ኩሉ ኮርሶሳት 5 መዓልቲ ዋጋ መመለሲ ውሕስነት ንህብ።"
+        "final_purchases": {
+          "question": "ኩሉ ዝገዝእካዮ ናይ መወዳእታ ድዩ?",
+          "answer": "እወ፣ ኩሉ ዝገዝእካዮ ናይ መወዳእታ እዩ። ቅድሚ ኮርስ ምግዛእካ ዝርዝራት ክትርእዮ ብኽብሪ ንሓትት።"
         },
         "mobile": {
           "question": "ኣብ ሞባይለይ ክመሃር እኽእል ድየ?",
@@ -285,9 +284,9 @@
           "question": "ኮርስ ብከመይ እየ ዝጀምር?",
           "answer": "መጀመርያ ብነጻ ተመዝገብ ብቐሊሉ ኣብ ዝኾነ ኮርስ ክትጅምር እንተኾንካ፣ ኩሉ ሓጋዚ ንጥብታት ብቕጽበት ክትረክብ ኢኻ።"
         },
-        "refunds": {
-          "question": "ክፍሊት ምምላስ ይከኣል ድዩ?",
-          "answer": "እወ! ኣብ ኩሉ ኮርሶሳት 5 መዓልቲ ዋጋ መመለሲ ውሕስነት ንህብ።"
+        "final_purchases": {
+          "question": "ኩሉ ዝገዝእካዮ ናይ መወዳእታ ድዩ?",
+          "answer": "እወ፣ ኩሉ ዝገዝእካዮ ናይ መወዳእታ እዩ። ቅድሚ ምግዛእ ኮርስ ዝርዝራት ክትርእዮ ብኽብረት ንሓተት።"
         },
         "mobile": {
           "question": "ኣብ ሞባይለይ ክመሃር እኽእል ድየ?",
@@ -297,9 +296,9 @@
     },
     "stats": {
       "support": "ሓገዝ",
-      "guarantee": "ውሕስነት",
+      "guarantee": "እማን",
       "support_24_7": "24/7",
-      "guarantee_30_day": "5-መዓልቲ"
+      "secure_checkout": "እማን"
     },
     "success_message": "ስለ መልእኽትካ ነመስግነካ! ብቕልጡፍ ክንመለስ ኢና።"
   },
@@ -665,7 +664,7 @@
     "start_learning": "ምምሃር ጀምር",
     "processing": "ይስራሕ ኣሎ...",
     "sign_in_to_enroll": "ንክትምዝገብ እቶ",
-    "money_back_guarantee": "5 መዓልቲ ናይ ምምለስ ክፍሊት ዋሕስ",
+    "secure_checkout": "ውሑስ ክፍሊት ምስ Stripe",
     "on_demand_video": "ተበሃግቲ ቪድዮ",
     "downloadable_resources": "መጠነ ሰፊሕ ትሕዝቶ",
     "all_lessons": "ኩሎም ክላሳት",
@@ -934,20 +933,10 @@
       "use_license": "ፍቓድ ኣጠቓቕማ",
       "user_accounts": "ኣካውንታት ተጠቃሚ",
       "payment_terms": "ውዕላት ክፍሊት",
-      "refund_policy": "ፖሊሲ ምምላስ ሕሳብ",
       "prohibited_uses": "ዝተከልኸለ ኣጠቓቕማታት",
       "content_ownership": "ናይ ትሕዝቶ ዋናነት",
       "limitation_liability": "ውሱን ሓላፍነት",
       "governing_law": "ሕጊ ምሕደራ"
-    },
-    "refund": {
-      "page_title": "ፖሊሲ ምምላስ ሕሳብ",
-      "last_updated": "ዝሓለፈ ተመሓይሹ",
-      "refund_policy": "ፖሊሲ ምምላስ ሕሳብ",
-      "eligibility": "ዓቕሚ ምምላስ ሕሳብ",
-      "refund_process": "ሂደት ምምላስ ሕሳብ",
-      "processing_time": "ናይ መስርሕ ግዜ",
-      "contact_support": "ሓገዝ ርኸብ"
     }
   },
   "payment_failure": {

@@ -408,8 +408,8 @@ const HomePage = () => {
                 answer: t('home.faq.questions.get_started.answer')
               },
               {
-                question: t('home.faq.questions.refunds.question'),
-                answer: t('home.faq.questions.refunds.answer')
+                question: t('home.faq.questions.final_purchases.question'),
+                answer: t('home.faq.questions.final_purchases.answer')
               },
               {
                 question: t('home.faq.questions.mobile.question'),

@@ -75,8 +75,8 @@ const ContactPage = () => {
       answer: t('contact.faq.questions.get_started.answer')
     },
     {
-      question: t('contact.faq.questions.refunds.question'),
-      answer: t('contact.faq.questions.refunds.answer')
+      question: t('contact.faq.questions.final_purchases.question'),
+      answer: t('contact.faq.questions.final_purchases.answer')
     },
     {
       question: t('contact.faq.questions.mobile.question'),
@@ -282,7 +282,7 @@ const ContactPage = () => {
                       <div className="text-red-100 text-sm">{t('contact.stats.support')}</div>
                     </div>
                     <div className="text-center">
-                      <div className="text-3xl font-bold mb-1">{t('contact.stats.guarantee_30_day')}</div>
+                      <div className="text-3xl font-bold mb-1">{t('contact.stats.secure_checkout')}</div>
                       <div className="text-red-100 text-sm">{t('contact.stats.guarantee')}</div>
                   </div>
                   </div>

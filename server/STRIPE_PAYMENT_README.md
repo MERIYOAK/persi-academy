@@ -210,7 +210,7 @@ The system provides detailed console logging:
 
 - **Email confirmations:** Uncomment in webhook handler
 - **Transaction logging:** Add Transaction model
-- **Refund handling:** Add refund webhook handler
+- **Enhanced security:** Add additional security measures
 - **Subscription support:** Modify for recurring payments
 
 ## 🚀 Production Deployment
