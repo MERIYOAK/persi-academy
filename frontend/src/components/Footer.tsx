@@ -119,11 +119,6 @@ const Footer: React.FC<FooterProps> = ({ className = '', openCookieSettingsRef }
                 </Link>
               </li>
               <li>
-                <Link to="/refund-policy" className="text-gray-400 hover:text-white transition-colors duration-200">
-                  {t('footer.refund_policy')}
-                </Link>
-              </li>
-              <li>
                 <button
                   onClick={() => openCookieSettingsRef?.current && openCookieSettingsRef.current()}
                   className="text-gray-400 hover:text-white transition-colors duration-200 text-left"

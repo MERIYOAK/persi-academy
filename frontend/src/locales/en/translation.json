@@ -23,7 +23,6 @@
     "copyright": "All Rights Reserved.",
     "privacy_policy": "Privacy Policy",
     "terms_of_service": "Terms of Service",
-    "refund_policy": "Refund Policy",
     "help_center": "Help Center",
     "help": "Help",
     "verify_certificate": "Verify Certificate",
@@ -101,9 +100,9 @@
           "question": "How do I get started with a course?",
           "answer": "Simply enroll in any course and you'll get immediate access to all the content and resources."
         },
-        "refunds": {
-          "question": "Do you offer refunds?",
-          "answer": "Yes! We offer a 5-day money-back guarantee on all our courses."
+        "final_purchases": {
+          "question": "Are all purchases final?",
+          "answer": "Yes, all purchases are final. We encourage you to review course details and preview content before making a purchase to ensure it meets your needs."
         },
         "mobile": {
           "question": "Can I access courses on mobile?",
@@ -285,9 +284,9 @@
           "question": "How do I get started with a course?",
           "answer": "Simply enroll in any course and you'll get immediate access to all the content and resources."
         },
-        "refunds": {
-          "question": "Do you offer refunds?",
-          "answer": "Yes! We offer a 5-day money-back guarantee on all our courses."
+        "final_purchases": {
+          "question": "Are all purchases final?",
+          "answer": "Yes, all purchases are final. We encourage you to review course details and preview content before making a purchase to ensure it meets your needs."
         },
         "mobile": {
           "question": "Can I access courses on mobile?",
@@ -297,9 +296,9 @@
     },
     "stats": {
       "support": "Support",
-      "guarantee": "Guarantee",
+      "guarantee": "Security",
       "support_24_7": "24/7",
-      "guarantee_30_day": "5-Day"
+      "secure_checkout": "Secure"
     },
     "success_message": "Thank you for your message! We'll get back to you soon."
   },
@@ -622,7 +621,7 @@
     "recently": "Recently",
     "course_purchased": "Course Purchased",
     "sign_in_to_enroll": "Sign In to Enroll",
-    "money_back_guarantee": "5-day money-back guarantee",
+    "secure_checkout": "Secure checkout with Stripe",
     "on_demand_video": "on-demand video",
     "downloadable_resources": "vast resources",
     "all_lessons": "All Lessons",
@@ -958,20 +957,10 @@
       "use_license": "Use License",
       "user_accounts": "User Accounts",
       "payment_terms": "Payment Terms",
-      "refund_policy": "Refund Policy",
       "prohibited_uses": "Prohibited Uses",
       "content_ownership": "Content Ownership",
       "limitation_liability": "Limitation of Liability",
       "governing_law": "Governing Law"
-    },
-    "refund": {
-      "page_title": "Refund Policy",
-      "last_updated": "Last Updated",
-      "refund_policy": "Refund Policy",
-      "eligibility": "Refund Eligibility",
-      "refund_process": "Refund Process",
-      "processing_time": "Processing Time",
-      "contact_support": "Contact Support"
     }
   },
   "payment_failure": {

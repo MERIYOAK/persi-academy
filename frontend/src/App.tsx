@@ -38,7 +38,6 @@ import CoursesPage from './pages/CoursesPage';
 import HelpCenterPage from './pages/HelpCenterPage';
 import TermsOfServicePage from './pages/TermsOfServicePage';
 import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
-import RefundPolicyPage from './pages/RefundPolicyPage';
 import GoogleCallbackPage from './pages/GoogleCallbackPage';
 import UserCourseDetailPage from './pages/UserCourseDetailPage';
 import CompleteGoogleRegistrationPage from './pages/CompleteGoogleRegistrationPage';
@@ -74,7 +73,6 @@ function App() {
           <Route path="/help-center" element={<HelpCenterPage />} />
           <Route path="/terms-of-service" element={<TermsOfServicePage />} />
           <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
-          <Route path="/refund-policy" element={<RefundPolicyPage />} />
         </Route>
 
         {/* Google OAuth Callback Route - Outside UserLayout to avoid navbar */}
