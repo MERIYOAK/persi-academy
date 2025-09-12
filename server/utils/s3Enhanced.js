@@ -441,6 +441,7 @@ const cleanupOldArchivedContent = async (gracePeriodMonths = 6) => {
 };
 
 module.exports = {
+  s3Client,
   uploadToS3,
   deleteFromS3,
   copyInS3,

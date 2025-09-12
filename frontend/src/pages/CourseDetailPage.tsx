@@ -6,6 +6,7 @@ import VideoPlaylist from '../components/VideoPlaylist';
 import VideoProgressBar from '../components/VideoProgressBar';
 import EnhancedVideoPlayer from '../components/EnhancedVideoPlayer';
 import { buildApiUrl } from '../config/environment';
+import DRMVideoService from '../services/drmVideoService';
 
 interface Video {
   id: string;
@@ -23,6 +24,11 @@ interface Video {
     completionPercentage: number;
     isCompleted: boolean;
     lastPosition?: number;
+  };
+  drm?: {
+    enabled: boolean;
+    sessionId?: string;
+    watermarkData?: string;
   };
 }
 
@@ -578,6 +584,9 @@ const CourseDetailPage = () => {
                     <EnhancedVideoPlayer
                       src={currentVideo.videoUrl}
                       title={courseData?.title}
+                      userId={localStorage.getItem('userId') || undefined}
+                      videoId={currentVideoId}
+                      courseId={id}
                       playing={isPlaying}
                       playbackRate={playbackRate}
                       onPlay={handleVideoPlay}
@@ -601,6 +610,8 @@ const CourseDetailPage = () => {
                       onControlsToggle={setControlsVisible}
                       className="w-full h-full"
                       initialTime={currentVideo?.progress?.lastPosition || 0}
+                      drmEnabled={currentVideo?.drm?.enabled || false}
+                      watermarkData={currentVideo?.drm?.watermarkData}
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-gray-400">
