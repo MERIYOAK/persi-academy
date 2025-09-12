@@ -6,6 +6,7 @@ import VideoPlaylist from '../components/VideoPlaylist';
 import EnhancedVideoPlayer from '../components/EnhancedVideoPlayer';
 import WhatsAppGroupButton from '../components/WhatsAppGroupButton';
 import { buildApiUrl } from '../config/environment';
+import DRMVideoService from '../services/drmVideoService';
 
 interface Video {
   id: string;
@@ -14,7 +15,7 @@ interface Video {
   videoUrl: string;
   completed?: boolean;
   locked?: boolean;
-  hasAccess?: boolean; // Add the missing hasAccess property
+  hasAccess?: boolean;
   isFreePreview?: boolean;
   requiresPurchase?: boolean;
   progress?: {
@@ -24,6 +25,11 @@ interface Video {
     completionPercentage: number;
     isCompleted: boolean;
     lastPosition?: number;
+  };
+  drm?: {
+    enabled: boolean;
+    sessionId?: string;
+    watermarkData?: string;
   };
 }
 
@@ -48,6 +54,9 @@ const VideoPlayerPage = () => {
   const [currentVideoId, setCurrentVideoId] = useState(videoId || '');
   const [isPlaying, setIsPlaying] = useState(false);
   const [playbackRate, setPlaybackRate] = useState(1);
+  
+  // DRM and Security states
+  const [forensicWatermark] = useState<any>(null);
   const [showPlaylist, setShowPlaylist] = useState(true); // Always show playlist by default
   const [courseData, setCourseData] = useState<CourseData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -68,6 +77,7 @@ const VideoPlayerPage = () => {
   const [isRefreshingUrl, setIsRefreshingUrl] = useState(false); // Track URL refresh state
   const [isSwitchingVideo, setIsSwitchingVideo] = useState(false); // Track video switching state
   const [currentVideo, setCurrentVideo] = useState<Video | undefined>(undefined); // Track current video object
+  const [isDecryptingUrl, setIsDecryptingUrl] = useState(false); // Track URL decryption state
   
   // Udemy-style progress tracking: Request deduplication and batching
   const pendingProgressRequest = useRef<AbortController | null>(null);
@@ -97,21 +107,74 @@ const VideoPlayerPage = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  // DRM URL decryption function
+  const decryptVideoUrl = async (encryptedUrl: string, sessionId: string): Promise<string> => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+
+      console.log('🔓 [Frontend] Decrypting URL with:', {
+        encryptedUrl: encryptedUrl ? 'Present' : 'Missing',
+        sessionId: sessionId ? 'Present' : 'Missing',
+        token: token ? 'Present' : 'Missing'
+      });
+
+      const response = await fetch(buildApiUrl('/api/drm/decrypt-url'), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          encryptedUrl,
+          sessionId
+        })
+      });
+
+      console.log('🔓 [Frontend] Response status:', response.status);
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('❌ [Frontend] Server error response:', errorData);
+        throw new Error(errorData.message || 'Failed to decrypt video URL');
+      }
+
+      const result = await response.json();
+      console.log('✅ [Frontend] Decryption successful');
+      return result.data.decryptedUrl;
+    } catch (error) {
+      console.error('❌ Failed to decrypt video URL:', error);
+      throw error;
+    }
+  };
+
   // Enhanced error handling functions
   const getVideoErrorDetails = (error: any): { type: string; message: string; userMessage: string } => {
-    const video = error.target as HTMLVideoElement;
-    const errorCode = video.error?.code;
+    const video = error?.target as HTMLVideoElement;
+    const errorCode = video?.error?.code;
+    
+    // If no video element is available, return a generic error
+    if (!video) {
+      return {
+        type: 'UNKNOWN',
+        message: error?.message || 'Unknown video error',
+        userMessage: 'An error occurred while loading the video. Please try again.'
+      };
+    }
     
     console.log('🔍 [VideoPlayer] Error details:', {
       errorCode,
-      networkState: video.networkState,
-      readyState: video.readyState,
-      src: video.src,
-      error: video.error
+      networkState: video?.networkState,
+      readyState: video?.readyState,
+      src: video?.src,
+      error: video?.error,
+      originalError: error
     });
 
     // Check for 403 Forbidden errors in the video source URL
-    const is403Error = video.src && (
+    const is403Error = video?.src && (
       video.src.includes('403') || 
       video.src.includes('Forbidden') ||
       video.networkState === 2 // NETWORK_NO_SOURCE
@@ -191,14 +254,17 @@ const VideoPlayerPage = () => {
         const fiveMinutesFromNow = currentTime + (5 * 60); // 5 minutes buffer
         
         const isExpired = fiveMinutesFromNow > expiryTime;
-        console.log('🔍 [VideoPlayer] URL expiry check:', {
-          signedDate: signedDate.toISOString(),
-          expiresInSeconds,
-          expiryTime: new Date(expiryTime * 1000).toISOString(),
-          currentTime: new Date(currentTime * 1000).toISOString(),
-          fiveMinutesFromNow: new Date(fiveMinutesFromNow * 1000).toISOString(),
-          isExpired
-        });
+        // Only log URL expiry check occasionally to reduce console spam
+        if (Math.random() < 0.05) { // Only log 5% of the time
+          console.log('🔍 [VideoPlayer] URL expiry check:', {
+            signedDate: signedDate.toISOString(),
+            expiresInSeconds,
+            expiryTime: new Date(expiryTime * 1000).toISOString(),
+            currentTime: new Date(currentTime * 1000).toISOString(),
+            fiveMinutesFromNow: new Date(fiveMinutesFromNow * 1000).toISOString(),
+            isExpired
+          });
+        }
         
         return isExpired;
       }
@@ -640,30 +706,21 @@ const VideoPlayerPage = () => {
           console.log('⚠️ [VideoPlayer] Course fetch failed, will use fallback title');
         }
         
-        // Fetch videos with access control (includes free preview logic)
-        console.log('🔧 [VideoPlayer] Fetching videos with access control...');
-        const videosResponse = await fetch(buildApiUrl(`/api/videos/course/${id}/version/1`), {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
+        // Fetch videos with DRM protection
+        console.log('🔧 [VideoPlayer] Fetching videos with DRM protection...');
+        const drmVideoService = DRMVideoService.getInstance();
+        const videosResult = await drmVideoService.getCourseVideosWithDRM(id!, 1);
+        console.log('🔧 [VideoPlayer] DRM videos data received:', videosResult);
         
-        if (!videosResponse.ok) {
-          console.log('❌ [VideoPlayer] Videos fetch failed:', videosResponse.status);
-          throw new Error('Failed to fetch course videos');
-        }
-        
-        const videosResult = await videosResponse.json();
-        console.log('🔧 [VideoPlayer] Videos data received:', videosResult);
-        
-        const videosWithAccess = videosResult.data.videos;
-        const userHasPurchased = videosResult.data.userHasPurchased;
+        const videosWithAccess = videosResult.course.videos;
+        const userHasPurchased = videosResult.userHasPurchased;
         
         console.log('🔧 [VideoPlayer] Video access details:', {
           totalVideos: videosWithAccess.length,
           userHasPurchased,
-          videosWithUrls: videosWithAccess.filter((v: any) => v.videoUrl).length,
-          videosWithAccess: videosWithAccess.filter((v: any) => v.hasAccess).length
+          videosWithUrls: videosWithAccess.filter((v: any) => v.drm?.encryptedUrl).length,
+          videosWithAccess: videosWithAccess.filter((v: any) => v.hasAccess).length,
+          drmEnabled: videosResult.drm.enabled
         });
         
         // Fetch course progress data
@@ -682,10 +739,8 @@ const VideoPlayerPage = () => {
           console.log('⚠️ [VideoPlayer] Progress fetch failed, continuing without progress data');
         }
         
-        // Get course title from the course data or fallback to video data
-        const courseTitle = courseData?.title || 
-          (videosWithAccess.length > 0 ? videosWithAccess[0].courseTitle : null) || 
-          'Course';
+        // Get course title from the course data or fallback
+        const courseTitle = courseData?.title || 'Course';
         
         // Create a progress map for quick lookup
         const progressMap = new Map();
@@ -695,32 +750,37 @@ const VideoPlayerPage = () => {
           });
         }
         
-        // Transform videos to match expected format with access control
+        // Transform videos to match expected format with DRM access control
         const transformedVideos = videosWithAccess.map((video: any) => {
           // Debug: Log access details for each video
-          console.log(`🔧 [VideoPlayer] Processing video "${video.title}":`, {
-            videoId: video._id,
+          console.log(`🔧 [VideoPlayer] Processing DRM video "${video.title}":`, {
+            videoId: video.id,
             hasAccess: video.hasAccess,
             isFreePreview: video.isFreePreview,
-            lockReason: video.lockReason,
-            hasVideoUrl: !!video.videoUrl
+            drmEnabled: video.drm?.enabled,
+            hasEncryptedUrl: !!video.drm?.encryptedUrl,
+            sessionId: video.drm?.sessionId
           });
           
-          // Try to get cached URL first
-          const cachedUrl = getCachedVideoUrl(video._id);
-          let videoUrl = cachedUrl || video.videoUrl || '';
+          // Use DRM encrypted URL if available, otherwise fall back to regular video URL
+          let videoUrl = video.url || video.videoUrl || '';
           
-          // Validate video URL for videos with access
-          if (video.hasAccess && !videoUrl) {
-            console.warn(`⚠️ [VideoPlayer] Video "${video.title}" has access but no URL!`);
-            console.log(`   - hasAccess: ${video.hasAccess}`);
-            console.log(`   - isFreePreview: ${video.isFreePreview}`);
-            // Checking video URL availability
+          // If we have an encrypted URL, don't set it as the video source yet
+          // We'll decrypt it when the video is actually played
+          if (video.drm?.encryptedUrl && video.drm?.sessionId) {
+            // Don't set the encrypted URL as the source - it will be decrypted on play
+            videoUrl = ''; // Empty URL until decryption
+            // console.log(`🔒 [VideoPlayer] Video "${video.title}" has encrypted URL, will decrypt on play`);
           }
           
-          // Cache the URL if it's new
-          if (video.videoUrl && !cachedUrl) {
-            cacheVideoUrl(video._id, video.videoUrl);
+          // Validate video URL for videos with access
+          if (video.hasAccess && !videoUrl && !video.drm?.encryptedUrl) {
+            console.warn(`⚠️ [VideoPlayer] Video "${video.title}" has access but no video URL!`);
+            console.log(`   - hasAccess: ${video.hasAccess}`);
+            console.log(`   - isFreePreview: ${video.isFreePreview}`);
+            console.log(`   - drmEnabled: ${video.drm?.enabled}`);
+            console.log(`   - drmUrl: ${video.drm?.encryptedUrl}`);
+            console.log(`   - regularUrl: ${video.url || video.videoUrl}`);
           }
 
           // Get progress data for this video
@@ -733,16 +793,23 @@ const VideoPlayerPage = () => {
           };
 
           return {
-            id: video._id,
+            id: video.id,
             title: video.title,
             duration: video.duration ? `${Math.floor(video.duration / 60)}:${(video.duration % 60).toString().padStart(2, '0')}` : '00:00',
             videoUrl: videoUrl,
             completed: progress.isCompleted,
-            hasAccess: video.hasAccess, // Add the hasAccess property
-            locked: !video.hasAccess, // Use the access control data
+            hasAccess: video.hasAccess,
+            locked: !video.hasAccess,
             progress: progress,
             isFreePreview: video.isFreePreview,
-            requiresPurchase: video.lockReason === 'purchase_required'
+            requiresPurchase: !video.hasAccess && !video.isFreePreview,
+            // DRM data
+            drm: {
+              enabled: video.drm?.enabled || false,
+              sessionId: video.drm?.sessionId,
+              watermarkData: video.drm?.watermarkData,
+              encryptedUrl: video.drm?.encryptedUrl
+            }
           };
         });
         
@@ -814,16 +881,22 @@ const VideoPlayerPage = () => {
         const token = localStorage.getItem('token');
         if (!token) return;
 
-        console.log('🔄 [Progress Refresh] Fetching latest progress data...');
+        // Only log progress refresh occasionally to reduce console spam
+        if (Math.random() < 0.1) { // Only log 10% of the time
+          console.log('🔄 [Progress Refresh] Fetching latest progress data...');
+        }
         
-        // Fetch latest progress data
+        // Fetch latest progress data with error handling
         const progressResponse = await fetch(buildApiUrl(`/api/progress/course/${id}`), {
           headers: {
             'Authorization': `Bearer ${token}`
           }
+        }).catch(error => {
+          console.warn('⚠️ [Progress Refresh] Network error (likely browser extension conflict):', error.message);
+          return null;
         });
 
-        if (progressResponse.ok) {
+        if (progressResponse && progressResponse.ok) {
           const progressResult = await progressResponse.json();
           
           if (progressResult?.data?.videos) {
@@ -1488,18 +1561,6 @@ const VideoPlayerPage = () => {
     }
   }, []);
 
-  const getCachedVideoUrl = useCallback((videoId: string) => {
-    try {
-      const cache = JSON.parse(localStorage.getItem('videoUrlCache') || '{}');
-      const cached = cache[videoId];
-      if (cached && Date.now() - cached.timestamp < 3600000) { // 1 hour cache
-        return cached.url;
-      }
-    } catch (error) {
-      console.error('Error getting cached video URL:', error);
-    }
-    return null;
-  }, []);
 
   // Proactive presigned URL refresh
   useEffect(() => {
@@ -1588,13 +1649,16 @@ const VideoPlayerPage = () => {
   }
 
   // Debug logging
-  console.log('🔍 [VideoPlayerPage] Render state:', {
-    showPlaylist,
-    courseData: courseData ? 'loaded' : 'null',
-    videos: courseData?.videos ? `${courseData.videos.length} videos` : 'none',
-    loading,
-    error
-  });
+  // Debug logging for render state (reduced frequency)
+  if (Math.random() < 0.1) { // Only log 10% of the time
+    console.log('🔍 [VideoPlayerPage] Render state:', {
+      showPlaylist,
+      courseData: courseData ? 'loaded' : 'null',
+      videos: courseData?.videos ? `${courseData.videos.length} videos` : 'none',
+      loading,
+      error
+    });
+  }
 
   return (
     <div className="min-h-screen bg-gray-900 flex flex-col pt-16">
@@ -1632,18 +1696,25 @@ const VideoPlayerPage = () => {
         <div className="flex-1 flex flex-col">
                 {/* Enhanced Video Player */}
       <div className="flex-1" style={{ minHeight: '400px', height: '60vh' }}>
-        {currentVideo?.videoUrl && 
-         currentVideo.videoUrl.trim() !== '' && 
-         currentVideo.videoUrl !== window.location.href &&
-         currentVideo.videoUrl !== 'undefined' &&
-         currentVideo.hasAccess &&
+        {currentVideo?.hasAccess &&
          !videoError &&
          !isRefreshingUrl ? (
           <>
-            <EnhancedVideoPlayer
+            {isDecryptingUrl ? (
+              <div className="w-full h-full bg-black flex items-center justify-center">
+                <div className="text-white text-center">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+                  <p className="text-lg">Decrypting video...</p>
+                </div>
+              </div>
+            ) : currentVideo.videoUrl ? (
+              <EnhancedVideoPlayer
                 key={`${currentVideoId}-${currentVideo.videoUrl}`}
-                src={currentVideo.videoUrl || ''}
+                src={currentVideo.videoUrl}
               title={courseData?.title}
+              userId={localStorage.getItem('userId') || undefined}
+              videoId={currentVideoId}
+              courseId={id}
               playing={isPlaying}
               playbackRate={playbackRate}
                 onPlay={() => {
@@ -1677,7 +1748,46 @@ const VideoPlayerPage = () => {
               onControlsToggle={setControlsVisible}
               className="w-full h-full"
               initialTime={currentVideo?.progress?.lastPosition || 0}
+              drmEnabled={currentVideo?.drm?.enabled || false}
+              watermarkData={currentVideo?.drm?.watermarkData}
+              forensicWatermark={forensicWatermark}
               />
+            ) : currentVideo.drm?.encryptedUrl && currentVideo.drm?.sessionId ? (
+              <div className="w-full h-full bg-black flex items-center justify-center">
+                <div className="text-white text-center">
+                  <button
+                    onClick={async () => {
+                      try {
+                        setIsDecryptingUrl(true);
+                        console.log('🔓 [VideoPlayerPage] Decrypting video URL...');
+                        const decryptedUrl = await decryptVideoUrl(currentVideo.drm.encryptedUrl, currentVideo.drm.sessionId);
+                        console.log('✅ [VideoPlayerPage] Video URL decrypted successfully');
+                        
+                        // Update the current video with the decrypted URL
+                        setCurrentVideo(prev => prev ? { ...prev, videoUrl: decryptedUrl } : prev);
+                      } catch (error) {
+                        console.error('❌ [VideoPlayerPage] Failed to decrypt video URL:', error);
+                        handleVideoError(error);
+                      } finally {
+                        setIsDecryptingUrl(false);
+                      }
+                    }}
+                    className="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors duration-200"
+                  >
+                    🔓 Decrypt & Play Video
+                  </button>
+                  <p className="text-sm mt-2 text-gray-300">
+                    Click to decrypt and load the video
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div className="w-full h-full bg-black flex items-center justify-center">
+                <div className="text-white text-center">
+                  <p className="text-lg">No video available</p>
+                </div>
+              </div>
+            )}
           </>
         ) : (
               <div className="w-full h-full flex items-center justify-center text-gray-400">

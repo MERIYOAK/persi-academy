@@ -24,6 +24,7 @@ const userRoutes = require('./routes/userRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const progressRoutes = require('./routes/progressRoutes');
 const certificateRoutes = require('./routes/certificateRoutes');
+const drmVideoRoutes = require('./routes/drmVideoRoutes');
 
 // Import controllers for fallback routes
 const authController = require('./controllers/authController');
@@ -31,6 +32,7 @@ const authController = require('./controllers/authController');
 // Import middleware
 const authMiddleware = require('./middleware/authMiddleware');
 const adminAuthMiddleware = require('./middleware/adminAuthMiddleware');
+const securityMiddleware = require('./middleware/securityMiddleware');
 
 // Configure multer for file uploads
 const upload = multer({
@@ -58,8 +60,19 @@ const allowedOrigins = [
   'https://persi-academy.vercel.app', // Your current Vercel domain
   'http://localhost:3000',
   'http://localhost:4173',
-  'http://localhost:8080'
+  'http://localhost:8080',
+  'http://127.0.0.1:5173', // Alternative localhost
+  'http://127.0.0.1:3000',
+  'http://127.0.0.1:4173',
+  'http://127.0.0.1:8080'
 ].filter(Boolean); // Remove any undefined values
+
+// Apply security middleware
+const security = securityMiddleware.getAllMiddleware();
+app.use(security.securityHeaders);
+app.use(security.rateLimiter);
+app.use(security.securityMonitoring);
+app.use(security.antiBotProtection);
 
 console.log('🔧 CORS Allowed Origins:', allowedOrigins);
 
@@ -74,6 +87,15 @@ app.use(cors({
       return callback(null, true);
     }
 
+    // In development, be more permissive with localhost origins
+    if (process.env.NODE_ENV === 'development') {
+      const isLocalhost = origin.includes('localhost') || origin.includes('127.0.0.1');
+      if (isLocalhost) {
+        console.log('✅ Development: Allowing localhost origin:', origin);
+        return callback(null, true);
+      }
+    }
+
     if (allowedOrigins.indexOf(origin) !== -1) {
       console.log('✅ Origin allowed:', origin);
       callback(null, true);
@@ -83,7 +105,9 @@ app.use(cors({
       callback(new Error('Not allowed by CORS'));
     }
   },
-  credentials: true
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin']
 }));
 // Parse JSON bodies for all routes except webhook
 app.use((req, res, next) => {
@@ -453,6 +477,9 @@ app.use('/api/archive', archiveRoutes);
 
 // Video routes
 app.use('/api/videos', videoRoutes);
+
+// DRM Video routes
+app.use('/api/drm', drmVideoRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

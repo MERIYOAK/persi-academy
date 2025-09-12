@@ -368,7 +368,7 @@ exports.downloadCertificate = async (req, res) => {
 };
 
 /**
- * Generate PDF certificate
+ * Generate PDF certificate - Clean Professional Design
  */
 async function generateCertificatePDF(certificate) {
   try {
@@ -379,247 +379,178 @@ async function generateCertificatePDF(certificate) {
     const centerX = width / 2;
     const centerY = height / 2;
 
-    // Embed fonts
+    // Embed fonts for professional typography
     const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
     const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
     const serifFont = await pdfDoc.embedFont(StandardFonts.TimesRoman);
     const serifBoldFont = await pdfDoc.embedFont(StandardFonts.TimesRomanBold);
     
-    // Color palette
-    const navy = rgb(0.12, 0.23, 0.54); // #1E3A8A
-    const gold = rgb(0.83, 0.69, 0.22); // #D4AF37
-    const silver = rgb(0.75, 0.75, 0.75); // #C0C0C0
-    const darkGray = rgb(0.2, 0.2, 0.2);
-    const lightGray = rgb(0.6, 0.6, 0.6);
+    // Clean color palette
+    const navy = rgb(0.1, 0.2, 0.4); // #1A3366 - Professional navy
+    const gold = rgb(0.8, 0.6, 0.2); // #CC9933 - Elegant gold
+    const darkGray = rgb(0.2, 0.2, 0.2); // #333333 - Dark gray
+    const mediumGray = rgb(0.5, 0.5, 0.5); // #808080 - Medium gray
+    const lightGray = rgb(0.7, 0.7, 0.7); // #B3B3B3 - Light gray
+    const white = rgb(1, 1, 1); // Pure white
     
-    // Set background color (off-white for elegance)
+    // Set clean white background
     page.drawRectangle({
       x: 0,
       y: 0,
       width,
       height,
-      color: rgb(0.99, 0.99, 0.98)
+      color: white
     });
 
-    // Draw decorative border with gradient effect
-    const borderWidth = 4;
-    const borderGradient = 3;
+    // Simple elegant border
+    const borderWidth = 3;
+    const margin = 50;
     
-    // Outer border (gold)
     page.drawRectangle({
-      x: borderWidth,
-      y: borderWidth,
-      width: width - (borderWidth * 2),
-      height: height - (borderWidth * 2),
-      borderColor: gold,
-      borderWidth: borderWidth,
-      color: rgb(1, 1, 1)
-    });
-
-    // Inner border (navy)
-    page.drawRectangle({
-      x: borderWidth + borderGradient,
-      y: borderWidth + borderGradient,
-      width: width - ((borderWidth + borderGradient) * 2),
-      height: height - ((borderWidth + borderGradient) * 2),
+      x: margin,
+      y: margin,
+      width: width - (margin * 2),
+      height: height - (margin * 2),
       borderColor: navy,
-      borderWidth: 1
+      borderWidth: borderWidth,
+      color: white
     });
 
-    // Add subtle watermark in background
-    page.drawText('QENDIEL Academy', {
-      x: centerX - 80,
+    // Subtle watermark - make it more visible
+    page.drawText('QENDIEL', {
+      x: centerX - 60,
       y: centerY + 50,
-      size: 100,
-      font: serifFont,
-      color: rgb(0.95, 0.95, 0.95),
+      size: 80,
+      font: serifBoldFont,
+      color: rgb(0.9, 0.9, 0.9),
       rotate: { angle: -45, type: 'degrees' }
     });
 
-    // Certificate ID in top right corner
-    page.drawText(`ID: ${certificate.certificateId}`, {
-      x: width - 180,
-      y: height - 60,
-      size: 10,
-      font,
-      color: lightGray
-    });
-
-    // Platform logo/name in top left
-    page.drawText('QENDIEL Academy', {
-      x: 60,
-      y: height - 80,
+    // Header section
+    const headerY = height - 80;
+    
+    // Academy name
+    page.drawText('QENDIEL ACADEMY', {
+      x: 80,
+      y: headerY,
       size: 24,
       font: serifBoldFont,
       color: navy
     });
     
-    page.drawText('QENDIEL Academy', {
-      x: 60,
-      y: height - 105,
-      size: 12,
-      font,
-      color: lightGray
+    // Certificate ID
+    page.drawText(`Certificate ID: ${certificate.certificateId}`, {
+      x: width - 250,
+      y: headerY,
+      size: 10,
+      font: font,
+      color: mediumGray
     });
 
-    // Main title - Certificate of Completion
-    page.drawText('Certificate of Completion', {
+    // Main title
+    const titleY = height - 150;
+    page.drawText('CERTIFICATE OF COMPLETION', {
       x: centerX - 180,
-      y: height - 120,
-      size: 36,
+      y: titleY,
+      size: 32,
       font: serifBoldFont,
       color: navy
     });
 
     // Decorative line under title
     page.drawLine({
-      start: { x: centerX - 150, y: height - 140 },
-      end: { x: centerX + 150, y: height - 140 },
+      start: { x: centerX - 150, y: titleY - 20 },
+      end: { x: centerX + 150, y: titleY - 20 },
       thickness: 2,
       color: gold
     });
 
-    // Main content area
-    let currentY = height - 220;
+    // Main content
+    let currentY = height - 250;
 
-    // Subtitle
+    // Certificate text
     page.drawText('This is to certify that', {
-      x: centerX - 120,
+      x: centerX - 80,
       y: currentY,
-      size: 18,
+      size: 16,
       font: serifFont,
-      color: lightGray
+      color: mediumGray
     });
 
-    // Student name - prominent and centered
-    currentY -= 80;
+    // Student name - most prominent
+    currentY -= 60;
+    const studentNameWidth = certificate.studentName.length * 10;
     page.drawText(certificate.studentName, {
-      x: centerX - (certificate.studentName.length * 8),
+      x: centerX - (studentNameWidth / 2),
       y: currentY,
-      size: 32,
+      size: 28,
       font: serifBoldFont,
       color: navy
     });
 
+    // Underline for student name
+    page.drawLine({
+      start: { x: centerX - (studentNameWidth / 2) - 10, y: currentY - 10 },
+      end: { x: centerX + (studentNameWidth / 2) + 10, y: currentY - 10 },
+      thickness: 1,
+      color: gold
+    });
+
     // Completion text
-    currentY -= 70;
+    currentY -= 50;
     page.drawText('has successfully completed the course', {
-      x: centerX - 140,
+      x: centerX - 120,
       y: currentY,
-      size: 18,
+      size: 16,
       font: serifFont,
-      color: lightGray
+      color: mediumGray
     });
 
     // Course title
-    currentY -= 60;
+    currentY -= 50;
+    const courseTitleWidth = certificate.courseTitle.length * 7;
     page.drawText(certificate.courseTitle, {
-      x: centerX - (certificate.courseTitle.length * 6),
+      x: centerX - (courseTitleWidth / 2),
       y: currentY,
-      size: 26,
+      size: 20,
       font: serifBoldFont,
       color: darkGray
     });
 
-    // Decorative line under course title
-    currentY -= 20;
-    page.drawLine({
-      start: { x: centerX - 120, y: currentY },
-      end: { x: centerX + 120, y: currentY },
-      thickness: 1,
-      color: silver
-    });
-
     // Course details
-    currentY -= 50;
-    page.drawText(`Instructor: ${certificate.instructorName}`, {
-      x: centerX - 100,
-      y: currentY,
-      size: 14,
-      font,
-      color: lightGray
-    });
-
-    currentY -= 40;
+    currentY -= 80;
+    const detailsY = currentY;
+    
+    // Completion date
     const completionDate = new Date(certificate.completionDate).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'long',
       day: 'numeric'
     });
-    page.drawText(`Completed on ${completionDate}`, {
-      x: centerX - 100,
-      y: currentY,
+    page.drawText(`Completed: ${completionDate}`, {
+      x: centerX - 80,
+      y: detailsY,
       size: 14,
-      font,
-      color: lightGray
-    });
-
-
-
-    // Signature area
-    currentY -= 80;
-    
-    // Left signature (Instructor)
-    page.drawText('Instructor Signature', {
-      x: 120,
-      y: currentY,
-      size: 12,
       font: boldFont,
       color: navy
     });
-    
-    page.drawText(certificate.instructorName, {
-      x: 120,
-      y: currentY - 20,
-      size: 14,
-      font: serifFont,
-      color: darkGray
-    });
-    
-    // Right signature (Platform)
-    page.drawText('Platform Signature', {
-      x: width - 200,
-      y: currentY,
-      size: 12,
-      font: boldFont,
-      color: navy
-    });
-    
-    page.drawText('QENDIEL Academy', {
-      x: width - 200,
-      y: currentY - 20,
-      size: 14,
-      font: serifFont,
-      color: darkGray
-    });
 
-    // Decorative seal in bottom center
-    const sealRadius = 40;
+    // Simple seal
+    const sealRadius = 30;
     const sealX = centerX;
-    const sealY = currentY - 80;
+    const sealY = detailsY - 80;
     
-    // Draw seal circle
     page.drawCircle({
       x: sealX,
       y: sealY,
       size: sealRadius,
       borderColor: gold,
       borderWidth: 2,
-      color: rgb(0.98, 0.98, 0.95)
+      color: white
     });
     
-    // Draw inner circle
-    page.drawCircle({
-      x: sealX,
-      y: sealY,
-      size: sealRadius - 8,
-      borderColor: navy,
-      borderWidth: 1
-    });
-    
-    // Draw seal text
     page.drawText('CERTIFIED', {
-      x: sealX - 35,
+      x: sealX - 25,
       y: sealY + 5,
       size: 10,
       font: boldFont,
@@ -627,29 +558,28 @@ async function generateCertificatePDF(certificate) {
     });
     
     page.drawText('COMPLETE', {
-      x: sealX - 35,
+      x: sealX - 25,
       y: sealY - 5,
       size: 10,
       font: boldFont,
       color: navy
     });
 
-    // Verification note at bottom
-    currentY -= 120;
-    page.drawText('This certificate can be verified at:', {
-      x: centerX - 120,
-      y: currentY,
+    // Verification
+    const verificationY = sealY - 60;
+    page.drawText('Verify this certificate at:', {
+      x: centerX - 100,
+      y: verificationY,
       size: 10,
-      font,
+      font: font,
       color: lightGray
     });
 
-    currentY -= 20;
-    page.drawText(`http://localhost:5173/verify/${certificate.certificateId}`, {
-      x: centerX - 150,
-      y: currentY,
+    page.drawText(`https://qendiel.com/verify/${certificate.certificateId}`, {
+      x: centerX - 120,
+      y: verificationY - 15,
       size: 10,
-      font,
+      font: font,
       color: navy
     });
 
