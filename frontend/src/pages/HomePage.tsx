@@ -3,7 +3,8 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ArrowRight, Star, Award, Zap, Target, TrendingUp } from 'lucide-react';
 import CourseCard from '../components/CourseCard';
-import { buildApiUrl } from '../config/environment';
+import LoadingMessage from '../components/LoadingMessage';
+import { useFeaturedCourses } from '../hooks/useCourses';
 import { parseDurationToSeconds } from '../utils/durationFormatter';
 
 interface ApiCourse {
@@ -22,10 +23,11 @@ const HomePage = () => {
   const { t } = useTranslation();
   console.log('🏠 HomePage component rendering');
   
-  const [recent, setRecent] = useState<ApiCourse[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
   const [currentVariation, setCurrentVariation] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  
+  // Use React Query for fetching featured courses
+  const { data: featuredCourses = [], isLoading: loading, error } = useFeaturedCourses();
 
   // Hero variations with translations
   const heroVariations = [
@@ -135,88 +137,65 @@ const HomePage = () => {
     return () => clearInterval(interval);
   }, []);
 
+  // Log loading state changes
   useEffect(() => {
-    const load = async () => {
+    if (loading) {
       console.log('🔄 HomePage loading featured courses');
-      try {
-        setLoading(true);
-        
-        // Get authentication token if available
-        const token = localStorage.getItem('token');
-        const headers: HeadersInit = {};
-        if (token) {
-          headers['Authorization'] = `Bearer ${token}`;
-          console.log('🔐 HomePage using authentication token');
-        } else {
-          console.log('🔓 HomePage no authentication token found');
-        }
-        
-    console.log('📡 Making API request to:', buildApiUrl('/api/courses'));
-    const res = await fetch(buildApiUrl('/api/courses'), {
-          headers
-        });
-        
-        console.log(`📊 HomePage API Response status: ${res.status}`);
-        console.log(`📊 HomePage API Response ok: ${res.ok}`);
-        
-        const data = await res.json();
-        console.log('📦 HomePage Raw API response data:', data);
-        
-        let coursesData: ApiCourse[] = [];
-        
-        if (Array.isArray(data)) {
-          console.log(`✅ HomePage received ${data.length} courses from API`);
-          coursesData = data;
-        } else if (data.data && Array.isArray(data.data.courses)) {
-          console.log(`✅ HomePage received ${data.data.courses.length} courses from enhanced API`);
-          coursesData = data.data.courses;
-        } else {
-          console.error('❌ HomePage unexpected API response structure:', data);
-          coursesData = [];
-        }
-        
-        const featuredCourses = coursesData.slice(0, 3);
-        // Featured courses loaded successfully
-        
-        setRecent(featuredCourses);
-      } catch (error) {
-        console.error('❌ HomePage load error:', error);
-        setRecent([]);
-      } finally {
-        setLoading(false);
-        console.log('🏁 HomePage load completed');
-      }
-    };
-    load();
-  }, []);
+    } else if (error) {
+      console.error('❌ HomePage load error:', error);
+    } else {
+      console.log('✅ HomePage featured courses loaded:', featuredCourses.length);
+    }
+  }, [loading, error, featuredCourses.length]);
 
   const featuredGrid = useMemo(() => {
     console.log('🎨 HomePage featuredGrid rendering with:');
     console.log(`   - Loading: ${loading}`);
-    console.log(`   - Recent courses count: ${recent.length}`);
+    console.log(`   - Featured courses count: ${featuredCourses.length}`);
     
     if (loading) {
-      console.log('⏳ HomePage rendering loading skeleton');
+      console.log('⏳ HomePage rendering loading state');
       return (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="animate-pulse bg-white rounded-2xl shadow p-6 h-64 sm:h-72" />
-          ))}
+        <div>
+          <LoadingMessage 
+            message={t('home.loading_featured_courses', 'Loading featured courses, please wait...')}
+            className="mb-8"
+          />
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className="animate-pulse bg-white rounded-2xl shadow p-6 h-64 sm:h-72" />
+            ))}
+          </div>
         </div>
       );
     }
-    if (!recent.length) {
+    
+    if (error) {
+      console.log('❌ HomePage rendering error state');
+      return (
+        <div className="text-center py-12">
+          <div className="text-red-600 mb-4">
+            <p className="text-lg font-medium">{t('home.error_loading_courses', 'Failed to load courses')}</p>
+            <p className="text-sm text-gray-500">{error.message}</p>
+          </div>
+        </div>
+      );
+    }
+    
+    if (!featuredCourses.length) {
       console.log('📭 HomePage rendering empty state');
       return (
-        <div className="text-gray-500 text-center px-4">No courses yet. Check back soon.</div>
+        <div className="text-gray-500 text-center px-4 py-12">
+          <p className="text-lg">{t('home.no_courses_available', 'No courses yet. Check back soon.')}</p>
+        </div>
       );
     }
     
     // Rendering featured course cards
-    
+    console.log('✅ HomePage rendering featured course cards');
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
-        {recent.map((c) => {
+        {featuredCourses.map((c) => {
           // Using the centralized parseDurationToSeconds utility
           const totalSeconds = (c.videos || []).reduce((acc, v) => acc + parseDurationToSeconds(v.duration), 0);
           return (
@@ -236,7 +215,7 @@ const HomePage = () => {
         );})}
       </div>
     );
-  }, [recent, loading]);
+  }, [featuredCourses, loading, error, t]);
 
   const currentHero = heroVariations[currentVariation];
 

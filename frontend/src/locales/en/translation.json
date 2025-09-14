@@ -38,6 +38,9 @@
     "view_all_courses": "View All Courses",
     "testimonials_title": "Testimonials",
     "student_success": "Student Success",
+    "loading_featured_courses": "Loading featured courses, please wait...",
+    "error_loading_courses": "Failed to load courses",
+    "no_courses_available": "No courses yet. Check back soon.",
     "hero_variations": {
       "variation1": {
         "headline": "Master Digital Content Creation",
@@ -142,6 +145,8 @@
     "filter_advanced": "Advanced",
     "sort_by": "Sort by",
     "sort_newest": "Newest",
+    "loading_courses": "Loading courses, please wait...",
+    "error_loading": "Failed to load courses",
     "sort_popular": "Popular",
     "sort_rating": "Rating",
     "enroll_now": "Enroll Now",
@@ -304,6 +309,8 @@
   },
   "common": {
     "loading": "Loading...",
+    "loading_courses": "Loading courses, please wait...",
+    "loading_subtitle": "This may take a few seconds",
     "error": "An error occurred",
     "success": "Success",
     "cancel": "Cancel",
@@ -323,6 +330,7 @@
     "submit": "Submit",
     "reset": "Reset",
     "confirm": "Confirm",
+    "retry": "Try Again",
     "yes": "Yes",
     "no": "No",
     "ok": "OK",
@@ -528,10 +536,11 @@
     "all_courses": "All Courses",
     "search_courses": "Search courses...",
     "no_courses": "No courses found",
+    "loading_dashboard": "Loading your dashboard, please wait...",
+    "error_loading": "Failed to load dashboard",
     "start_learning": "Start Learning",
     "view_all": "View All",
     "progress": "Progress",
-    "error_loading": "Error Loading Dashboard",
     "try_again": "Try Again",
     "failed_fetch_user": "Failed to fetch user data",
     "failed_fetch_progress": "Failed to fetch progress data",
@@ -763,7 +772,13 @@
       "login_success": "Login successful",
       "login_error": "Login failed",
       "invalid_credentials": "Invalid email or password",
-      "verify_email_first": "Please verify your email address before logging in. Check your inbox for a verification link."
+      "verify_email_first": "Please verify your email address before logging in. Check your inbox for a verification link.",
+      "account_suspended_title": "Account Suspended",
+      "account_suspended_message": "Your account has been suspended and you cannot access the platform at this time. This may be due to a temporary restriction or policy violation.",
+      "need_help": "Need Help?",
+      "contact_support_message": "If you believe this is an error or need assistance, please contact our support team.",
+      "contact_support": "Contact Support",
+      "close": "Close"
     },
     "upload": {
       "click_to_upload": "Click to upload",

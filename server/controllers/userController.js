@@ -102,7 +102,7 @@ exports.getUserDashboard = async (req, res) => {
 // Admin user management functions
 exports.getAllUsers = async (req, res) => {
   try {
-    const { page = 1, limit = 10, search = '', status = '', role = '' } = req.query;
+    const { page = 1, limit = 10, search = '', status = '', role = '', sortBy = 'createdAt', sortOrder = 'desc' } = req.query;
     
     const query = {};
     
@@ -114,16 +114,43 @@ exports.getAllUsers = async (req, res) => {
       ];
     }
     
+    // Filter by status
+    if (status) {
+      query.status = status;
+    }
+    
     // Filter by role
     if (role) {
       query.role = role;
+    }
+    
+    // Build sort object
+    const sortObj = {};
+    const order = sortOrder === 'asc' ? 1 : -1;
+    
+    // Handle different sort fields
+    switch (sortBy) {
+      case 'name':
+        sortObj.name = order;
+        break;
+      case 'email':
+        sortObj.email = order;
+        break;
+      case 'status':
+        // For status sorting, we'll use a custom sort order: active, inactive
+        sortObj.status = order;
+        break;
+      case 'createdAt':
+      default:
+        sortObj.createdAt = order;
+        break;
     }
     
     const skip = (page - 1) * limit;
     
     const users = await User.find(query)
       .select('-password')
-      .sort({ createdAt: -1 })
+      .sort(sortObj)
       .skip(skip)
       .limit(parseInt(limit));
     
@@ -221,16 +248,18 @@ exports.updateUserStatus = async (req, res) => {
   try {
     const { status } = req.body;
     
-    // Add status field to user if it doesn't exist
     const user = await User.findById(req.params.id);
     
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
     
-    // Update user status (you might want to add a status field to the User model)
+    // Update user status and increment token version to invalidate existing tokens
     user.status = status;
+    user.tokenVersion = (user.tokenVersion || 1) + 1; // Increment token version
     await user.save();
+    
+    console.log(`🔒 User ${user.email} status changed to ${status}, token version incremented to ${user.tokenVersion}`);
     
     res.json({
       success: true,

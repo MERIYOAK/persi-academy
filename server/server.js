@@ -497,64 +497,24 @@ app.use('/api/payments', paymentRoutes); // Also support plural for webhook comp
 // User routes
 app.use('/api/user', userRoutes);
 
-// Admin dashboard stats
+// Admin dashboard stats (basic stats only)
 app.get('/api/admin/stats', adminAuthMiddleware, async (req, res) => {
   try {
     const Course = require('./models/Course');
-    const CourseVersion = require('./models/CourseVersion');
     const Video = require('./models/Video');
     const User = require('./models/User');
-    const Transaction = require('./models/Transaction');
 
-    // Get total users (excluding admins)
-    const totalUsers = await User.countDocuments({ role: 'user' });
-
-    // Get total courses
-    const totalCourses = await Course.countDocuments();
-
-    // Calculate total revenue from completed transactions
-    const completedTransactions = await Transaction.find({ status: 'completed' });
-    const totalRevenue = completedTransactions.reduce((sum, transaction) => sum + transaction.amount, 0);
-
-    // Calculate active sessions (users who have been active in the last 24 hours)
-    const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
-    const activeSessions = await User.countDocuments({
-      updatedAt: { $gte: twentyFourHoursAgo }
-    });
-
-    // Get course statistics
-    const activeCourses = await Course.countDocuments({ status: 'active' });
-    const inactiveCourses = await Course.countDocuments({ status: 'inactive' });
-    const archivedCourses = await Course.countDocuments({ status: 'archived' });
-    const totalVersions = await CourseVersion.countDocuments();
-    const totalVideos = await Video.countDocuments();
-
-    // Get recent courses
-    const recentCourses = await Course.find()
-      .sort({ createdAt: -1 })
-      .limit(5)
-      .select('title status createdAt price');
-
-    // Get recent transactions
-    const recentTransactions = await Transaction.find({ status: 'completed' })
-      .populate('userId', 'name email')
-      .populate('courseId', 'title')
-      .sort({ createdAt: -1 })
-      .limit(10)
-      .select('amount createdAt');
+    // Get basic counts
+    const [totalUsers, totalCourses, totalVideos] = await Promise.all([
+      User.countDocuments({ role: 'user' }),
+      Course.countDocuments(),
+      Video.countDocuments()
+    ]);
 
     const stats = {
       totalUsers,
       totalCourses,
-      totalRevenue,
-      activeSessions,
-      activeCourses,
-      inactiveCourses,
-      archivedCourses,
-      totalVersions,
-      totalVideos,
-      recentCourses,
-      recentTransactions
+      totalVideos
     };
 
     res.json({
@@ -570,6 +530,7 @@ app.get('/api/admin/stats', adminAuthMiddleware, async (req, res) => {
     });
   }
 });
+
 
 // Error handling middleware
 app.use((error, req, res, next) => {

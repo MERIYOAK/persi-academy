@@ -360,6 +360,25 @@ const SecureVideoPlayer: React.FC<SecureVideoPlayerProps> = ({
 
       container?.appendChild(dynamicWatermark);
 
+      // Add QENDIEL ACADEMY watermark
+      const academyWatermark = document.createElement('div');
+      academyWatermark.id = 'academy-watermark';
+      academyWatermark.style.cssText = `
+        position: absolute;
+        bottom: 20px;
+        left: 20px;
+        color: rgba(255,255,255,0.15);
+        font-size: 24px;
+        font-weight: bold;
+        font-family: 'Arial', sans-serif;
+        z-index: 25;
+        pointer-events: none;
+        text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+        user-select: none;
+      `;
+      academyWatermark.textContent = 'QENDIEL ACADEMY';
+      container?.appendChild(academyWatermark);
+
       // Update watermark every second
       const updateWatermark = () => {
         const timestamp = Date.now();
@@ -374,6 +393,7 @@ const SecureVideoPlayer: React.FC<SecureVideoPlayerProps> = ({
         clearInterval(watermarkInterval);
         overlay.remove();
         dynamicWatermark.remove();
+        academyWatermark.remove();
       };
     };
 
@@ -1100,8 +1120,8 @@ const SecureVideoPlayer: React.FC<SecureVideoPlayerProps> = ({
       )}
 
 
-      {/* Security Status Indicator */}
-      {drmEnabled && (
+      {/* Security Status Indicator - Hidden */}
+      {false && drmEnabled && (
         <div className="absolute top-4 left-4 z-20">
           <div className={`flex items-center space-x-2 px-3 py-1 rounded-full text-xs ${
             securityStatus.isSecure 
@@ -1114,8 +1134,8 @@ const SecureVideoPlayer: React.FC<SecureVideoPlayerProps> = ({
         </div>
       )}
 
-      {/* Windows Key Blocking Indicator */}
-      {isPlaying && (
+      {/* Windows Key Blocking Indicator - Hidden */}
+      {false && isPlaying && (
         <div className="absolute top-4 left-32 z-20">
           <div className="flex items-center space-x-2 px-3 py-1 rounded-full text-xs bg-blue-900 bg-opacity-75 text-blue-300">
             <Shield className="w-3 h-3" />
@@ -1124,8 +1144,8 @@ const SecureVideoPlayer: React.FC<SecureVideoPlayerProps> = ({
         </div>
       )}
 
-      {/* Watermark Toggle */}
-      {drmEnabled && watermarkData && (
+      {/* Watermark Toggle - Hidden */}
+      {false && drmEnabled && watermarkData && (
         <div className="absolute top-4 right-4 z-20">
           <button
             onClick={() => setWatermarkVisible(!watermarkVisible)}
@@ -1324,7 +1344,7 @@ const SecureVideoPlayer: React.FC<SecureVideoPlayerProps> = ({
           <div>↑/↓: Volume ±10%</div>
           <div>F: Fullscreen</div>
           <div>0: Start | 9: 90%</div>
-          {isPlaying && (
+          {false && isPlaying && (
             <div className="mt-2 pt-2 border-t border-gray-600 text-yellow-300">
               <div className="font-semibold">🔒 Security Active:</div>
               <div>Windows Key Blocked</div>

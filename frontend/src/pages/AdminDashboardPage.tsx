@@ -3,7 +3,7 @@ import { buildApiUrl } from '../config/environment';
 
 import { useNavigate } from 'react-router-dom';
 import { useAdminAuth } from '../contexts/AdminAuthContext';
-import { BookOpen, Users, Play, TrendingUp, Plus, ArrowRight } from 'lucide-react';
+import { BookOpen, Users, Play, Plus, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 interface AdminUser {
@@ -16,7 +16,6 @@ interface AdminStats {
   totalCourses: number;
   totalUsers: number;
   totalVideos: number;
-  totalRevenue: number;
 }
 
 const AdminDashboardPage = () => {
@@ -70,13 +69,6 @@ const AdminDashboardPage = () => {
     return num.toLocaleString();
   };
 
-  // Format currency
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-    }).format(amount);
-  };
 
   const adminStats = [
     { 
@@ -90,12 +82,6 @@ const AdminDashboardPage = () => {
       value: stats ? formatNumber(stats.totalCourses) : '...', 
       icon: BookOpen, 
       color: 'bg-green-500' 
-    },
-    { 
-      title: 'Total Revenue', 
-      value: stats ? formatCurrency(stats.totalRevenue) : '...', 
-      icon: TrendingUp, 
-      color: 'bg-purple-500' 
     },
     { 
       title: 'Total Videos', 

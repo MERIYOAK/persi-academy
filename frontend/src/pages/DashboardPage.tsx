@@ -1,8 +1,9 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { BookOpen, Search, Filter, Trophy, TrendingUp, Clock, Users, ChevronLeft, ChevronRight } from 'lucide-react';
+import { BookOpen, Search, Trophy, TrendingUp, Clock, ChevronLeft, ChevronRight } from 'lucide-react';
 import DashboardCard from '../components/DashboardCard';
+import LoadingMessage from '../components/LoadingMessage';
 import { buildApiUrl } from '../config/environment';
 
 interface UserData {
@@ -175,6 +176,10 @@ const DashboardPage = () => {
     return (
       <div className="min-h-screen bg-gray-50">
         <div className="max-w-7xl mx-auto px-3 xxs:px-4 sm:px-6 lg:px-8 py-6 xxs:py-8">
+          <LoadingMessage 
+            message={t('dashboard.loading_dashboard', 'Loading your dashboard, please wait...')}
+            className="mb-8"
+          />
           <div className="animate-pulse">
             <div className="h-6 xxs:h-8 bg-gray-200 rounded w-1/2 xxs:w-1/4 mb-6 xxs:mb-8"></div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 xxs:gap-6 sm:gap-8">
@@ -191,14 +196,17 @@ const DashboardPage = () => {
   if (error) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center px-3 xxs:px-4">
-        <div className="text-center">
-          <div className="text-red-600 text-lg xxs:text-xl font-semibold mb-3 xxs:mb-4">{t('dashboard.error_loading')}</div>
-          <div className="text-gray-600 mb-3 xxs:mb-4 text-sm xxs:text-base">{error}</div>
+        <div className="text-center max-w-md mx-auto">
+          <div className="text-red-600 mb-4 xxs:mb-6">
+            <BookOpen className="h-16 w-16 xxs:h-20 xxs:w-20 mx-auto" />
+          </div>
+          <h2 className="text-xl xxs:text-2xl font-bold text-gray-800 mb-3 xxs:mb-4">{t('dashboard.error_loading', 'Failed to load dashboard')}</h2>
+          <p className="text-gray-600 mb-6 xxs:mb-8 text-sm xxs:text-base">{error}</p>
           <button
             onClick={() => window.location.reload()}
-            className="bg-red-600 hover:bg-red-700 text-white px-4 xxs:px-6 py-2 rounded-lg text-sm xxs:text-base"
+            className="bg-red-600 hover:bg-red-700 text-white px-6 xxs:px-8 py-2 xxs:py-3 rounded-xl font-semibold transition-all duration-200 transform hover:scale-105 shadow-lg text-sm xxs:text-base"
           >
-            {t('dashboard.try_again')}
+            {t('common.retry', 'Try Again')}
           </button>
         </div>
       </div>

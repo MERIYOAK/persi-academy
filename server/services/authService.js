@@ -15,7 +15,8 @@ class AuthService {
         userId: user._id, 
         email: user.email, 
         role: user.role,
-        authProvider: user.authProvider 
+        authProvider: user.authProvider,
+        tokenVersion: user.tokenVersion || 1
       },
       process.env.JWT_SECRET,
       { expiresIn: '7d' }

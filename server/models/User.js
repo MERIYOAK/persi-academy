@@ -9,7 +9,8 @@ const userSchema = new mongoose.Schema({
   profilePhotoKey: { type: String, default: null },
   isVerified: { type: Boolean, default: false },
   role: { type: String, enum: ['user', 'admin'], default: 'user' },
-  status: { type: String, enum: ['active', 'inactive', 'suspended'], default: 'active' },
+  status: { type: String, enum: ['active', 'inactive'], default: 'active' },
+  tokenVersion: { type: Number, default: 1 }, // For token invalidation
   purchasedCourses: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Course' }],
   // Extended profile fields
   firstName: { type: String, default: null },

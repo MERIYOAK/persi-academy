@@ -199,11 +199,11 @@ router.get('/admin/processing', auth, adminAuthMiddleware, async (req, res) => {
 });
 
 /**
- * Bulk archive videos (admin only)
- * POST /api/videos/admin/bulk-archive
+ * Bulk delete videos (admin only) - permanently deletes from database and S3
+ * POST /api/videos/admin/bulk-delete
  * Body: { videoIds: [] }
  */
-router.post('/admin/bulk-archive', auth, adminAuthMiddleware, async (req, res) => {
+router.post('/admin/bulk-delete', auth, adminAuthMiddleware, async (req, res) => {
   try {
     const { videoIds } = req.body;
     const adminEmail = req.admin?.email || 'admin';
@@ -216,17 +216,55 @@ router.post('/admin/bulk-archive', auth, adminAuthMiddleware, async (req, res) =
     }
 
     const Video = require('../models/Video');
+    const CourseVersion = require('../models/CourseVersion');
+    const Course = require('../models/Course');
+    const { deleteFileFromS3 } = require('../utils/s3CourseManager');
     const results = [];
 
     for (const videoId of videoIds) {
       try {
         const video = await Video.findById(videoId);
         if (video) {
-          await video.archive();
+          console.log(`🗑️ [bulk-delete] Deleting video: ${video.title} (${video._id})`);
+          
+          // Delete from S3
+          if (video.s3Key) {
+            try {
+              await deleteFileFromS3(video.s3Key);
+              console.log(`✅ [bulk-delete] Deleted from S3: ${video.s3Key}`);
+            } catch (s3Error) {
+              console.error(`❌ [bulk-delete] Failed to delete from S3:`, s3Error);
+              // Continue with database deletion
+            }
+          }
+          
+          // Remove from course version
+          const courseVersion = await CourseVersion.findOne({ 
+            courseId: video.courseId, 
+            versionNumber: video.courseVersion 
+          });
+          
+          if (courseVersion) {
+            courseVersion.videos = courseVersion.videos.filter(vid => vid.toString() !== video._id.toString());
+            await courseVersion.save();
+            await courseVersion.updateStatistics();
+          }
+          
+          // Remove from main course if it's the current version
+          const course = await Course.findById(video.courseId);
+          if (course && course.currentVersion === video.courseVersion) {
+            course.videos = course.videos.filter(vid => vid.toString() !== video._id.toString());
+            await course.save();
+          }
+          
+          // Delete from database
+          await Video.findByIdAndDelete(video._id);
+          
           results.push({
             videoId,
             success: true,
-            title: video.title
+            title: video.title,
+            s3Key: video.s3Key
           });
         } else {
           results.push({
@@ -247,11 +285,11 @@ router.post('/admin/bulk-archive', auth, adminAuthMiddleware, async (req, res) =
     const successful = results.filter(r => r.success).length;
     const failed = results.filter(r => !r.success).length;
 
-    console.log(`✅ Bulk archive videos completed: ${successful} successful, ${failed} failed by ${adminEmail}`);
+    console.log(`✅ Bulk delete videos completed: ${successful} successful, ${failed} failed by ${adminEmail}`);
 
     res.json({
       success: true,
-      message: `Bulk archive completed: ${successful} successful, ${failed} failed`,
+      message: `Bulk delete completed: ${successful} successful, ${failed} failed`,
       data: {
         results,
         summary: {
@@ -263,77 +301,15 @@ router.post('/admin/bulk-archive', auth, adminAuthMiddleware, async (req, res) =
     });
 
   } catch (error) {
-    console.error('❌ Bulk archive videos error:', error);
+    console.error('❌ Bulk delete videos error:', error);
     res.status(500).json({
       success: false,
-      message: 'Failed to bulk archive videos',
+      message: 'Failed to bulk delete videos',
       error: error.message
     });
   }
 });
 
-/**
- * Get video statistics (admin only)
- * GET /api/videos/admin/statistics
- */
-router.get('/admin/statistics', auth, adminAuthMiddleware, async (req, res) => {
-  try {
-    const Video = require('../models/Video');
-
-    const [
-      totalVideos,
-      activeVideos,
-      processingVideos,
-      archivedVideos,
-      totalFileSize,
-      totalDuration
-    ] = await Promise.all([
-      Video.countDocuments(),
-      Video.countDocuments({ status: 'active' }),
-      Video.countDocuments({ processingStatus: { $in: ['pending', 'processing'] } }),
-      Video.countDocuments({ status: 'archived' }),
-      Video.aggregate([
-        { $group: { _id: null, total: { $sum: '$fileSize' } } }
-      ]),
-      Video.aggregate([
-        { $match: { duration: { $exists: true, $ne: null } } },
-        { $group: { _id: null, total: { $sum: { $toInt: '$duration' } } } }
-      ])
-    ]);
-
-    const fileSizeTotal = totalFileSize[0]?.total || 0;
-    const durationTotalSeconds = totalDuration[0]?.total || 0;
-
-    res.json({
-      success: true,
-      data: {
-        videos: {
-          total: totalVideos,
-          active: activeVideos,
-          processing: processingVideos,
-          archived: archivedVideos
-        },
-        storage: {
-          totalFileSize: fileSizeTotal,
-          totalFileSizeGB: (fileSizeTotal / (1024 * 1024 * 1024)).toFixed(2)
-        },
-        duration: {
-          totalSeconds: durationTotalSeconds,
-          totalHours: (durationTotalSeconds / 3600).toFixed(2)
-        },
-        averageFileSize: totalVideos > 0 ? (fileSizeTotal / totalVideos).toFixed(2) : 0
-      }
-    });
-
-  } catch (error) {
-    console.error('❌ Get video statistics error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to get video statistics',
-      error: error.message
-    });
-  }
-});
 
 // Test endpoint to set video durations
 router.post('/test-durations', async (req, res) => {

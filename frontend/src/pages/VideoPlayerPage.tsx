@@ -30,6 +30,7 @@ interface Video {
     enabled: boolean;
     sessionId?: string;
     watermarkData?: string;
+    encryptedUrl?: string;
   };
 }
 
@@ -841,6 +842,33 @@ const VideoPlayerPage = () => {
         
         setCourseData(finalCourseData);
         
+        // Check if there are any videos available
+        if (transformedVideos.length === 0) {
+          console.log('⚠️ [VideoPlayer] No videos available for this course');
+          setError('No videos available for this course. Please contact support if this is unexpected.');
+          setLoading(false);
+          clearTimeout(loadingTimeout);
+          return;
+        }
+        
+        // Validate that the requested videoId exists in the course
+        if (videoId && transformedVideos.length > 0) {
+          const requestedVideo = transformedVideos.find((v: any) => v.id === videoId);
+          if (!requestedVideo) {
+            console.log('⚠️ [VideoPlayer] Requested video not found, redirecting to first available video');
+            console.log(`   - Requested videoId: ${videoId}`);
+            console.log(`   - Available videos: ${transformedVideos.map((v: any) => v.id).join(', ')}`);
+            
+            // Show a brief message and redirect to the first available video
+            setError('The requested video is no longer available. Redirecting to the first video...');
+            setTimeout(() => {
+              const firstVideoId = transformedVideos[0].id;
+              navigate(`/course/${id}/watch/${firstVideoId}`, { replace: true });
+            }, 2000); // 2 second delay to show the message
+            return;
+          }
+        }
+        
         // Set current video if not already set
         if (!currentVideoId && transformedVideos.length > 0) {
           console.log('🔧 [VideoPlayer] Setting current video to first video:', transformedVideos[0].id);
@@ -1488,32 +1516,15 @@ const VideoPlayerPage = () => {
 
   // Debug current video state - only log when currentVideoId changes
   useEffect(() => {
-    console.log('🔧 [VideoPlayer] Current video state updated:');
-    console.log('   - currentVideoId:', currentVideoId);
-    console.log('   - currentVideo:', currentVideo);
-    console.log('   - courseData:', courseData);
-    console.log('   - isPlaying:', isPlaying);
-    console.log('   - playbackRate:', playbackRate);
-    
-    // Additional debugging for video selection
-    if (courseData && courseData.videos) {
-      console.log('🔧 [VideoPlayer] Video selection debugging:');
-      console.log('   - Total videos in courseData:', courseData.videos.length);
-      console.log('   - All video IDs:', courseData.videos.map(v => v.id));
-      console.log('   - Looking for video with ID:', currentVideoId);
-      console.log('   - Found video:', courseData.videos.find(v => v.id === currentVideoId));
-      
-      // Check if currentVideoId matches any video
+    // Only log when there's an issue finding the video
+    if (courseData && courseData.videos && currentVideoId) {
       const matchingVideo = courseData.videos.find(v => v.id === currentVideoId);
       if (!matchingVideo) {
         console.log('❌ [VideoPlayer] No video found with currentVideoId:', currentVideoId);
         console.log('   - Available video IDs:', courseData.videos.map(v => v.id));
-        console.log('   - ID comparison:', courseData.videos.map(v => ({ id: v.id, matches: v.id === currentVideoId })));
-      } else {
-        console.log('✅ [VideoPlayer] Found matching video:', matchingVideo);
       }
     }
-  }, [currentVideoId]); // Only depend on currentVideoId to prevent excessive logging
+  }, [currentVideoId, courseData]); // Only log when there's an issue
 
   // Update current video progress display
   useEffect(() => {
@@ -1712,7 +1723,18 @@ const VideoPlayerPage = () => {
                 key={`${currentVideoId}-${currentVideo.videoUrl}`}
                 src={currentVideo.videoUrl}
               title={courseData?.title}
-              userId={localStorage.getItem('userId') || undefined}
+              userId={(() => {
+                try {
+                  const token = localStorage.getItem('token');
+                  if (token) {
+                    const decoded = JSON.parse(atob(token.split('.')[1]));
+                    return decoded.userId || decoded._id || decoded.id;
+                  }
+                } catch (e) {
+                  console.error('Error decoding token:', e);
+                }
+                return undefined;
+              })()}
               videoId={currentVideoId}
               courseId={id}
               playing={isPlaying}
@@ -1760,7 +1782,7 @@ const VideoPlayerPage = () => {
                       try {
                         setIsDecryptingUrl(true);
                         console.log('🔓 [VideoPlayerPage] Decrypting video URL...');
-                        const decryptedUrl = await decryptVideoUrl(currentVideo.drm.encryptedUrl, currentVideo.drm.sessionId);
+                        const decryptedUrl = await decryptVideoUrl(currentVideo.drm!.encryptedUrl!, currentVideo.drm!.sessionId!);
                         console.log('✅ [VideoPlayerPage] Video URL decrypted successfully');
                         
                         // Update the current video with the decrypted URL

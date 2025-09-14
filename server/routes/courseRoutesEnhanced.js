@@ -313,59 +313,6 @@ router.post('/admin/bulk-archive', adminAuthMiddleware, async (req, res) => {
   }
 });
 
-/**
- * Get course statistics (admin only)
- * GET /api/courses/admin/statistics
- */
-router.get('/admin/statistics', adminAuthMiddleware, async (req, res) => {
-  try {
-    const Course = require('../models/Course');
-    const CourseVersion = require('../models/CourseVersion');
-
-    const [
-      totalCourses,
-      activeCourses,
-      inactiveCourses,
-      archivedCourses,
-      totalVersions,
-      totalEnrollments
-    ] = await Promise.all([
-      Course.countDocuments(),
-      Course.countDocuments({ status: 'active' }),
-      Course.countDocuments({ status: 'inactive' }),
-      Course.countDocuments({ status: 'archived' }),
-      CourseVersion.countDocuments(),
-      Course.aggregate([
-        { $group: { _id: null, total: { $sum: '$totalEnrollments' } } }
-      ])
-    ]);
-
-    const enrollmentTotal = totalEnrollments[0]?.total || 0;
-
-    res.json({
-      success: true,
-      data: {
-        courses: {
-          total: totalCourses,
-          active: activeCourses,
-          inactive: inactiveCourses,
-          archived: archivedCourses
-        },
-        versions: totalVersions,
-        enrollments: enrollmentTotal,
-        averageEnrollmentsPerCourse: totalCourses > 0 ? (enrollmentTotal / totalCourses).toFixed(2) : 0
-      }
-    });
-
-  } catch (error) {
-    console.error('❌ Get course statistics error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to get course statistics',
-      error: error.message
-    });
-  }
-});
 
 // ========================================
 // WHATSAPP GROUP ROUTES (Require user authentication)
