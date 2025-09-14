@@ -1,32 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { buildApiUrl } from '../config/environment';
-import { useNavigate, Link } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router-dom';
 import { 
   ArrowLeft, 
   Search, 
   Filter, 
   Users, 
-  Eye, 
-  Edit, 
-  Trash2, 
-  UserPlus, 
   Mail, 
   Calendar, 
-  Shield, 
   X,
   ChevronLeft,
   ChevronRight,
-  MoreHorizontal,
-  Phone,
-  CheckCircle,
-  XCircle,
-  ChevronDown,
-  ChevronUp,
-  SortAsc,
-  SortDesc,
-  Download,
-  Upload
+  Phone
 } from 'lucide-react';
 import DeleteConfirmationModal from '../components/DeleteConfirmationModal';
 import Toast from '../components/Toast';
@@ -36,7 +21,7 @@ interface User {
   name: string;
   email: string;
   role: 'user' | 'admin';
-  status: 'active' | 'inactive' | 'suspended';
+  status: 'active' | 'inactive';
   profilePicture?: string;
   purchasedCourses: string[];
   createdAt: string;
@@ -57,7 +42,6 @@ const AdminUsersPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [roleFilter, setRoleFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [sortBy, setSortBy] = useState<string>('createdAt');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
@@ -65,10 +49,13 @@ const AdminUsersPage: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [limit] = useState(10);
   
-  // Delete functionality
-  const [userToDelete, setUserToDelete] = useState<User | null>(null);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
+  // Account deactivation/reactivation functionality
+  const [userToDeactivate, setUserToDeactivate] = useState<User | null>(null);
+  const [userToReactivate, setUserToReactivate] = useState<User | null>(null);
+  const [showDeactivateModal, setShowDeactivateModal] = useState(false);
+  const [showReactivateModal, setShowReactivateModal] = useState(false);
+  const [isDeactivating, setIsDeactivating] = useState(false);
+  const [isReactivating, setIsReactivating] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
   // Fetch users from API
@@ -85,7 +72,6 @@ const AdminUsersPage: React.FC = () => {
         page: page.toString(),
         limit: limit.toString(),
         search: searchTerm,
-        role: roleFilter !== 'all' ? roleFilter : '',
         status: statusFilter !== 'all' ? statusFilter : '',
         sortBy,
         sortOrder
@@ -112,44 +98,91 @@ const AdminUsersPage: React.FC = () => {
     }
   };
 
-  // Handle user deletion
-  const handleDeleteUser = async (userId: string) => {
+  // Handle user deactivation
+  const handleDeactivateUser = async (userId: string) => {
     try {
-      setIsDeleting(true);
+      setIsDeactivating(true);
       const adminToken = localStorage.getItem('adminToken');
       
       if (!adminToken) {
         throw new Error('Admin token not found');
       }
 
-      const response = await fetch(buildApiUrl(`/api/user/admin/${userId}`), {
-        method: 'DELETE',
+      const response = await fetch(buildApiUrl(`/api/user/admin/${userId}/status`), {
+        method: 'PUT',
         headers: {
           'Authorization': `Bearer ${adminToken}`,
           'Content-Type': 'application/json',
         },
+        body: JSON.stringify({ status: 'inactive' }),
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to delete user');
+        throw new Error(errorData.message || 'Failed to deactivate user');
       }
 
-      // Remove user from state
-      setUsers(prev => prev.filter(user => user._id !== userId));
+      // Update user status in state
+      setUsers(prev => prev.map(user => 
+        user._id === userId ? { ...user, status: 'inactive' } : user
+      ));
       setToast({
-        message: 'User deleted successfully',
+        message: 'User account deactivated successfully',
         type: 'success'
       });
     } catch (err) {
       setToast({
-        message: err instanceof Error ? err.message : 'Failed to delete user',
+        message: err instanceof Error ? err.message : 'Failed to deactivate user',
         type: 'error'
       });
     } finally {
-      setIsDeleting(false);
-      setShowDeleteModal(false);
-      setUserToDelete(null);
+      setIsDeactivating(false);
+      setShowDeactivateModal(false);
+      setUserToDeactivate(null);
+    }
+  };
+
+  // Handle user reactivation
+  const handleReactivateUser = async (userId: string) => {
+    try {
+      setIsReactivating(true);
+      const adminToken = localStorage.getItem('adminToken');
+      
+      if (!adminToken) {
+        throw new Error('Admin token not found');
+      }
+
+      const response = await fetch(buildApiUrl(`/api/user/admin/${userId}/status`), {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${adminToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ status: 'active' }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to reactivate user');
+      }
+
+      // Update user status in state
+      setUsers(prev => prev.map(user => 
+        user._id === userId ? { ...user, status: 'active' } : user
+      ));
+      setToast({
+        message: 'User account reactivated successfully',
+        type: 'success'
+      });
+    } catch (err) {
+      setToast({
+        message: err instanceof Error ? err.message : 'Failed to reactivate user',
+        type: 'error'
+      });
+    } finally {
+      setIsReactivating(false);
+      setShowReactivateModal(false);
+      setUserToReactivate(null);
     }
   };
 
@@ -161,7 +194,6 @@ const AdminUsersPage: React.FC = () => {
 
   const handleClearFilters = () => {
     setSearchTerm('');
-    setRoleFilter('all');
     setStatusFilter('all');
     setSortBy('createdAt');
     setSortOrder('desc');
@@ -187,19 +219,11 @@ const AdminUsersPage: React.FC = () => {
     });
   };
 
-  const getRoleColor = (role: string) => {
-    switch (role) {
-      case 'admin': return 'bg-purple-100 text-purple-800';
-      case 'user': return 'bg-blue-100 text-blue-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'active': return 'bg-green-100 text-green-800';
       case 'inactive': return 'bg-yellow-100 text-yellow-800';
-      case 'suspended': return 'bg-red-100 text-red-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
@@ -263,14 +287,14 @@ const AdminUsersPage: React.FC = () => {
               <div className="flex items-center space-x-2 xxs:space-x-3">
                 <Filter className="h-4 w-4 xxs:h-5 xxs:w-5 text-red-600" />
                 <h3 className="text-base xxs:text-lg font-semibold text-gray-900">User Management</h3>
-                {(searchTerm || roleFilter !== 'all' || statusFilter !== 'all') && (
+                {(searchTerm || statusFilter !== 'all') && (
                   <span className="bg-red-100 text-red-800 text-xs font-medium px-2 py-0.5 rounded-full">
                     Filtered
                   </span>
                 )}
               </div>
               <div className="flex items-center space-x-2 xxs:space-x-3">
-                {(searchTerm || roleFilter !== 'all' || statusFilter !== 'all') && (
+                {(searchTerm || statusFilter !== 'all') && (
                   <button
                     onClick={handleClearFilters}
                     className="flex items-center space-x-1 xxs:space-x-2 px-2 xxs:px-3 py-1 xxs:py-1.5 text-xs xxs:text-sm text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200"
@@ -285,7 +309,7 @@ const AdminUsersPage: React.FC = () => {
 
           {/* Filter Options */}
           <div className="p-3 xxs:p-4 sm:p-6">
-            <div className="grid grid-cols-1 xxs:grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3 xxs:gap-4 sm:gap-6">
+            <div className="grid grid-cols-1 xxs:grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 xxs:gap-4 sm:gap-6">
               {/* Search */}
               <div className="xxs:col-span-1 sm:col-span-2 space-y-2">
                 <label className="block text-xs xxs:text-sm font-semibold text-gray-700">
@@ -314,28 +338,6 @@ const AdminUsersPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* Role Filter */}
-              <div className="space-y-2">
-                <label className="block text-sm font-semibold text-gray-700">
-                  Role
-                </label>
-                <div className="relative">
-                  <select
-                    value={roleFilter}
-                    onChange={(e) => setRoleFilter(e.target.value)}
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-red-100 focus:border-red-500 transition-all duration-200 appearance-none bg-white"
-                  >
-                    <option value="all">All Roles</option>
-                    <option value="user">Users</option>
-                    <option value="admin">Admins</option>
-                  </select>
-                  <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                    <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </div>
-                </div>
-              </div>
 
               {/* Status Filter */}
               <div className="space-y-2">
@@ -351,7 +353,6 @@ const AdminUsersPage: React.FC = () => {
                     <option value="all">All Status</option>
                     <option value="active">Active</option>
                     <option value="inactive">Inactive</option>
-                    <option value="suspended">Suspended</option>
                   </select>
                   <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
                     <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -382,6 +383,8 @@ const AdminUsersPage: React.FC = () => {
                     <option value="name-desc">Name Z-A</option>
                     <option value="email-asc">Email A-Z</option>
                     <option value="email-desc">Email Z-A</option>
+                    <option value="status-asc">Status: Active → Inactive</option>
+                    <option value="status-desc">Status: Inactive → Active</option>
                   </select>
                   <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
                     <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -414,18 +417,13 @@ const AdminUsersPage: React.FC = () => {
                     </span>
                   )}
                 </div>
-                {(searchTerm || roleFilter !== 'all' || statusFilter !== 'all') && (
+                {(searchTerm || statusFilter !== 'all') && (
                   <div className="flex items-center space-x-2">
                     <span className="text-sm text-gray-500">Filtered by:</span>
                     <div className="flex flex-wrap gap-2">
                       {searchTerm && (
                         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
                           "{searchTerm}"
-                        </span>
-                      )}
-                      {roleFilter !== 'all' && (
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                          {roleFilter.charAt(0).toUpperCase() + roleFilter.slice(1)}
                         </span>
                       )}
                       {statusFilter !== 'all' && (
@@ -453,9 +451,6 @@ const AdminUsersPage: React.FC = () => {
                     <tr>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         User
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Role
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Status
@@ -502,11 +497,6 @@ const AdminUsersPage: React.FC = () => {
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getRoleColor(user.role)}`}>
-                            {user.role}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
                           <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(user.status)}`}>
                             {user.status}
                           </span>
@@ -527,21 +517,28 @@ const AdminUsersPage: React.FC = () => {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                           <div className="flex items-center justify-end space-x-2">
-                            <button className="text-blue-600 hover:text-blue-900 transition-colors duration-200">
-                              <Eye className="h-4 w-4" />
-                            </button>
-                            <button className="text-green-600 hover:text-green-900 transition-colors duration-200">
-                              <Edit className="h-4 w-4" />
-                            </button>
-                            {user.role !== 'admin' && (
+                            {user.role !== 'admin' && user.status === 'active' && (
                               <button
                                 onClick={() => {
-                                  setUserToDelete(user);
-                                  setShowDeleteModal(true);
+                                  setUserToDeactivate(user);
+                                  setShowDeactivateModal(true);
                                 }}
-                                className="text-red-600 hover:text-red-900 transition-colors duration-200"
+                                className="text-orange-600 hover:text-orange-900 transition-colors duration-200 text-sm font-medium"
+                                title="Deactivate Account"
                               >
-                                <Trash2 className="h-4 w-4" />
+                                Deactivate
+                              </button>
+                            )}
+                            {user.role !== 'admin' && user.status === 'inactive' && (
+                              <button
+                                onClick={() => {
+                                  setUserToReactivate(user);
+                                  setShowReactivateModal(true);
+                                }}
+                                className="text-green-600 hover:text-green-900 transition-colors duration-200 text-sm font-medium"
+                                title="Reactivate Account"
+                              >
+                                Reactivate
                               </button>
                             )}
                           </div>
@@ -575,21 +572,28 @@ const AdminUsersPage: React.FC = () => {
                         <div className="flex items-center justify-between mb-2">
                           <h3 className="text-sm xxs:text-base font-medium text-gray-900 truncate">{user.name}</h3>
                           <div className="flex items-center space-x-1 xxs:space-x-2">
-                            <button className="text-blue-600 hover:text-blue-900 transition-colors duration-200 p-1">
-                              <Eye className="h-3 w-3 xxs:h-4 xxs:w-4" />
-                            </button>
-                            <button className="text-green-600 hover:text-green-900 transition-colors duration-200 p-1">
-                              <Edit className="h-3 w-3 xxs:h-4 xxs:w-4" />
-                            </button>
-                            {user.role !== 'admin' && (
+                            {user.role !== 'admin' && user.status === 'active' && (
                               <button
                                 onClick={() => {
-                                  setUserToDelete(user);
-                                  setShowDeleteModal(true);
+                                  setUserToDeactivate(user);
+                                  setShowDeactivateModal(true);
                                 }}
-                                className="text-red-600 hover:text-red-900 transition-colors duration-200 p-1"
+                                className="text-orange-600 hover:text-orange-900 transition-colors duration-200 text-xs xxs:text-sm font-medium px-2 py-1"
+                                title="Deactivate Account"
                               >
-                                <Trash2 className="h-3 w-3 xxs:h-4 xxs:w-4" />
+                                Deactivate
+                              </button>
+                            )}
+                            {user.role !== 'admin' && user.status === 'inactive' && (
+                              <button
+                                onClick={() => {
+                                  setUserToReactivate(user);
+                                  setShowReactivateModal(true);
+                                }}
+                                className="text-green-600 hover:text-green-900 transition-colors duration-200 text-xs xxs:text-sm font-medium px-2 py-1"
+                                title="Reactivate Account"
+                              >
+                                Reactivate
                               </button>
                             )}
                           </div>
@@ -603,9 +607,6 @@ const AdminUsersPage: React.FC = () => {
                           <span className="truncate">{user.phoneNumber || 'N/A'}</span>
                         </div>
                         <div className="flex flex-wrap items-center gap-2 xxs:gap-3">
-                          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getRoleColor(user.role)}`}>
-                            {user.role}
-                          </span>
                           <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColor(user.status)}`}>
                             {user.status}
                           </span>
@@ -630,7 +631,7 @@ const AdminUsersPage: React.FC = () => {
               </div>
               <h3 className="mt-2 text-sm font-medium text-gray-900">No users found</h3>
               <p className="mt-1 text-xs xxs:text-sm text-gray-500">
-                {searchTerm || roleFilter !== 'all' || statusFilter !== 'all' 
+                {searchTerm || statusFilter !== 'all' 
                   ? 'Try adjusting your search or filter criteria.'
                   : 'No users have registered yet.'
                 }
@@ -714,17 +715,31 @@ const AdminUsersPage: React.FC = () => {
         )}
       </div>
 
-      {/* Delete Confirmation Modal */}
-      {showDeleteModal && userToDelete && (
+      {/* Deactivate Confirmation Modal */}
+      {showDeactivateModal && userToDeactivate && (
         <DeleteConfirmationModal
-          isOpen={showDeleteModal}
-          onClose={() => setShowDeleteModal(false)}
-          onConfirm={() => handleDeleteUser(userToDelete._id)}
-          title="Delete User"
-          message={`Are you sure you want to delete "${userToDelete.name}"? This action cannot be undone and will permanently remove the user account.`}
-          confirmText="Delete User"
+          isOpen={showDeactivateModal}
+          onClose={() => setShowDeactivateModal(false)}
+          onConfirm={() => handleDeactivateUser(userToDeactivate._id)}
+          title="Deactivate Account"
+          message={`Are you sure you want to deactivate "${userToDeactivate.name}"'s account? The user will not be able to log in, but their data will be preserved.`}
+          confirmText="Deactivate Account"
           cancelText="Cancel"
-          isLoading={isDeleting}
+          isLoading={isDeactivating}
+        />
+      )}
+
+      {/* Reactivate Confirmation Modal */}
+      {showReactivateModal && userToReactivate && (
+        <DeleteConfirmationModal
+          isOpen={showReactivateModal}
+          onClose={() => setShowReactivateModal(false)}
+          onConfirm={() => handleReactivateUser(userToReactivate._id)}
+          title="Reactivate Account"
+          message={`Are you sure you want to reactivate "${userToReactivate.name}"'s account? The user will regain access to their account and all purchased courses.`}
+          confirmText="Reactivate Account"
+          cancelText="Cancel"
+          isLoading={isReactivating}
         />
       )}
 

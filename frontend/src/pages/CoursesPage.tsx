@@ -1,30 +1,13 @@
 import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import CourseCard from '../components/CourseCard';
+import LoadingMessage from '../components/LoadingMessage';
 import { Search, Filter, X } from 'lucide-react';
-import { buildApiUrl } from '../config/environment';
+import { useCourses, CourseFilters } from '../hooks/useCourses';
 import { parseDurationToSeconds } from '../utils/durationFormatter';
-
-interface ApiCourse {
-  _id: string;
-  title: string;
-  description: string;
-  thumbnailURL?: string;
-  price: number;
-  category?: string;
-  level?: string;
-  totalEnrollments?: number;
-  tags?: string[];
-  videos?: Array<{ _id: string; duration?: string }>
-}
 
 const CoursesPage: React.FC = () => {
   const { t } = useTranslation();
-  const [courses, setCourses] = useState<ApiCourse[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
-  const [userToken, setUserToken] = useState<string | null>(null);
-  const [hasFilteredData, setHasFilteredData] = useState<boolean>(false);
   
   // Search and filter state
   const [searchTerm, setSearchTerm] = useState<string>('');
@@ -37,129 +20,53 @@ const CoursesPage: React.FC = () => {
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(12);
-  const [totalPages, setTotalPages] = useState(1);
-  const [totalItems, setTotalItems] = useState(0);
+  
+  // Build filters for React Query
+  const filters: CourseFilters = useMemo(() => ({
+    page: currentPage,
+    limit: itemsPerPage,
+    search: searchTerm,
+    category: selectedCategory,
+    level: selectedLevel,
+    tag: selectedTag,
+    priceRange: priceRange,
+  }), [currentPage, itemsPerPage, searchTerm, selectedCategory, selectedLevel, selectedTag, priceRange]);
+  
+  // Use React Query for fetching courses
+  const { 
+    data: coursesResponse, 
+    isLoading: loading, 
+    error,
+    refetch 
+  } = useCourses(filters);
+  
+  const courses = coursesResponse?.courses || [];
+  const pagination = coursesResponse?.pagination;
+  const totalPages = pagination?.pages || 1;
+  const totalItems = pagination?.total || 0;
 
   // Check if user is authenticated - immediate check
   useEffect(() => {
     const token = localStorage.getItem('token');
-    setUserToken(token);
     console.log('🔍 [CoursesPage] Authentication check:', {
       hasToken: !!token,
       tokenLength: token?.length || 0
     });
   }, []);
 
-  const fetchCourses = useCallback(async (page: number = currentPage, limit: number = itemsPerPage) => {
-    try {
-      setLoading(true);
-      setError(null);
-      setHasFilteredData(false); // Reset filtered data flag
-      
-      // Get token directly from localStorage to avoid timing issues
-      const token = localStorage.getItem('token');
-      
-      console.log('🔍 [CoursesPage] Fetching courses...');
-      console.log(`   - User token: ${token ? 'Present' : 'Not present'}`);
-      console.log(`   - Page: ${page}, Limit: ${limit}`);
-      
-      // Build query parameters
-      const queryParams = new URLSearchParams({
-        page: page.toString(),
-        limit: limit.toString()
-      });
-
-      // Add search term if provided
-      if (searchTerm.trim()) {
-        queryParams.append('search', searchTerm.trim());
-      }
-
-      // Add category filter if provided
-      if (selectedCategory) {
-        queryParams.append('category', selectedCategory);
-      }
-
-      // Add level filter if provided
-      if (selectedLevel) {
-        queryParams.append('level', selectedLevel);
-      }
-
-      // Add tag filter if provided
-      if (selectedTag) {
-        queryParams.append('tag', selectedTag);
-      }
-
-      // Add price range filter if provided
-      if (priceRange) {
-        queryParams.append('priceRange', priceRange);
-      }
-      
-      // Include authentication token if available
-      const headers: HeadersInit = {};
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-      }
-      
-      const res = await fetch(buildApiUrl(`/api/courses?${queryParams.toString()}`), {
-        headers
-      });
-      
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data.message || 'Failed to load courses');
-      }
-      
-      const data = await res.json();
-      
-      console.log('📊 [CoursesPage] API response received:', {
-        isArray: Array.isArray(data),
-        dataLength: Array.isArray(data) ? data.length : 'N/A',
-        hasDataProperty: !!(data && data.data),
-        hasCoursesProperty: !!(data && data.data && data.data.courses)
-      });
-      
-      // Check if data has the expected structure
-      let coursesData: ApiCourse[] = [];
-      if (Array.isArray(data)) {
-        coursesData = data as ApiCourse[];
-      } else if (data.data && Array.isArray(data.data.courses)) {
-        coursesData = data.data.courses as ApiCourse[];
-      } else if (data.success && data.data && Array.isArray(data.data.courses)) {
-        coursesData = data.data.courses as ApiCourse[];
-      } else {
-        coursesData = [];
-      }
-      
-      // Courses processed successfully
-      
-      setCourses(coursesData);
-      setHasFilteredData(true); // Mark that filtered data is ready
-      
-      // Update pagination info
-      if (data.data && data.data.pagination) {
-        setTotalPages(data.data.pagination.pages);
-        setTotalItems(data.data.pagination.total);
-        setCurrentPage(data.data.pagination.page);
-      }
-      
-    } catch (e) {
-      console.error('❌ [CoursesPage] Error fetching courses:', e);
-      setError(e instanceof Error ? e.message : 'Unknown error');
-    } finally {
-      setLoading(false);
-    }
-  }, [currentPage, itemsPerPage, searchTerm, selectedCategory, selectedLevel, selectedTag, priceRange]); // Add dependencies for filters
+  // Handle refetch when filters change
+  const handleRefetch = useCallback(() => {
+    refetch();
+  }, [refetch]);
 
   // Handle pagination changes
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
-    fetchCourses(page, itemsPerPage);
   };
 
   const handleItemsPerPageChange = (newItemsPerPage: number) => {
     setItemsPerPage(newItemsPerPage);
     setCurrentPage(1); // Reset to first page
-    fetchCourses(1, newItemsPerPage);
   };
 
   // Handle search and filter changes
@@ -188,26 +95,14 @@ const CoursesPage: React.FC = () => {
     setCurrentPage(1); // Reset to first page
   };
 
-  useEffect(() => {
-    fetchCourses();
-  }, [fetchCourses]);
-
-  // Debounced search and filter effect
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      fetchCourses(1, itemsPerPage);
-    }, 500);
-
-    return () => clearTimeout(timeoutId);
-  }, [searchTerm, selectedCategory, selectedLevel, selectedTag, priceRange]);
-
+  // Listen for course creation events to refetch
   useEffect(() => {
     const onCreated = () => {
-      fetchCourses();
+      handleRefetch();
     };
     const onVisibility = () => {
       if (document.visibilityState === 'visible') {
-        fetchCourses();
+        handleRefetch();
       }
     };
     window.addEventListener('course:created', onCreated as EventListener);
@@ -216,7 +111,7 @@ const CoursesPage: React.FC = () => {
       window.removeEventListener('course:created', onCreated as EventListener);
       document.removeEventListener('visibilitychange', onVisibility);
     };
-  }, [fetchCourses]);
+  }, [handleRefetch]);
 
   // Use courses directly since filtering is now handled server-side
   const displayedCourses = courses;
@@ -287,20 +182,35 @@ const CoursesPage: React.FC = () => {
   const content = useMemo(() => {
     // Rendering content
     
-    if (loading || !hasFilteredData) {
+    if (loading) {
       return (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 xxs:gap-6">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="animate-pulse bg-white rounded-2xl shadow p-4 xxs:p-6 h-64 xxs:h-72" />
-          ))}
+        <div>
+          <LoadingMessage 
+            message={t('courses.loading_courses', 'Loading courses, please wait...')}
+            className="mb-8"
+          />
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 xxs:gap-6">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="animate-pulse bg-white rounded-2xl shadow p-4 xxs:p-6 h-64 xxs:h-72" />
+            ))}
+          </div>
         </div>
       );
     }
     
     if (error) {
       return (
-        <div className="bg-red-50 text-red-700 border border-red-200 rounded-lg p-3 xxs:p-4 text-sm xxs:text-base">
-          {error}
+        <div className="text-center py-12">
+          <div className="bg-red-50 text-red-700 border border-red-200 rounded-lg p-6 max-w-md mx-auto">
+            <h3 className="text-lg font-semibold mb-2">{t('courses.error_loading', 'Failed to load courses')}</h3>
+            <p className="text-sm mb-4">{error.message}</p>
+            <button
+              onClick={handleRefetch}
+              className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+            >
+              {t('common.retry', 'Try Again')}
+            </button>
+          </div>
         </div>
       );
     }
@@ -314,7 +224,6 @@ const CoursesPage: React.FC = () => {
     }
     
     // Rendering course grid
-    
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 xxs:gap-6 sm:gap-8">
         {displayedCourses.map((c) => {
@@ -338,7 +247,7 @@ const CoursesPage: React.FC = () => {
         );})}
       </div>
     );
-  }, [displayedCourses, loading, error, totalItems, handlePurchaseSuccess]);
+  }, [displayedCourses, loading, error, totalItems, handlePurchaseSuccess, handleRefetch, t]);
 
   return (
     <div className="min-h-screen bg-gray-50 pt-16 sm:pt-20 xxs:pt-24 pb-6 sm:pb-8 xxs:pb-12">

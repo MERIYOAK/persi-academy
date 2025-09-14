@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { buildApiUrl } from '../config/environment';
+import { useQueryClient } from '@tanstack/react-query';
+import { queryKeys } from '../lib/queryClient';
 
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Plus, Video, Edit, Trash2, Eye, Upload, Clock, User, Save, X, GripVertical, Check, AlertCircle } from 'lucide-react';
@@ -29,6 +31,7 @@ interface Course {
 const AdminCourseVideosPage: React.FC = () => {
   const { courseId } = useParams<{ courseId: string }>();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [course, setCourse] = useState<Course | null>(null);
   const [videos, setVideos] = useState<Video[]>([]);
   const [loading, setLoading] = useState(true);
@@ -158,6 +161,21 @@ const AdminCourseVideosPage: React.FC = () => {
       });
 
       setSuccess('Video deleted successfully!');
+      
+      // Invalidate React Query cache for this course and related data
+      if (courseId) {
+        // Invalidate course detail cache
+        queryClient.invalidateQueries({ queryKey: queryKeys.courses.detail(courseId) });
+        // Invalidate course videos cache
+        queryClient.invalidateQueries({ queryKey: ['videos', 'course', courseId] });
+        // Invalidate all courses list cache (in case course metadata changed)
+        queryClient.invalidateQueries({ queryKey: queryKeys.courses.list() });
+        // Invalidate featured courses cache
+        queryClient.invalidateQueries({ queryKey: queryKeys.courses.featured() });
+        
+        console.log('🔄 Cache invalidated for course:', courseId);
+      }
+      
       // Refresh videos list
       await fetchCourseAndVideos();
     } catch (err) {
@@ -276,22 +294,48 @@ const AdminCourseVideosPage: React.FC = () => {
         }
       }
 
-      const promises = selectedVideos.map(videoId => {
-        if (bulkAction === 'delete') {
-          return fetch(buildApiUrl(`/api/videos/${videoId}`), {
-            method: 'DELETE',
-            headers: {
-              'Authorization': `Bearer ${adminToken}`,
-              'Content-Type': 'application/json',
-            },
-          });
-        }
-        // Add more bulk actions here as needed
-        return Promise.resolve();
-      });
+      if (bulkAction === 'delete') {
+        // Use bulk delete endpoint for better performance
+        const response = await fetch(buildApiUrl('/api/videos/admin/bulk-delete'), {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${adminToken}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ videoIds: selectedVideos }),
+        });
 
-      await Promise.all(promises);
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || 'Failed to delete videos');
+        }
+
+        const result = await response.json();
+        console.log('Bulk delete result:', result);
+      } else {
+        // Handle other bulk actions here as needed
+        const promises = selectedVideos.map(videoId => {
+          // Add more bulk actions here as needed
+          return Promise.resolve();
+        });
+        await Promise.all(promises);
+      }
       setSuccess(`${bulkAction === 'delete' ? 'Videos deleted' : 'Action completed'} successfully!`);
+      
+      // Invalidate React Query cache for this course and related data
+      if (courseId && bulkAction === 'delete') {
+        // Invalidate course detail cache
+        queryClient.invalidateQueries({ queryKey: queryKeys.courses.detail(courseId) });
+        // Invalidate course videos cache
+        queryClient.invalidateQueries({ queryKey: ['videos', 'course', courseId] });
+        // Invalidate all courses list cache (in case course metadata changed)
+        queryClient.invalidateQueries({ queryKey: queryKeys.courses.list() });
+        // Invalidate featured courses cache
+        queryClient.invalidateQueries({ queryKey: queryKeys.courses.featured() });
+        
+        console.log('🔄 Cache invalidated for course after bulk delete:', courseId);
+      }
+      
       setSelectedVideos([]);
       setBulkAction('');
       await fetchCourseAndVideos();

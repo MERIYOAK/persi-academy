@@ -281,18 +281,39 @@ exports.getCourseProgress = async (req, res) => {
     // Create a map of video progress
     const progressMap = {};
     progressEntries.forEach(entry => {
-      progressMap[entry.videoId._id.toString()] = {
-        watchedDuration: entry.watchedDuration,
-        totalDuration: entry.totalDuration,
-        completionPercentage: entry.completionPercentage,
-        isCompleted: entry.isCompleted,
-        lastPosition: entry.getLastPosition(),
-        lastWatchedAt: entry.lastWatchedAt
-      };
+      // Check if videoId exists and is populated
+      if (entry.videoId && entry.videoId._id) {
+        progressMap[entry.videoId._id.toString()] = {
+          watchedDuration: entry.watchedDuration,
+          totalDuration: entry.totalDuration,
+          completionPercentage: entry.completionPercentage,
+          isCompleted: entry.isCompleted,
+          lastPosition: entry.getLastPosition(),
+          lastWatchedAt: entry.lastWatchedAt
+        };
+      } else {
+        console.warn(`⚠️ Progress entry missing videoId:`, entry._id);
+      }
     });
 
     // Get overall course progress with correct total videos count
-    const overallProgress = await Progress.getOverallCourseProgress(userId, courseId, course.videos.length);
+    let overallProgress;
+    try {
+      overallProgress = await Progress.getOverallCourseProgress(userId, courseId, course.videos.length);
+    } catch (error) {
+      console.error('❌ Error getting overall course progress:', error);
+      // Fallback to basic progress calculation
+      overallProgress = {
+        totalVideos: course.videos.length,
+        completedVideos: 0,
+        totalProgress: 0,
+        lastWatchedVideo: null,
+        lastWatchedPosition: 0,
+        courseProgressPercentage: 0,
+        totalWatchedDuration: 0,
+        courseTotalDuration: 0
+      };
+    }
 
     // Prepare video list with progress and URLs
     const videosWithProgress = await Promise.all(course.videos.map(async (video) => {

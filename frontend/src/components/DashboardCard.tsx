@@ -26,7 +26,6 @@ const DashboardCard: React.FC<DashboardCardProps> = ({
   progress,
   totalLessons,
   completedLessons,
-  lastWatched,
   duration,
   videos,
   isCompleted = false
@@ -37,19 +36,9 @@ const DashboardCard: React.FC<DashboardCardProps> = ({
   const [certificateExists, setCertificateExists] = useState(false);
   const [certificateId, setCertificateId] = useState<string | null>(null);
 
-  // Debug logging
-  console.log('🔧 DashboardCard rendering:', {
-    title,
-    _id,
-    videos: videos?.length,
-    firstVideo: videos?.[0]
-  });
-
   // Get the first video ID for the watch link
   const firstVideoId = videos && videos.length > 0 ? videos[0]._id || videos[0].id : null;
   const watchLink = firstVideoId ? `/course/${_id}/watch/${firstVideoId}` : `/course/${_id}`;
-
-  console.log('🔧 Watch link:', watchLink);
 
   // Determine if course is completed (100% progress and all lessons completed)
   const courseCompleted = isCompleted || progress >= 100;

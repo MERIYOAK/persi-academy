@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { buildApiUrl } from '../config/environment';
 
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, Users, Star, Calendar, DollarSign, Eye, Play, Plus, Upload, Settings, BookOpen } from 'lucide-react';
+import { ArrowLeft, Users, Calendar, DollarSign, Eye, Play, Plus, Upload, Settings, BookOpen } from 'lucide-react';
 
 interface Course {
   _id: string;
@@ -29,7 +29,7 @@ const AdminCourseViewPage: React.FC = () => {
   const [course, setCourse] = useState<Course | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'overview' | 'videos' | 'analytics'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'videos'>('overview');
 
   // Fetch course details
   const fetchCourse = async () => {
@@ -152,8 +152,7 @@ const AdminCourseViewPage: React.FC = () => {
           <nav className="flex space-x-8">
             {[
               { id: 'overview', label: 'Overview', icon: Eye },
-              { id: 'videos', label: 'Videos', icon: Play },
-              { id: 'analytics', label: 'Analytics', icon: Star }
+              { id: 'videos', label: 'Videos', icon: Play }
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -457,12 +456,6 @@ const AdminCourseViewPage: React.FC = () => {
           </div>
         )}
 
-        {activeTab === 'analytics' && (
-          <div className="bg-white rounded-xl shadow-sm border p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Course Analytics</h2>
-            <p className="text-gray-600">Analytics dashboard coming soon...</p>
-          </div>
-        )}
       </div>
     </div>
   );

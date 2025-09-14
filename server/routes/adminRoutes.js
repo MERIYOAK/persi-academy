@@ -50,13 +50,5 @@ router.get('/users', adminAuthMiddleware, (req, res) => {
   });
 });
 
-// Example: Analytics route
-router.get('/analytics', adminAuthMiddleware, (req, res) => {
-  res.json({
-    success: true,
-    message: 'Admin analytics dashboard',
-    admin: req.admin
-  });
-});
 
 module.exports = router; 

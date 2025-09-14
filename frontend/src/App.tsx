@@ -1,10 +1,19 @@
-import React from 'react';
+import { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { QueryClientProvider } from '@tanstack/react-query';
 import './i18n'; // Initialize i18n configuration
+import { queryClient, initializePersistentCache, saveCacheData } from './lib/queryClient';
+import './utils/cacheMigration'; // Auto-migrate old cache entries
+import './utils/cacheTester'; // Cache testing utilities
+import './utils/userCacheVerifier'; // User data cache verification
+import './utils/cachePersistence'; // Enhanced cache persistence
+import './utils/cacheInspector'; // Cache inspection utilities
+import './utils/cacheClearer'; // Cache clearing utilities
 import UserLayout from './layouts/UserLayout';
 import AdminLayout from './layouts/AdminLayout';
 import { AdminAuthProvider } from './contexts/AdminAuthContext';
 import ScrollManager from './components/ScrollManager';
+import SessionMonitorWrapper from './components/SessionMonitorWrapper';
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
@@ -27,8 +36,6 @@ import AdminVideoPlayerPage from './pages/AdminVideoPlayerPage';
 import AdminLoginPage from './pages/AdminLoginPage';
 import AdminDashboardPage from './pages/AdminDashboardPage';
 import AdminUsersPage from './pages/AdminUsersPage';
-import AdminAnalyticsPage from './pages/AdminAnalyticsPage';
-import AdminSettingsPage from './pages/AdminSettingsPage';
 import CheckoutSuccessPage from './pages/CheckoutSuccessPage';
 import CheckoutCancelPage from './pages/CheckoutCancelPage';
 import PaymentFailurePage from './pages/PaymentFailurePage';
@@ -44,11 +51,36 @@ import CompleteGoogleRegistrationPage from './pages/CompleteGoogleRegistrationPa
 import PaymentFailureHandler from './components/PaymentFailureHandler';
 
 function App() {
+  // Initialize persistent cache on app startup
+  useEffect(() => {
+    initializePersistentCache();
+    
+    // Start enhanced cache persistence monitoring
+    const stopCacheMonitoring = (window as any).CachePersistence?.startCacheMonitoring();
+    
+    // Save cache data on page unload
+    const handleBeforeUnload = () => {
+      saveCacheData();
+      (window as any).CachePersistence?.forceSaveAllCache();
+    };
+    
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    
+    return () => {
+      if (stopCacheMonitoring) stopCacheMonitoring();
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      saveCacheData(); // Final save on cleanup
+      (window as any).CachePersistence?.forceSaveAllCache();
+    };
+  }, []);
+
   return (
-    <Router>
-      <ScrollManager>
-        <PaymentFailureHandler />
-        <Routes>
+    <QueryClientProvider client={queryClient}>
+      <Router>
+        <SessionMonitorWrapper>
+          <ScrollManager>
+            <PaymentFailureHandler />
+            <Routes>
         <Route element={<UserLayout />}>
           <Route path="/" element={<HomePage />} />
           <Route path="/login" element={<LoginPage />} />
@@ -94,12 +126,12 @@ function App() {
           <Route path="courses/:courseId/videos/:videoId" element={<AdminVideoPlayerPage />} />
           <Route path="courses/:courseId/videos/upload" element={<AdminVideoUploadPage />} />
           <Route path="users" element={<AdminUsersPage />} />
-          <Route path="analytics" element={<AdminAnalyticsPage />} />
-          <Route path="settings" element={<AdminSettingsPage />} />
         </Route>
-      </Routes>
-      </ScrollManager>
-    </Router>
+            </Routes>
+          </ScrollManager>
+        </SessionMonitorWrapper>
+      </Router>
+    </QueryClientProvider>
   );
 }
 

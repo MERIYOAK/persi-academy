@@ -38,6 +38,9 @@
     "view_all_courses": "ኩሉ ኮርስ ርአ",
     "testimonials_title": "ምስክር",
     "student_success": "ዕውታት ተምሃሮ",
+    "loading_featured_courses": "ኮርሳት ይጽዓኑ ኣለዉ፣ ቅሩብ ተጸበይ...",
+    "error_loading_courses": "ኮርሳት ክጽዓኑ ኣይከኣሉን",
+    "no_courses_available": "ኮርሳት ኣይተሓዙን። ብቕልጡፍ እንደገና ርአ።",
     "hero_variations": {
       "variation1": {
         "headline": "ማስተር ዲጂታላዊ ትሕዝቶ ፈጠራውነት",
@@ -142,6 +145,8 @@
     "filter_advanced": "ዝለዓለ",
     "sort_by": "ስርዓዮ ብ",
     "sort_newest": "ዝሓደሰ",
+    "loading_courses": "ኮርሳት ይጽዓኑ ኣለዉ፣ ቅሩብ ተጸበይ...",
+    "error_loading": "ኮርሳት ክጽዓኑ ኣይከኣሉን",
     "sort_popular": "ዝሃበበ",
     "sort_rating": "ዝበለጸ ደረጃ",
     "enroll_now": "ተመዝገብ ሕጂ",
@@ -304,6 +309,8 @@
   },
   "common": {
     "loading": "ይጽዓን ኣሎ...",
+    "loading_courses": "ኮርሳት ይጽዓኑ ኣለዉ፣ ቅሩብ ተጸበይ...",
+    "loading_subtitle": "እዚ ሒደት ካልኢት ክወስድ ይኽእል እዩ።",
     "error": "ጌጋ ኣጋጢሙ",
     "success": "ዕውት",
     "cancel": "ዕጽዎ",
@@ -323,6 +330,7 @@
     "submit": "ስደድ",
     "reset": "ምለስ",
     "confirm": "ኣረጋግጽ",
+    "retry": "እንደገና ፈትን",
     "yes": "እወ",
     "no": "ኣይኮነን",
     "ok": "እወ",
@@ -567,10 +575,11 @@
     "all_courses": "ኩሉ ኮርሳት",
     "search_courses": "ኮርሳት ድለ...",
     "no_courses": "ኮርሳት ኣይተረኽቡን",
+    "loading_dashboard": "ዳሽቦርድኻ ይጽዓን ኣሎ፣ ቅሩብ ተጸበይ...",
+    "error_loading": "ዳሽቦርድ ክጽዓን ኣይከኣለን",
     "start_learning": "ምምሃር ጀምር",
     "view_all": "ኩሉ ርአ",
     "progress": "ምዕባለ",
-    "error_loading": "ዳሽቦርድ ኣይተጻዕነን",
     "try_again": "ዳግማይ ፈትን",
     "failed_fetch_user": "ናይ ተጠቃሚ ሓበሬታ ምርካብ ኣይተኻእለን",
     "failed_fetch_progress": "ናይ ምዕባለ ሓበሬታ ምርካብ ኣይተኻእለን",
@@ -767,7 +776,13 @@
       "login_success": "ብዓወት ኣቲኻ",
       "login_error": "መአተዊ ኣይተዓወተን",
       "invalid_credentials": "ዘይቅኑዕ ኢመይል ወይ መሕለፊ ቃል",
-      "verify_email_first": "ቅድሚ ምእታውካ ኢመይልካ ከፊትካ ኣረጋግጽ። ናይ መረጋገጺ ሊንክ ኣብ ኢመይልካ ተሰዲዱካ ኣሎ ርኢኻ ጠውቆ።"
+      "verify_email_first": "ቅድሚ ምእታውካ ኢመይልካ ከፊትካ ኣረጋግጽ። ናይ መረጋገጺ ሊንክ ኣብ ኢመይልካ ተሰዲዱካ ኣሎ ርኢኻ ጠውቆ።",
+      "account_suspended_title": "ኣካውንት ተዓጽዩ ኣሎ።",
+      "account_suspended_message": "ኣካውንትካ ተዓጽዩ እዩ። ኣብዚ እዋን ናብ ፕላትፎርም ክትኣቱ ኣይትኽእልን። እዚ ብሰንኪ ግዜኣዊ ገደብ ወይ ናይ ፖሊሲ ምጥሓስ ክኸውን ይኽእል እዩ።",
+      "need_help": "ሓገዝ የድካ/ኪ?",
+      "contact_support_message": "እዚ ብጌጋ ናትና እዩ ኢልካ ምስ እትሓስብ ፣ ናይ ጉጅለና ሓገዝ ርኸብ።",
+      "contact_support": "ሓገዝ ርኸብ",
+      "close": "ዕጾ"
     },
     "upload": {
       "click_to_upload": "ንምጽዓን ጠውቕ",

@@ -354,7 +354,7 @@ exports.updateVideo = async (req, res) => {
 };
 
 /**
- * Delete video (soft delete - archive instead of permanent deletion)
+ * Delete video (permanent deletion from database and S3)
  */
 exports.deleteVideo = async (req, res) => {
   try {
@@ -362,8 +362,28 @@ exports.deleteVideo = async (req, res) => {
     const video = await Video.findById(req.params.videoId);
     if (!video) return res.status(404).json({ message: 'Video not found' });
     
-    // Instead of deleting, archive the video
-    await video.archive();
+    console.log(`🗑️ [deleteVideo] Starting deletion of video: ${video.title}`);
+    console.log(`   - S3 Key: ${video.s3Key}`);
+    console.log(`   - Course ID: ${video.courseId}`);
+    
+    // Delete the video file from S3
+    if (video.s3Key) {
+      try {
+        console.log(`🔧 [deleteVideo] Deleting video from S3: ${video.s3Key}`);
+        await deleteFileFromS3(video.s3Key);
+        console.log(`✅ [deleteVideo] Successfully deleted video from S3`);
+      } catch (s3Error) {
+        console.error(`❌ [deleteVideo] Failed to delete video from S3:`, s3Error);
+        // Continue with database deletion even if S3 deletion fails
+        // This prevents orphaned database records
+      }
+    } else {
+      console.log(`⚠️ [deleteVideo] No S3 key found for video, skipping S3 deletion`);
+    }
+    
+    // Delete the video from database (permanent deletion)
+    await Video.findByIdAndDelete(video._id);
+    console.log(`✅ [deleteVideo] Successfully deleted video from database`);
     
     // Remove from course version
     const courseVersion = await CourseVersion.findOne({ 
@@ -375,6 +395,7 @@ exports.deleteVideo = async (req, res) => {
       courseVersion.videos = courseVersion.videos.filter(vid => vid.toString() !== video._id.toString());
       await courseVersion.save();
       await courseVersion.updateStatistics();
+      console.log(`✅ [deleteVideo] Removed video from CourseVersion`);
     }
     
     // Remove from main course if it's the current version
@@ -382,14 +403,25 @@ exports.deleteVideo = async (req, res) => {
     if (course && course.currentVersion === video.courseVersion) {
       course.videos = course.videos.filter(vid => vid.toString() !== video._id.toString());
       await course.save();
+      console.log(`✅ [deleteVideo] Removed video from Course`);
     }
+    
+    // Log the successful deletion for debugging
+    console.log(`✅ [deleteVideo] Video permanently deleted: ${video.title} (${video._id})`);
+    console.log(`   Course: ${course?.title} (${video.courseId})`);
+    console.log(`   Removed from CourseVersion: ${courseVersion ? 'Yes' : 'No'}`);
+    console.log(`   Removed from Course: ${course ? 'Yes' : 'No'}`);
+    console.log(`   Deleted from S3: ${video.s3Key ? 'Yes' : 'No'}`);
     
     res.json({ 
       success: true,
-      message: 'Video archived successfully',
+      message: 'Video permanently deleted successfully',
       data: {
         videoId: video._id,
-        archivedAt: video.archivedAt
+        deletedAt: new Date().toISOString(),
+        courseId: video.courseId,
+        courseTitle: course?.title,
+        s3Key: video.s3Key
       }
     });
   } catch (err) {
