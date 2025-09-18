@@ -3,8 +3,8 @@ import { buildApiUrl } from '../config/environment';
 import { useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from '../lib/queryClient';
 
-import { useParams, Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Plus, Video, Edit, Trash2, Eye, Upload, Clock, User, Save, X, GripVertical, Check, AlertCircle } from 'lucide-react';
+import { useParams, Link } from 'react-router-dom';
+import { ArrowLeft, Video, Edit, Trash2, Eye, Clock, User, Save, X, GripVertical, Check, AlertCircle } from 'lucide-react';
 import ProgressOverlay from '../components/ProgressOverlay';
 import { formatDuration } from '../utils/durationFormatter';
 
@@ -30,7 +30,6 @@ interface Course {
 
 const AdminCourseVideosPage: React.FC = () => {
   const { courseId } = useParams<{ courseId: string }>();
-  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [course, setCourse] = useState<Course | null>(null);
   const [videos, setVideos] = useState<Video[]>([]);
@@ -48,7 +47,6 @@ const AdminCourseVideosPage: React.FC = () => {
   
   // Bulk actions state
   const [selectedVideos, setSelectedVideos] = useState<string[]>([]);
-  const [bulkAction, setBulkAction] = useState<string>('');
 
   // Free preview toggle state
   const [togglingPreview, setTogglingPreview] = useState<string | null>(null);
@@ -89,7 +87,7 @@ const AdminCourseVideosPage: React.FC = () => {
         courseId: courseData._id,
         title: courseData.title,
         videoCount: courseData.videos?.length || 0,
-        videos: courseData.videos?.map(v => ({ 
+        videos: courseData.videos?.map((v: Video) => ({ 
           id: v._id, 
           title: v.title, 
           duration: v.duration,
@@ -169,7 +167,7 @@ const AdminCourseVideosPage: React.FC = () => {
         // Invalidate course videos cache
         queryClient.invalidateQueries({ queryKey: ['videos', 'course', courseId] });
         // Invalidate all courses list cache (in case course metadata changed)
-        queryClient.invalidateQueries({ queryKey: queryKeys.courses.list() });
+        queryClient.invalidateQueries({ queryKey: queryKeys.courses.list({}) });
         // Invalidate featured courses cache
         queryClient.invalidateQueries({ queryKey: queryKeys.courses.featured() });
         
@@ -278,71 +276,6 @@ const AdminCourseVideosPage: React.FC = () => {
     }
   };
 
-  // Handle bulk actions
-  const handleBulkAction = async () => {
-    if (!bulkAction || selectedVideos.length === 0) return;
-
-    try {
-      const adminToken = localStorage.getItem('adminToken');
-      if (!adminToken) {
-        throw new Error('Admin token not found');
-      }
-
-      if (bulkAction === 'delete') {
-        if (!window.confirm(`Are you sure you want to delete ${selectedVideos.length} videos? This action cannot be undone.`)) {
-          return;
-        }
-      }
-
-      if (bulkAction === 'delete') {
-        // Use bulk delete endpoint for better performance
-        const response = await fetch(buildApiUrl('/api/videos/admin/bulk-delete'), {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${adminToken}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ videoIds: selectedVideos }),
-        });
-
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.message || 'Failed to delete videos');
-        }
-
-        const result = await response.json();
-        console.log('Bulk delete result:', result);
-      } else {
-        // Handle other bulk actions here as needed
-        const promises = selectedVideos.map(videoId => {
-          // Add more bulk actions here as needed
-          return Promise.resolve();
-        });
-        await Promise.all(promises);
-      }
-      setSuccess(`${bulkAction === 'delete' ? 'Videos deleted' : 'Action completed'} successfully!`);
-      
-      // Invalidate React Query cache for this course and related data
-      if (courseId && bulkAction === 'delete') {
-        // Invalidate course detail cache
-        queryClient.invalidateQueries({ queryKey: queryKeys.courses.detail(courseId) });
-        // Invalidate course videos cache
-        queryClient.invalidateQueries({ queryKey: ['videos', 'course', courseId] });
-        // Invalidate all courses list cache (in case course metadata changed)
-        queryClient.invalidateQueries({ queryKey: queryKeys.courses.list() });
-        // Invalidate featured courses cache
-        queryClient.invalidateQueries({ queryKey: queryKeys.courses.featured() });
-        
-        console.log('🔄 Cache invalidated for course after bulk delete:', courseId);
-      }
-      
-      setSelectedVideos([]);
-      setBulkAction('');
-      await fetchCourseAndVideos();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to perform bulk action');
-    }
-  };
 
   // Toggle video selection
   const toggleVideoSelection = (videoId: string) => {
@@ -403,15 +336,6 @@ const AdminCourseVideosPage: React.FC = () => {
     }
   };
 
-  // Select all videos
-  const selectAllVideos = () => {
-    setSelectedVideos(videos.map(video => video._id));
-  };
-
-  // Clear selection
-  const clearSelection = () => {
-    setSelectedVideos([]);
-  };
 
   useEffect(() => {
     if (courseId) {
@@ -507,7 +431,8 @@ const AdminCourseVideosPage: React.FC = () => {
                 <p className="text-sm sm:text-base text-gray-600 truncate max-w-full">{course.title}</p>
               </div>
             </div>
-            <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3 flex-shrink-0">
+            {/* Upload Video Button - Commented Out */}
+            {/* <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3 flex-shrink-0">
               <Link
                 to={`/admin/courses/${courseId}/videos/upload`}
                 className="inline-flex items-center justify-center px-3 sm:px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 w-full sm:w-auto"
@@ -516,7 +441,7 @@ const AdminCourseVideosPage: React.FC = () => {
                 <span className="hidden sm:inline">Upload Video</span>
                 <span className="sm:hidden">Upload Video</span>
               </Link>
-            </div>
+            </div> */}
           </div>
         </div>
       </div>
@@ -541,8 +466,8 @@ const AdminCourseVideosPage: React.FC = () => {
           </div>
         )}
 
-        {/* Bulk Actions */}
-        {videos.length > 0 && (
+        {/* Bulk Actions - Commented Out */}
+        {/* {videos.length > 0 && (
           <div className={`mb-4 sm:mb-6 bg-white rounded-lg shadow-sm border p-3 sm:p-4 ${progressOverlay.isVisible ? 'pointer-events-none' : ''}`}>
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0">
               <div className="flex items-center space-x-2 sm:space-x-4">
@@ -579,7 +504,7 @@ const AdminCourseVideosPage: React.FC = () => {
                 )}
             </div>
           </div>
-        )}
+        )} */}
 
         {/* Videos List */}
         <div className={`bg-white rounded-lg shadow-sm border ${progressOverlay.isVisible ? 'pointer-events-none' : ''}`}>
@@ -630,14 +555,15 @@ const AdminCourseVideosPage: React.FC = () => {
                 <Video className="h-12 w-12 sm:h-16 sm:w-16 text-gray-400 mx-auto mb-3 sm:mb-4" />
                 <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-2">No videos yet</h3>
                 <p className="text-sm sm:text-base text-gray-500 mb-4 sm:mb-6">Start building your course by uploading the first video.</p>
-                <Link
+                {/* Upload First Video Button - Commented Out */}
+                {/* <Link
                   to={`/admin/courses/${courseId}/videos/upload`}
                   className="inline-flex items-center justify-center px-3 sm:px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 w-full sm:w-auto"
                 >
                   <Upload className="h-4 w-4 mr-1 sm:mr-2" />
                   <span className="hidden sm:inline">Upload First Video</span>
                   <span className="sm:hidden">Upload First Video</span>
-                </Link>
+                </Link> */}
               </div>
             ) : (
               <div className="space-y-3 sm:space-y-4">
@@ -745,7 +671,7 @@ const AdminCourseVideosPage: React.FC = () => {
                     
                     {editingVideo !== video._id && (
                       <div className="flex flex-wrap items-center gap-1 sm:gap-2">
-                        <Link
+                        {/*<Link
                           to={`/admin/courses/${courseId}/videos/${video._id}`}
                           className="inline-flex items-center px-2 py-1 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded text-xs font-medium"
                           title="View video"
@@ -753,7 +679,7 @@ const AdminCourseVideosPage: React.FC = () => {
                           <Eye className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
                           <span className="hidden sm:inline">View</span>
                           <span className="sm:hidden">View</span>
-                        </Link>
+                        </Link>*/}
                         <button
                           onClick={() => startEditing(video)}
                           className="inline-flex items-center px-2 py-1 text-gray-600 hover:text-gray-800 hover:bg-gray-50 rounded text-xs font-medium"
@@ -783,7 +709,7 @@ const AdminCourseVideosPage: React.FC = () => {
                           <span className="hidden sm:inline">{video.isFreePreview ? 'Free' : 'Locked'}</span>
                           <span className="sm:hidden">{video.isFreePreview ? 'Free' : 'Locked'}</span>
                         </button>
-                        <button
+                        {/*<button
                           onClick={() => deleteVideo(video._id)}
                           className="inline-flex items-center px-2 py-1 text-red-600 hover:text-red-800 hover:bg-red-50 rounded text-xs font-medium"
                           title="Delete video"
@@ -791,7 +717,7 @@ const AdminCourseVideosPage: React.FC = () => {
                           <Trash2 className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
                           <span className="hidden sm:inline">Delete</span>
                           <span className="sm:hidden">Delete</span>
-                        </button>
+                        </button>*/}
                       </div>
                     )}
                   </div>
@@ -827,12 +753,13 @@ const AdminCourseVideosPage: React.FC = () => {
                   >
                     View Course
                   </Link>
-                  <Link
+                  {/* Upload New Video Link - Commented Out */}
+                  {/* <Link
                     to={`/admin/courses/${courseId}/videos/upload`}
                     className="block text-sm text-blue-600 hover:text-blue-800"
                   >
                     Upload New Video
-                  </Link>
+                  </Link> */}
                 </div>
               </div>
             </div>
