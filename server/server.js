@@ -25,6 +25,7 @@ const adminRoutes = require('./routes/adminRoutes');
 const progressRoutes = require('./routes/progressRoutes');
 const certificateRoutes = require('./routes/certificateRoutes');
 const drmVideoRoutes = require('./routes/drmVideoRoutes');
+const contactRoutes = require('./routes/contactRoutes');
 
 // Import controllers for fallback routes
 const authController = require('./controllers/authController');
@@ -496,6 +497,9 @@ app.use('/api/payments', paymentRoutes); // Also support plural for webhook comp
 
 // User routes
 app.use('/api/user', userRoutes);
+
+// Contact routes
+app.use('/api/contact', contactRoutes);
 
 // Admin dashboard stats (basic stats only)
 app.get('/api/admin/stats', adminAuthMiddleware, async (req, res) => {

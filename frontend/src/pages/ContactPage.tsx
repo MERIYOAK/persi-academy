@@ -22,13 +22,31 @@ const ContactPage = () => {
     e.preventDefault();
     setIsSubmitting(true);
     
-    // Simulate form submission delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // Simulate form submission
-    alert(t('contact.success_message'));
-    setFormData({ name: '', email: '', subject: '', message: '' });
-    setIsSubmitting(false);
+    try {
+      const response = await fetch(`${config.API_BASE_URL}/api/contact/submit`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        // Success - show success message
+        alert(t('contact.success_message'));
+        setFormData({ name: '', email: '', subject: '', message: '' });
+      } else {
+        // Error - show error message
+        alert(result.message || 'Failed to send message. Please try again.');
+      }
+    } catch (error) {
+      console.error('Contact form submission error:', error);
+      alert('Failed to send message. Please check your connection and try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
