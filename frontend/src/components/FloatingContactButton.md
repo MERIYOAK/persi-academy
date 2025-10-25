@@ -14,12 +14,11 @@ A responsive floating action button (FAB) that provides quick access to contact 
 
 ## Contact Options
 
-The FAB expands to reveal 4 contact options with official platform logos:
+The FAB expands to reveal 3 contact options with official platform logos:
 
 1. **Phone Call** - Opens phone dialer (`tel:+1234567890`) - Uses Lucide React Phone icon
 2. **WhatsApp** - Opens WhatsApp chat (`https://wa.me/1234567890`) - Uses official WhatsApp logo
 3. **Telegram** - Opens Telegram chat (`https://t.me/username`) - Uses official Telegram logo
-4. **Messenger** - Opens Facebook Messenger (`https://m.me/username`) - Uses official Messenger logo
 
 ## Customization
 
@@ -66,7 +65,7 @@ The component is automatically integrated into `UserLayout.tsx` and will appear 
 ## Accessibility Features
 
 - Keyboard navigation (Tab, Enter, Space)
-- ARIA labels for screen readers ("Call", "WhatsApp", "Telegram", "Messenger")
+- ARIA labels for screen readers ("Call", "WhatsApp", "Telegram")
 - Focus states with visible rings
 - Proper semantic HTML structure
 - SVG icons with proper accessibility attributes

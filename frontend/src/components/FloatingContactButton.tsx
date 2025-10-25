@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { contactConfig, fabConfig } from '../config/contactConfig';
 import { Phone } from 'lucide-react';
-import { FaWhatsapp, FaTelegramPlane, FaFacebookMessenger } from 'react-icons/fa';
+import { FaWhatsapp, FaTelegramPlane } from 'react-icons/fa';
 
 const FloatingContactButton: React.FC = () => {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -38,8 +38,6 @@ const FloatingContactButton: React.FC = () => {
         return <FaWhatsapp className="w-5 h-5 sm:w-6 sm:h-6" />;
       case 'telegram':
         return <FaTelegramPlane className="w-5 h-5 sm:w-6 sm:h-6" />;
-      case 'messenger':
-        return <FaFacebookMessenger className="w-5 h-5 sm:w-6 sm:h-6" />;
       default:
         return <span className="text-xs sm:text-sm">{iconComponent}</span>;
     }

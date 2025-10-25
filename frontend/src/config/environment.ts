@@ -15,7 +15,6 @@ export const config = {
   SUPPORT_WHATSAPP: import.meta.env.VITE_SUPPORT_WHATSAPP || '+15551234567',
   SUPPORT_PHONE: import.meta.env.VITE_SUPPORT_PHONE || '+1 (555) 123-4567',
   SUPPORT_TELEGRAM: import.meta.env.VITE_SUPPORT_TELEGRAM || 'username',
-  SUPPORT_MESSENGER: import.meta.env.VITE_SUPPORT_MESSENGER || 'username',
   SUPPORT_ADDRESS: import.meta.env.VITE_SUPPORT_ADDRESS || '123 Creator Street, New York, NY 10001',
   SUPPORT_ADDRESS_SHORT: import.meta.env.VITE_SUPPORT_ADDRESS_SHORT || 'Ontario, Canada',
   BUSINESS_HOURS_WEEKDAY: import.meta.env.VITE_BUSINESS_HOURS_WEEKDAY || 'Monday - Friday: 9AM - 6PM EST',
@@ -30,7 +29,6 @@ export const config = {
   SOCIAL_FACEBOOK: import.meta.env.VITE_SOCIAL_FACEBOOK || 'qendielacademy',
   SOCIAL_YOUTUBE: import.meta.env.VITE_SOCIAL_YOUTUBE || 'qendielacademy',
   SOCIAL_INSTAGRAM: import.meta.env.VITE_SOCIAL_INSTAGRAM || 'qendielacademy',
-  SOCIAL_LINKEDIN: import.meta.env.VITE_SOCIAL_LINKEDIN || 'company/qendiel-academy',
   SOCIAL_TWITTER: import.meta.env.VITE_SOCIAL_TWITTER || 'qendielacademy',
   
   // S3 Configuration

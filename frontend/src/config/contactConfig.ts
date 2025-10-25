@@ -38,15 +38,6 @@ export const contactConfig: ContactOption[] = [
     hoverColor: 'hover:bg-blue-600',
     iconComponent: 'telegram'
   },
-  {
-    id: 'messenger',
-    icon: '💬',
-    label: 'Messenger',
-    url: `https://m.me/${config.SUPPORT_MESSENGER}`,
-    color: 'bg-blue-600',
-    hoverColor: 'hover:bg-blue-700',
-    iconComponent: 'messenger'
-  }
 ];
 
 // Configuration for FAB behavior
